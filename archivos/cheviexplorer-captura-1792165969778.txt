@@ -1,0 +1,27 @@
+[11:51:51] Aplicación iniciada. Conecta el KKL mediante USB OTG.
+[11:51:51] Esta versión prueba el enlace serie; el protocolo ECU específico aún debe validarse.
+[11:52:10] USB detectado: VID=1A86 PID=7523
+[11:52:12] USB detectado: VID=1A86 PID=7523
+[11:52:12] Puerto abierto: Ch34xSerialDriver, 10400 baud, 8N1.
+[11:52:12] No se han enviado bytes a la ECU. Esperando datos del enlace.
+[11:52:17] INIT MR-140: comprobando soporte de inicialización K-Line; trama candidata, aún no validada.
+[11:52:17] AVISO INIT MR-140: el controlador no admite purgeHwBuffers(); se continúa.
+[11:52:18] RX  00
+[11:52:18] TX MR-140  81 11 F1 81 04
+[11:52:18] RX  81 11 F1 81 04
+[11:52:18] RX  83 F1 11 C1 EF 8F C4
+[11:52:19] ECO TX detectado: 81 11 F1 81 04
+[11:52:19] RX CANDIDATA MR-140: 83 F1 11 C1 EF 8F C4
+[11:52:19] VALIDACIÓN DE TRAMA: formato=0x83, longitud=3, destino=0xF1, origen=0x11, checksum recibido=0xC4, esperado=0xC4 (OK)
+[11:52:19] RESULTADO MR-140: trama con formato/dirección/checksum coherentes. Respuesta candidata; identidad y datos aún no decodificados.
+[11:52:37] INIT ZF 4HP16: comprobando soporte de inicialización K-Line; trama candidata, aún no validada.
+[11:52:37] AVISO INIT ZF 4HP16: el controlador no admite purgeHwBuffers(); se continúa.
+[11:52:38] RX  00
+[11:52:38] TX ZF 4HP16  81 18 F1 81 0B
+[11:52:38] RX  81 18 F1 81 0B
+[11:52:38] RX  83 F1 18 C1 EF 8F CB
+[11:52:39] ECO TX detectado: 81 18 F1 81 0B
+[11:52:39] RX CANDIDATA ZF 4HP16: 83 F1 18 C1 EF 8F CB
+[11:52:39] VALIDACIÓN DE TRAMA: formato=0x83, longitud=3, destino=0xF1, origen=0x18, checksum recibido=0xCB, esperado=0xCB (OK)
+[11:52:39] RESULTADO ZF 4HP16: trama con formato/dirección/checksum coherentes. Respuesta candidata; identidad y datos aún no decodificados.
+[11:52:45] Puerto serie cerrado.

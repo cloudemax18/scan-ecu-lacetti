@@ -1,0 +1,52 @@
+[12:19:49] Aplicación iniciada. Conecta el KKL mediante USB OTG.
+[12:19:49] Esta versión prueba el enlace serie; el protocolo ECU específico aún debe validarse.
+[12:20:08] USB detectado: VID=1A86 PID=7523
+[12:20:10] USB detectado: VID=1A86 PID=7523
+[12:20:10] Puerto abierto: Ch34xSerialDriver, 10400 baud, 8N1.
+[12:20:10] No se han enviado bytes a la ECU. Esperando datos del enlace.
+[12:20:13] INIT MR-140: comprobando soporte de inicialización K-Line; trama candidata, aún no validada.
+[12:20:13] AVISO INIT MR-140: el controlador no admite purgeHwBuffers(); se continúa.
+[12:20:13] RX  00
+[12:20:13] TX MR-140  81 11 F1 81 04
+[12:20:13] RX  81 11 F1 81 04
+[12:20:13] RX  83 F1 11 C1 EF 8F C4
+[12:20:15] ECO TX detectado: 81 11 F1 81 04
+[12:20:15] RX CANDIDATA MR-140: 83 F1 11 C1 EF 8F C4
+[12:20:15] VALIDACIÓN DE TRAMA: formato=0x83, longitud=3, destino=0xF1, origen=0x11, checksum recibido=0xC4, esperado=0xC4 (OK)
+[12:20:15] RESULTADO MR-140: trama con formato/dirección/checksum coherentes.
+[12:20:15] KWP StartCommunication: respuesta positiva 0xC1 al servicio 0x81; bytes de clave=EF 8F.
+[12:20:15] Estas claves no son una identificación de ECU; se puede probar el servicio de identificación 1A 80.
+[12:20:17] IDENT ECU MR-140: solicitud de lectura 1A 80 reconstruida del programa original.
+[12:20:17] TX IDENT MR-140  82 11 F1 1A 80 1E
+[12:20:17] RX  82 11 F1 1A 80 1E
+[12:20:17] RX  80 F1 11 50 5A 80 38 5A 31 4A 4A 35 31 33 38 38 56 33 32 32 39 34 36 00 00 00 00 00 00 00 00 00
+[12:20:17] RX  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 30 33 68 30 31 34 68 30 30 35
+[12:20:17] RX  00 00 00 00 00 00 FF FF FF FF FF FF FF FF FF FF FF FF FF FF EB
+[12:20:19] ECO TX IDENT detectado: 82 11 F1 1A 80 1E
+[12:20:19] IDENT ECU MR-140: RX sin trama reconocible: 80 F1 11 50 5A 80 38 5A 31 4A 4A 35 31 33 38 38 56 33 32 32 39 34 36 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 30 33 68 30 31 34 68 30 30 35 00 00 00 00 00 00 FF FF FF FF FF FF FF FF FF FF FF FF FF FF EB
+[12:20:28] Puerto serie cerrado.
+[12:20:32] USB detectado: VID=1A86 PID=7523
+[12:20:32] Puerto abierto: Ch34xSerialDriver, 10400 baud, 8N1.
+[12:20:32] No se han enviado bytes a la ECU. Esperando datos del enlace.
+[12:20:36] INIT ZF 4HP16: comprobando soporte de inicialización K-Line; trama candidata, aún no validada.
+[12:20:36] AVISO INIT ZF 4HP16: el controlador no admite purgeHwBuffers(); se continúa.
+[12:20:37] RX  00
+[12:20:37] TX ZF 4HP16  81 18 F1 81 0B
+[12:20:37] RX  81 18 F1 81 0B
+[12:20:37] RX  83 F1 18 C1 EF 8F CB
+[12:20:38] ECO TX detectado: 81 18 F1 81 0B
+[12:20:38] RX CANDIDATA ZF 4HP16: 83 F1 18 C1 EF 8F CB
+[12:20:38] VALIDACIÓN DE TRAMA: formato=0x83, longitud=3, destino=0xF1, origen=0x18, checksum recibido=0xCB, esperado=0xCB (OK)
+[12:20:38] RESULTADO ZF 4HP16: trama con formato/dirección/checksum coherentes.
+[12:20:38] KWP StartCommunication: respuesta positiva 0xC1 al servicio 0x81; bytes de clave=EF 8F.
+[12:20:38] Estas claves no son una identificación de ECU; se puede probar el servicio de identificación 1A 80.
+[12:20:40] IDENT ECU ZF 4HP16: solicitud de lectura 1A 80 reconstruida del programa original.
+[12:20:40] TX IDENT ZF 4HP16  82 18 F1 1A 80 25
+[12:20:40] RX  82 18 F1 1A 80 25
+[12:20:40] RX  80 F1 18 76 5A 80 35 57 4B 33 33 36 30 30 4A 47 31 30 36 33 30 30 34 30 37 36 36 35 38 31 30 37
+[12:20:40] RX  35 31 32 31 2D 2D 36 35 38 31 30 37 35 35 41 39 2D 2D 36 35 38 31 30 37 35 36 44 36 37 36 35 34
+[12:20:40] RX  33 38 31 FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF
+[12:20:40] RX  FF FF 39 36 38 30 31 31 36 39 4A 47 FF FF FF FF FF FF FF FF FF FF FF FF FF FF AD
+[12:20:41] ECO TX IDENT detectado: 82 18 F1 1A 80 25
+[12:20:41] IDENT ECU ZF 4HP16: RX sin trama reconocible: 80 F1 18 76 5A 80 35 57 4B 33 33 36 30 30 4A 47 31 30 36 33 30 30 34 30 37 36 36 35 38 31 30 37 35 31 32 31 2D 2D 36 35 38 31 30 37 35 35 41 39 2D 2D 36 35 38 31 30 37 35 36 44 36 37 36 35 34 33 38 31 FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 39 36 38 30 31 31 36 39 4A 47 FF FF FF FF FF FF FF FF FF FF FF FF FF FF AD
+[12:20:47] Puerto serie cerrado.
