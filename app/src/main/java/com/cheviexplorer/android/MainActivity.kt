@@ -610,18 +610,27 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 }
                 appendLog("RX DTC CANDIDATA $profile: ${response.bytes.toHex()}")
                 appendLog("VALIDACIÓN DTC: ${response.description}")
-                when {
-                    !response.valid -> appendLog("LECTURA DTC $profile: checksum inválido; no se interpretan datos.")
-                    KwpProtocol.isPositiveResponseTo(response, requestService) -> {
-                        appendLog("LECTURA DTC $profile: respuesta positiva 0x%02X.".format(requestService + 0x40))
-                        appendLog("DATOS DTC RAW $profile (sin decodificar): ${response.payload.toHex()}")
-                        appendLog("No se muestran códigos traducidos hasta verificar el formato de registros de esta ECU.")
+                when (val decoded = DtcResponseDecoder.decode(response, requestService)) {
+                    is DtcResponseDecoder.Result.Invalid ->
+                        appendLog("LECTURA DTC $profile: respuesta no interpretable: ${decoded.reason}.")
+                    is DtcResponseDecoder.Result.Negative ->
+                        appendLog("LECTURA DTC $profile: respuesta negativa KWP, NRC=0x%02X.".format(decoded.nrc))
+                    is DtcResponseDecoder.Result.Unexpected ->
+                        appendLog("LECTURA DTC $profile: SID inesperado; payload RX: ${decoded.rawPayload.toHex()}")
+                    is DtcResponseDecoder.Result.Positive -> {
+                        appendLog("LECTURA DTC $profile: respuesta positiva 0x%02X.".format(decoded.responseService))
+                        decoded.subfunctionOrStatus?.let {
+                            appendLog("DTC: subfunción/estado recibido = 0x%02X.".format(it))
+                        }
+                        appendLog("DATOS DTC RAW $profile (incluye SID): ${decoded.rawPayload.toHex()}")
+                        if (decoded.recordBytes.isEmpty()) {
+                            appendLog("DTC: la respuesta no contiene bytes de registro después del SID/estado.")
+                            appendLog("Esto NO se presenta como «sin averías»: falta confirmar el formato de registros Delphi para esta ECU.")
+                        } else {
+                            appendLog("DTC: ${decoded.recordBytes.size} byte(s) de registro disponibles; se conservan sin decodificar hasta verificar el formato de esta ECU.")
+                            appendLog("REGISTROS DTC RAW: ${decoded.recordBytes.toHex()}")
+                        }
                     }
-                    KwpProtocol.isNegativeResponseTo(response, requestService) -> {
-                        val nrc = response.payload[2].toInt() and 0xFF
-                        appendLog("LECTURA DTC $profile: respuesta negativa KWP, NRC=0x%02X.".format(nrc))
-                    }
-                    else -> appendLog("LECTURA DTC $profile: trama válida, pero el SID no coincide con la respuesta esperada.")
                 }
                 val remaining = candidate.drop(response.bytes.size).toByteArray()
                 if (remaining.isNotEmpty()) appendLog("RX DTC restante/no clasificada: ${remaining.toHex()}")
