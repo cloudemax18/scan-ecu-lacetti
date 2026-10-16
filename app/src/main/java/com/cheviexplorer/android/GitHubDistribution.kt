@@ -48,34 +48,27 @@ internal object GitHubDistribution {
         }
     }
 
-    fun uploadSecretGist(token: String, capture: String): String {
-        require(token.isNotBlank()) { "Introduce un token de GitHub con permiso gist." }
-        val payload = JSONObject()
-            .put("description", "CheviExplorer diagnostic capture")
-            .put("public", false)
-            .put("files", JSONObject().put(
-                "cheviexplorer-capture.txt",
-                JSONObject().put("content", capture)
-            ))
-        val connection = (URL("https://api.github.com/gists").openConnection() as HttpURLConnection)
-        connection.requestMethod = "POST"
+    fun fetchLatestSuccessfulDebugBuild(): String {
+        val url = URL("https://api.github.com/repos/$REPOSITORY/actions/workflows/android.yml/runs?branch=main&status=success&per_page=1")
+        val connection = url.openConnection() as HttpURLConnection
+        connection.requestMethod = "GET"
         connection.connectTimeout = 10000
-        connection.readTimeout = 20000
-        connection.doOutput = true
+        connection.readTimeout = 15000
         connection.setRequestProperty("Accept", "application/vnd.github+json")
         connection.setRequestProperty("X-GitHub-Api-Version", "2022-11-28")
         connection.setRequestProperty("User-Agent", USER_AGENT)
-        connection.setRequestProperty("Authorization", "Bearer $token")
-        connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
         try {
-            connection.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) }
             val code = connection.responseCode
             val body = (if (code in 200..299) connection.inputStream else connection.errorStream)
                 ?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-            if (code !in 200..299) throw IllegalStateException("GitHub API HTTP $code: ${body.take(240)}")
-            return JSONObject(body).optString("html_url")
-                .takeIf { it.startsWith("https://gist.github.com/") }
-                ?: throw IllegalStateException("GitHub no devolvió la URL del Gist.")
+            if (code !in 200..299) throw IllegalStateException("GitHub Actions HTTP $code: ${body.take(240)}")
+            val runs = JSONObject(body).optJSONArray("workflow_runs")
+                ?: throw IllegalStateException("GitHub no devolvió ejecuciones de Actions")
+            if (runs.length() == 0) throw IllegalStateException("No hay compilaciones debug exitosas disponibles")
+            val run = runs.getJSONObject(0)
+            return run.optString("html_url")
+                .takeIf { it.startsWith("https://github.com/") }
+                ?: throw IllegalStateException("GitHub no devolvió el enlace de la compilación")
         } finally {
             connection.disconnect()
         }
