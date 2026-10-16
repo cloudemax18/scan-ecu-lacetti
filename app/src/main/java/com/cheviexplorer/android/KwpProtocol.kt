@@ -26,6 +26,31 @@ internal object KwpProtocol {
     }
 
     /**
+     * Reconstructs the read-only DTC requests used by the original Delphi program.
+     * MR-140 profile 0x12 uses service 0x19 DA FF 00; ZF 4HP16 profile 0x22 uses 0x18 00 00 00.
+     * The final checksum is additive over all preceding bytes.
+     */
+    fun buildDtcReadRequest(targetAddress: Int, isMr140: Boolean): ByteArray {
+        require(targetAddress == if (isMr140) 0x11 else 0x18) {
+            "Target address does not match the selected ECU profile"
+        }
+        val payload = if (isMr140) {
+            byteArrayOf(0x19, 0xDA.toByte(), 0xFF.toByte(), 0x00)
+        } else {
+            byteArrayOf(0x18, 0x00, 0x00, 0x00)
+        }
+        val frame = byteArrayOf(
+            0x84.toByte(),
+            targetAddress.toByte(),
+            0xF1.toByte(),
+            payload[0], payload[1], payload[2], payload[3],
+            0x00
+        )
+        frame[7] = checksum(frame.copyOfRange(0, 7)).toByte()
+        return frame
+    }
+
+    /**
      * Builds the standard-profile TesterPresent frame observed in the original
      * Delphi timer: format 0x81, target, tester address 0xF1, service 0x3E,
      * and additive checksum.
