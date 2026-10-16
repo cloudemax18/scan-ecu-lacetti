@@ -28,12 +28,6 @@ import java.util.concurrent.Executors
 class MainActivity : Activity(), SerialInputOutputManager.Listener {
     companion object { private const val ACTION_USB_PERMISSION = "com.cheviexplorer.android.USB_PERMISSION" }
 
-    private data class KLineFrameCheck(
-        val valid: Boolean,
-        val description: String,
-        val bytes: ByteArray
-    )
-
     private lateinit var usbManager: UsbManager
     private lateinit var status: TextView
     private lateinit var log: TextView
@@ -181,15 +175,9 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
 
         val isEngine = ecuProfile.selectedItemPosition == 0
         val profile = if (isEngine) "MR-140" else "ZF 4HP16"
-        // The original WriteReadComm receives a length of 4, sums the first
-        // four bytes, writes the low checksum byte at index 4, and transmits 5 bytes.
-        val frame = if (isEngine) {
-            byteArrayOf(0x81.toByte(), 0x11, 0xF1.toByte(), 0x81.toByte(), 0x00)
-        } else {
-            byteArrayOf(0x81.toByte(), 0x18, 0xF1.toByte(), 0x81.toByte(), 0x00)
-        }
-        val checksum = frame.take(4).sumOf { it.toInt() and 0xFF } and 0xFF
-        frame[4] = checksum.toByte()
+        // Captured/original-program StartCommunication request (service 0x81).
+        // This is the only ECU request currently enabled in this test build.
+        val frame = KwpProtocol.buildStartCommunicationRequest(if (isEngine) 0x11 else 0x18)
         val selectedBaud = when (baud.selectedItemPosition) {
             1 -> 9600
             2 -> 38400
@@ -274,12 +262,20 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             return
         }
 
-        val frameCheck = findKLineResponse(candidate, expectedSource = if (profile == "MR-140") 0x11 else 0x18)
+        val frameCheck = KwpProtocol.findResponse(candidate, expectedSource = if (profile == "MR-140") 0x11 else 0x18)
         if (frameCheck != null) {
             appendLog("RX CANDIDATA $profile: ${frameCheck.bytes.toHex()}")
             appendLog("VALIDACIÓN DE TRAMA: ${frameCheck.description}")
             if (frameCheck.valid) {
-                appendLog("RESULTADO $profile: trama con formato/dirección/checksum coherentes. Respuesta candidata; identidad y datos aún no decodificados.")
+                appendLog("RESULTADO $profile: trama con formato/dirección/checksum coherentes.")
+                val keys = KwpProtocol.startCommunicationKeys(frameCheck)
+                if (keys != null) {
+                    val keyHex = keys.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
+                    appendLog("KWP StartCommunication: respuesta positiva 0xC1 al servicio 0x81; bytes de clave=$keyHex.")
+                    appendLog("Estas claves no son una identificación de ECU; siguiente solicitud aún pendiente de validar.")
+                } else {
+                    appendLog("Respuesta estructural válida, pero no se ha confirmado respuesta positiva al servicio StartCommunication.")
+                }
             } else {
                 appendLog("RESULTADO $profile: se detectó una cabecera candidata, pero la trama no supera todas las validaciones.")
             }
@@ -289,35 +285,6 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             appendLog("RESULTADO $profile: ${if (hadEcho) "ECO TX + " else ""}RX sin trama K-Line reconocible: $hex")
             appendLog("No se confirma una respuesta válida de la ECU.")
         }
-    }
-
-    /**
-     * Scans for a length-coded K-Line frame: format, target, source, payload, checksum.
-     * This is a structural/checksum check only, not semantic ECU identification.
-     */
-    private fun findKLineResponse(bytes: ByteArray, expectedSource: Int): KLineFrameCheck? {
-        for (start in bytes.indices) {
-            val format = bytes[start].toInt() and 0xFF
-            if ((format and 0x80) == 0) continue
-            val payloadLength = format and 0x3F
-            val frameLength = 1 + 2 + payloadLength + 1
-            if (payloadLength == 0 || start + frameLength > bytes.size) continue
-
-            val frame = bytes.copyOfRange(start, start + frameLength)
-            val target = frame[1].toInt() and 0xFF
-            val source = frame[2].toInt() and 0xFF
-            if (target != 0xF1 || source != expectedSource) continue
-
-            val expectedChecksum = frame.dropLast(1).sumOf { it.toInt() and 0xFF } and 0xFF
-            val actualChecksum = frame.last().toInt() and 0xFF
-            val checksumOk = expectedChecksum == actualChecksum
-            val description = "formato=0x%02X, longitud=%d, destino=0x%02X, origen=0x%02X, checksum recibido=0x%02X, esperado=0x%02X (%s)".format(
-                format, payloadLength, target, source, actualChecksum, expectedChecksum,
-                if (checksumOk) "OK" else "ERROR"
-            )
-            return KLineFrameCheck(checksumOk, description, frame)
-        }
-        return null
     }
 
     private fun ByteArray.toHex(): String =
