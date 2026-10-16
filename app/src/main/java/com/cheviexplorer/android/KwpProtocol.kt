@@ -43,6 +43,17 @@ internal object KwpProtocol {
         return frame
     }
 
+    fun isPositiveResponseTo(frame: FrameCheck, requestService: Int): Boolean {
+        if (!frame.valid || frame.payload.isEmpty() || requestService !in 0..0xBF) return false
+        return (frame.payload[0].toInt() and 0xFF) == ((requestService + 0x40) and 0xFF)
+    }
+
+    fun isNegativeResponseTo(frame: FrameCheck, requestService: Int): Boolean {
+        if (!frame.valid || frame.payload.size < 3) return false
+        return (frame.payload[0].toInt() and 0xFF) == 0x7F &&
+            (frame.payload[1].toInt() and 0xFF) == requestService
+    }
+
     fun findResponse(bytes: ByteArray, expectedSource: Int): FrameCheck? {
         for (start in bytes.indices) {
             val format = bytes[start].toInt() and 0xFF
