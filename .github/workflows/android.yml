@@ -37,6 +37,9 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Run KWP protocol unit tests
+        run: gradle --no-daemon testDebugUnitTest
+
       - name: Compile debug APK
         run: gradle --no-daemon assembleDebug
 
