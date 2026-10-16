@@ -210,3 +210,26 @@ El siguiente paso es comparar la respuesta de identificación del ejecutable ori
 ### Pruebas automatizadas añadidas
 
 Se creó `KwpProtocol.kt` para centralizar el armado de las solicitudes de inicio, el análisis de trama, la verificación de checksum y la extracción de bytes de clave de una respuesta `C1`. Las pruebas unitarias cubren las dos solicitudes y respuestas observadas, checksum incorrecto, dirección de origen incorrecta y una respuesta precedida por el eco TX. El workflow de Android ejecuta ahora `testDebugUnitTest` antes de compilar el APK. Estas pruebas son de framing y clasificación; no sustituyen una prueba con la ECU ni una decodificación completa de la respuesta de identificación.
+
+
+## Captura Android de las 12:07–12:08: repetición de StartCommunication
+
+La captura más reciente vuelve a confirmar la respuesta positiva de inicio en ambos perfiles, y ahora la aplicación también registra la interpretación de los bytes posteriores a `C1`:
+
+- MR-140, repetido dos veces: TX `81 11 F1 81 04`; respuesta `83 F1 11 C1 EF 8F C4`; checksum correcto; bytes posteriores a `C1`: `EF 8F`.
+- ZF 4HP16: TX `81 18 F1 81 0B`; respuesta `83 F1 18 C1 EF 8F CB`; checksum correcto; bytes posteriores a `C1`: `EF 8F`.
+
+La aplicación se desconectó y volvió a abrir el puerto entre los perfiles. La respuesta observada es consistente con las capturas previas. El aviso del driver sobre `purgeHwBuffers()` sigue sin impedir el intercambio observado.
+
+## Solicitud de identificación 1A 80: habilitación controlada en Android
+
+La rutina `TForm1.Button_ECUIdentClick` del dump Delphi contiene una rama para perfiles `0x12` (MR-140) y `0x22` (ZF 4HP16) que construye `82 [destino] F1 1A 80 [checksum]`. La función `WriteReadComm` suma los cinco primeros bytes y transmite seis en total. Los bytes reconstruidos son:
+
+- MR-140: `82 11 F1 1A 80 1E`
+- ZF 4HP16: `82 18 F1 1A 80 25`
+
+La aplicación Android incorpora ahora un botón explícito **«Consultar identificación ECU · 1A 80»**. Solo permite enviar la solicitud tras recibir y validar una respuesta positiva `C1` al servicio `81` en el perfil seleccionado. Captura hasta 1500 ms de RX, separa el eco exacto cuando está presente y valida formato, direcciones y checksum. Si la respuesta es positiva al servicio `1A` (`0x5A)), registra los bytes brutos sin atribuir todavía un nombre de ECU. Si es negativa (`7F 1A NRC`), registra el código NRC. No envía la solicitud de identificación automáticamente al inicializar.
+
+La solicitud estática es de lectura/identificación; no se habilitan comandos de borrado, escritura, acceso de seguridad ni actuadores. La primera captura real de la respuesta a `1A 80` sigue pendiente; no asumir de antemano que todas las ECU contestarán con el mismo formato o contenido.
+
+Se añadieron pruebas unitarias para los checksums de las dos solicitudes y para clasificar respuestas positivas `5A` y negativas `7F 1A`. El CI debe completar `testDebugUnitTest` y `assembleDebug` antes de considerar entregable el nuevo APK.
