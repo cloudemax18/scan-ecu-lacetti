@@ -32,6 +32,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     private lateinit var log: TextView
     private lateinit var baud: Spinner
     private lateinit var connectButton: Button
+    private lateinit var ecuProfile: Spinner
     private var port: UsbSerialPort? = null
     private var ioManager: SerialInputOutputManager? = null
     private val REQUEST_SAVE_LOG = 7104
@@ -67,10 +68,18 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         root.addView(TextView(this).apply { text = "Velocidad serie"; textSize = 14f; setTextColor(0xFFCFD8DC.toInt()); setPadding(0, 16, 0, 4) }, lp(-1, -2))
         baud = Spinner(this).apply { adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, listOf("10400 baud (K-line, por validar)", "9600 baud", "38400 baud", "4800 baud")) }
         root.addView(baud, lp(-1, -2))
+        root.addView(TextView(this).apply { text = "Perfil de ECU"; textSize = 14f; setTextColor(0xFFCFD8DC.toInt()); setPadding(0, 12, 0, 4) }, lp(-1, -2))
+        ecuProfile = Spinner(this).apply { adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, listOf("Motor Delphi MR-140", "Transmisión ZF 4HP16")) }
+        root.addView(ecuProfile, lp(-1, -2))
         connectButton = Button(this).apply { text = "Buscar / conectar cable"; setOnClickListener { requestUsbConnection() } }
         root.addView(connectButton, lp(-1, -2))
+        val initButton = Button(this).apply {
+            text = "Inicializar ECU · solo identificación"
+            setOnClickListener { initializeSelectedEcu() }
+        }
+        root.addView(initButton, lp(-1, -2))
         val note = TextView(this).apply {
-            text = "Funciones de esta versión: detección USB, apertura del puerto serie, registro hexadecimal RX y exportación de la captura. Aún no envía comandos de diagnóstico: el protocolo y las tramas de cada ECU deben validarse antes de habilitar consultas o pruebas de actuadores."
+            text = "Funciones: detección USB, enlace serie, inicialización K-Line de prueba para MR-140 o ZF 4HP16, registro hexadecimal RX y exportación. El botón de inicialización envía únicamente la trama inicial candidata del software original; no lee parámetros, no borra averías y no activa actuadores."
             textSize = 13f; setTextColor(0xFFFFD180.toInt()); setPadding(0, 12, 0, 12)
         }
         root.addView(note, lp(-1, -2))
@@ -152,6 +161,44 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
     }
 
+    private fun initializeSelectedEcu() {
+        val serialPort = port
+        if (serialPort == null || !serialPort.isOpen) {
+            Toast.makeText(this, "Primero conecta el adaptador USB", Toast.LENGTH_LONG).show()
+            appendLog("INIT cancelada: el puerto serie no está abierto.")
+            return
+        }
+        val isEngine = ecuProfile.selectedItemPosition == 0
+        val profile = if (isEngine) "MR-140" else "ZF 4HP16"
+        val frame = if (isEngine) byteArrayOf(0x81.toByte(), 0x11, 0xF1.toByte(), 0x83.toByte())
+                    else byteArrayOf(0x81.toByte(), 0x18, 0xF1.toByte(), 0x8A.toByte())
+        val selectedBaud = when (baud.selectedItemPosition) { 1 -> 9600; 2 -> 38400; 3 -> 4800; else -> 10400 }
+        if (selectedBaud != 10400) {
+            Toast.makeText(this, "Selecciona 10400 baudios para estos perfiles", Toast.LENGTH_LONG).show()
+            appendLog("INIT cancelada: $profile requiere el perfil de prueba a 10400 baudios.")
+            return
+        }
+        appendLog("INIT $profile: secuencia candidata derivada estáticamente; no es una comunicación confirmada.")
+        executor.execute {
+            try {
+                serialPort.purgeHwBuffers(true, true)
+                Thread.sleep(300)
+                val delay = 24L
+                serialPort.setBreak(false)
+                Thread.sleep(delay)
+                serialPort.setBreak(true)
+                Thread.sleep(delay)
+                serialPort.setBreak(false)
+                Thread.sleep(delay)
+                appendLog("TX $profile  " + frame.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) })
+                serialPort.write(frame, 1000)
+                Thread.sleep(1500)
+                appendLog("INIT $profile finalizada; revisa si apareció RX después de TX.")
+            } catch (e: Exception) {
+                appendLog("ERROR INIT $profile: " + (e.message ?: e.javaClass.simpleName))
+            }
+        }
+    }
     private fun disconnect() {
         try { ioManager?.listener = null; ioManager?.stop() } catch (_: Exception) {}
         ioManager = null
