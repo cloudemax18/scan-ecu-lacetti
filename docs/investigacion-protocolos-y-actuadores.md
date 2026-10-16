@@ -6,6 +6,10 @@ Vehículo objetivo: Chevrolet/Daewoo Lacetti 2008, motor 1.8 LDA, transmisión a
 
 Se inspeccionó la tabla de cadenas del ejecutable Windows Delphi (PE32, 1.31 MB). Aparecen nombres de funciones/controles `PortInit`, `Altinit`, `Button_ECUIdentClick`, `TimerTesterPresentTimer`, `test_ON`, `test_OFF`, `MenuItem_TestClick` y la pantalla «Control de actuadores». También contiene perfiles «Motor (MR-140/HV-240)», «Transmisión» y «ABS AVEO (Delphi)», así como etiquetas de actuadores y parámetros de transmisión. Estos nombres confirman que el programa original incluye rutinas de inicialización, keep-alive/TesterPresent, identificación y pruebas ON/OFF; la tabla de cadenas por sí sola no revela los bytes que transmiten esas rutinas. La siguiente fase de ingeniería inversa debe localizar esas rutinas en el código nativo y relacionarlas con capturas de tráfico conocidas.
 
+## Nueva evidencia estática del ejecutable
+
+La inspección de cadenas ASCII del PE32 confirmó referencias a `PortInit`, `Altinit`, `TimerTesterPresentTimer`, `Button_ECUIdentClick`, `test_ONClick`, `test_OFFClick`, `SecurityAccess`, `Prueba del adaptador K-Line`, `Control de actuadores` y archivos de respuestas `*.cedat`. En datos de recursos aparece la cadena `10400`, lo que respalda priorizar 10400 bit/s como primer ajuste de captura; no prueba por sí solo que todas las ECU objetivo usen esa velocidad ni revela la secuencia de inicialización. El ejecutable importa funciones Win32 de puerto serie como `CreateFileA`, `ReadFile`, `WriteFile`, `SetCommState`, `SetCommTimeouts`, `SetCommBreak`, `PurgeComm` y `Sleep`, así que el análisis de la rutina de inicialización debe prestar atención a temporización y a cambios de BREAK, no solo a comandos KWP genéricos.
+
 ## Estado confirmado
 
 - La app abre un puerto USB-serie y registra bytes recibidos en hexadecimal.
@@ -26,7 +30,7 @@ No se ha confirmado aún que el TCM ZF 4HP16 concreto de este vehículo sea acce
 
 ## Plan de validación
 
-1. Capturar identificación USB (VID/PID), velocidad serie y datos RX/TX sin transmitir comandos de control.
+1. Capturar identificación USB (VID/PID), velocidad serie y datos RX. La app Android ahora permite exportar el registro RX como TXT; todavía no registra TX porque no transmite comandos.
 2. Obtener una captura de referencia de la herramienta original en el mismo vehículo: conexión, identificación, lectura de DTC y lectura de datos en vivo.
 3. Separar sesiones de motor y transmisión; comparar inicialización, cabeceras, temporización y checksum.
 4. Crear pruebas unitarias de framing/checksum usando capturas conocidas antes de habilitar cualquier envío.
