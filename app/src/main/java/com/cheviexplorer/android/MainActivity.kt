@@ -655,7 +655,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         testerPresentTask = executor.scheduleAtFixedRate({
             try {
                 if (validatedStartProfile != profile || port !== serialPort || !serialPort.isOpen ||
-                    ecuProfile.selectedItemPosition != if (profile == "MR-140") 0 else 1) {
+                    ecuProfile.selectedItemPosition != (if (profile == "MR-140") 0 else 1)) {
                     testerPresentTask?.cancel(false)
                     return@scheduleAtFixedRate
                 }
