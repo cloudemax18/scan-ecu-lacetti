@@ -19,6 +19,7 @@ import android.widget.Toast
 import com.hoho.android.usbserial.driver.UsbSerialPort
 import com.hoho.android.usbserial.driver.UsbSerialProber
 import com.hoho.android.usbserial.util.SerialInputOutputManager
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -37,6 +38,9 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     private var ioManager: SerialInputOutputManager? = null
     private val REQUEST_SAVE_LOG = 7104
     private val executor = Executors.newSingleThreadExecutor()
+    private val initRxLock = Any()
+    private val initRxBuffer = ByteArrayOutputStream()
+    @Volatile private var captureInitRx = false
     private val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
 
     private val permissionReceiver = object : BroadcastReceiver() {
@@ -224,11 +228,39 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 }
 
                 stage = "envío de trama"
+                synchronized(initRxLock) {
+                    initRxBuffer.reset()
+                    captureInitRx = true
+                }
                 appendLog("TX $profile  " + frame.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) })
                 serialPort.write(frame, 1000)
                 stage = "espera de respuesta"
                 Thread.sleep(1500)
-                appendLog("INIT $profile finalizada; comprueba si apareció RX después de TX.")
+                val rxBytes = synchronized(initRxLock) {
+                    captureInitRx = false
+                    initRxBuffer.toByteArray()
+                }
+                val rxHex = rxBytes.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
+                when {
+                    rxBytes.isEmpty() -> {
+                        appendLog("RESULTADO $profile: SIN RESPUESTA RX durante 1500 ms.")
+                        appendLog("No se confirma comunicación con la ECU; revisar BREAK, cableado K-Line y alimentación.")
+                    }
+                    rxBytes.contentEquals(frame) -> {
+                        appendLog("RESULTADO $profile: SOLO ECO TX (RX = trama enviada: $rxHex).")
+                        appendLog("Esto no demuestra respuesta de la ECU; no marcar como conectado.")
+                    }
+                    rxBytes.size > frame.size && rxBytes.copyOfRange(0, frame.size).contentEquals(frame) -> {
+                        val extra = rxBytes.copyOfRange(frame.size, rxBytes.size)
+                        appendLog("RESULTADO $profile: ECO TX + BYTES ADICIONALES RX: " +
+                            extra.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) })
+                        appendLog("Los bytes adicionales son candidatos a respuesta; todavía falta validar formato y checksum.")
+                    }
+                    else -> {
+                        appendLog("RESULTADO $profile: RX DISTINTO DE ECO: $rxHex")
+                        appendLog("Hay datos recibidos, pero no se confirma que sean una respuesta válida de la ECU.")
+                    }
+                }
             } catch (e: Exception) {
                 val detail = e.message?.takeIf { it.isNotBlank() } ?: "(sin mensaje)"
                 appendLog("ERROR INIT $profile en $stage: ${e.javaClass.simpleName}: $detail")
@@ -247,6 +279,9 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     }
 
     override fun onNewData(data: ByteArray) {
+        synchronized(initRxLock) {
+            if (captureInitRx) initRxBuffer.write(data)
+        }
         val hex = data.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
         runOnUiThread { appendLog("RX  $hex") }
     }
