@@ -25,6 +25,16 @@ android {
     }
 }
 
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlin" &&
+            requested.name.startsWith("kotlin-stdlib")) {
+            useVersion("2.0.21")
+            because("Keep Kotlin standard library metadata compatible with Kotlin compiler 2.0.21")
+        }
+    }
+}
+
 dependencies {
     implementation("com.github.mik3y:usb-serial-for-android:3.11.0")
 }
