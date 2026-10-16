@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId = "com.cheviexplorer.android"
         minSdk = 23
-        targetSdk = 28
+        targetSdk = 35
         versionCode = providers.environmentVariable("GITHUB_RUN_NUMBER").orNull?.toIntOrNull() ?: 1
         versionName = providers.environmentVariable("GITHUB_REF_NAME").orNull
             ?.takeIf { it.startsWith("v") && it.length > 1 }
