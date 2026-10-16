@@ -1,0 +1,66 @@
+name: Analizar CheviExplorer original
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'archivos/CheviExplorer.exe'
+      - 'archivos/CheviExplorer.chm'
+      - '.github/workflows/analizar-cheviexplorer.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Extraer cadenas y metadatos PE/CHM
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p informe chm_extraido
+          sudo apt-get update
+          sudo apt-get install -y binutils p7zip-full file
+          {
+            echo "# Análisis estático de CheviExplorer"
+            echo
+            echo "Este informe solo extrae metadatos y cadenas; no ejecuta el EXE."
+            echo
+            echo "## Archivos"
+            file archivos/CheviExplorer.exe archivos/CheviExplorer.chm
+            sha256sum archivos/CheviExplorer.exe archivos/CheviExplorer.chm
+            echo
+            echo "## Importaciones del ejecutable"
+            objdump -p archivos/CheviExplorer.exe | sed -n '/DLL Name/,$p' || true
+            echo
+            echo "## Cadenas ASCII relevantes del EXE"
+            strings -a -n 4 archivos/CheviExplorer.exe | grep -Ei 'KWP|ISO|ECU|MR-140|HV-240|trans|actuat|solenoid|inject|security|ident|port|baud|10400|9600|38400|break|tester|motor|Delphi|K-Line|OBD|init|error|relay|fan|EGR|EDS|lock' || true
+            echo
+            echo "## Cadenas UTF-16LE relevantes del EXE"
+            strings -el -n 4 archivos/CheviExplorer.exe | grep -Ei 'KWP|ISO|ECU|MR-140|HV-240|trans|actuat|solenoid|inject|security|ident|port|baud|10400|9600|38400|break|tester|motor|Delphi|K-Line|OBD|init|error|relay|fan|EGR|EDS|lock' || true
+          } > informe/analisis-estatico.txt
+          strings -a -n 4 archivos/CheviExplorer.exe > informe/exe-strings-ascii.txt
+          strings -el -n 4 archivos/CheviExplorer.exe > informe/exe-strings-utf16le.txt
+          7z x -y -ochm_extraido archivos/CheviExplorer.chm >/dev/null || true
+          find chm_extraido -type f -print > informe/chm-archivos.txt
+          find chm_extraido -type f \( -iname '*.htm' -o -iname '*.html' -o -iname '*.hhc' -o -iname '*.hhk' -o -iname '*.txt' -o -iname '*.xml' \) -print0 |
+            xargs -0 -r grep -IinE 'KWP|ISO|ECU|MR-140|HV-240|trans|actuat|solenoid|inject|security|ident|port|baud|10400|9600|38400|break|tester|motor|Delphi|K-Line|OBD|init|error|relay|fan|EGR|EDS|lock|adaptador' > informe/ayuda-coincidencias.txt || true
+          tar -czf informe-ayuda-extraida.tar.gz chm_extraido
+      - name: Publicar informe
+        uses: actions/upload-artifact@v4
+        with:
+          name: analisis-cheviexplorer
+          path: informe/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publicar ayuda extraída
+        uses: actions/upload-artifact@v4
+        with:
+          name: ayuda-cheviexplorer-extraida
+          path: informe-ayuda-extraida.tar.gz
+          if-no-files-found: warn
+          retention-days: 14
