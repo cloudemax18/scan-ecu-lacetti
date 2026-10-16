@@ -1,0 +1,16 @@
+[11:36:24] Aplicación iniciada. Conecta el KKL mediante USB OTG.
+[11:36:24] Esta versión prueba el enlace serie; el protocolo ECU específico aún debe validarse.
+[11:36:47] USB detectado: VID=1A86 PID=7523
+[11:36:49] USB detectado: VID=1A86 PID=7523
+[11:36:49] Puerto abierto: Ch34xSerialDriver, 10400 baud, 8N1.
+[11:36:49] No se han enviado bytes a la ECU. Esperando datos del enlace.
+[11:36:51] INIT MR-140: comprobando soporte de inicialización K-Line; trama candidata, aún no validada.
+[11:36:51] AVISO INIT MR-140: el controlador no admite purgeHwBuffers(); se continúa.
+[11:36:52] RX  00
+[11:36:52] TX MR-140  81 11 F1 81 04
+[11:36:52] RX  81 11 F1 81 04
+[11:36:52] RX  83 F1 11 C1 EF 8F C4
+[11:36:53] ECO TX detectado: 81 11 F1 81 04
+[11:36:53] RX CANDIDATA MR-140: 83 F1 11 C1 EF 8F C4
+[11:36:53] VALIDACIÓN DE TRAMA: formato=0x83, longitud=3, destino=0xF1, origen=0x11, checksum recibido=0xC4, esperado=0xC4 (OK)
+[11:36:53] RESULTADO MR-140: trama con formato/dirección/checksum coherentes. Respuesta candidata; identidad y datos aún no decodificados.
