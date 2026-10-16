@@ -126,4 +126,23 @@ Por tanto, las tramas candidatas deducidas estáticamente son:
 - MR-140: `81 11 F1 81 04` (checksum aditivo de los cuatro bytes anteriores).
 - ZF 4HP16: `81 18 F1 81 0B` (checksum aditivo de los cuatro bytes anteriores).
 
-**Importante:** estas tramas son evidencia del volcado del software original, pero no se han probado con el Lacetti del usuario. El volcado muestra también que la inicialización depende de los pulsos BREAK y de retardos precisos. La versión Android actual solo abre el puerto USB-serie; no genera BREAK ni envía estas tramas, así que no se debe esperar RX con la versión actual. Antes de implementar el envío, hay que confirmar que la biblioteca/driver CH340 Android puede reproducir la temporización y el control de línea necesarios, y verificar la secuencia de respuesta esperada en el mismo método `Start`.
+**Importante (estado histórico del análisis):** estas tramas se dedujeron del volcado original. En una prueba Android posterior, la app sí logró ejecutar su secuencia de inicialización y recibió una respuesta adicional para MR-140; el resultado queda documentado a continuación. La capacidad de BREAK depende del controlador USB y debe seguir manejándose como una condición que puede fallar.
+
+
+## Captura Android: respuesta candidata MR-140 (16-10-2026)
+
+Archivo: `archivos/cheviexplorer-captura-1792165021396.txt`.
+
+La captura registra el adaptador CH340/CH341 (`VID=1A86 PID=7523`) abierto a 10400 baud, 8N1. La app envía la trama deducida del ejecutable original:
+
+- TX: `81 11 F1 81 04`
+- Eco recibido: `81 11 F1 81 04`
+- Bytes adicionales: `83 F1 11 C1 EF 8F C4`
+
+El clasificador separa el eco TX y reconoce los bytes adicionales como una trama candidata. Interpretando `0x83` como un campo de formato con longitud de datos 3, la estructura detectada es: formato `83`, destino `F1`, origen `11`, datos `C1 EF 8F`, checksum `C4`. La suma de los primeros seis bytes, módulo 256, es `C4`, por lo que el checksum aditivo coincide.
+
+**Qué demuestra:** el adaptador no solo devuelve el eco de TX; hay bytes adicionales con direcciones coherentes y checksum correcto. Esto constituye evidencia fuerte de una respuesta estructurada en el enlace MR-140.
+
+**Qué no demuestra todavía:** el significado de los tres bytes de datos, la identidad exacta de la ECU, ni que estén operativas la lectura de parámetros, la consulta/borrado de DTC o las pruebas de actuadores. El formato debe contrastarse con la rutina de recepción y decodificación del ejecutable original o con más capturas controladas.
+
+**Siguiente prueba recomendada:** guardar esta respuesta como referencia y probar por separado el perfil ZF 4HP16, usando `81 18 F1 81 0B`, con el vehículo detenido y sin emitir comandos de actuadores. Comparar si la caja responde con dirección de origen `18`, checksum coherente y un formato repetible. No reutilizar automáticamente la respuesta MR-140 como si fuera válida para la transmisión.
