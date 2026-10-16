@@ -34,6 +34,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     private lateinit var connectButton: Button
     private var port: UsbSerialPort? = null
     private var ioManager: SerialInputOutputManager? = null
+    private val REQUEST_SAVE_LOG = 7104
     private val executor = Executors.newSingleThreadExecutor()
     private val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
 
@@ -69,7 +70,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         connectButton = Button(this).apply { text = "Buscar / conectar cable"; setOnClickListener { requestUsbConnection() } }
         root.addView(connectButton, lp(-1, -2))
         val note = TextView(this).apply {
-            text = "Funciones de esta versión: detección USB, apertura del puerto serie y registro hexadecimal. No envía comandos de ECU ni ejecuta borrados, ajustes o SecurityAccess hasta confirmar el protocolo correcto para esta centralita."
+            text = "Funciones de esta versión: detección USB, apertura del puerto serie, registro hexadecimal RX y exportación de la captura. Aún no envía comandos de diagnóstico: el protocolo y las tramas de cada ECU deben validarse antes de habilitar consultas o pruebas de actuadores."
             textSize = 13f; setTextColor(0xFFFFD180.toInt()); setPadding(0, 12, 0, 12)
         }
         root.addView(note, lp(-1, -2))
@@ -77,12 +78,39 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         log = TextView(this).apply { textSize = 12f; typeface = android.graphics.Typeface.MONOSPACE; setTextColor(0xFFECEFF1.toInt()); setPadding(10, 10, 10, 10) }
         val scroll = ScrollView(this).apply { setBackgroundColor(0xFF18232C.toInt()); addView(log) }
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        val save = Button(this).apply { text = "Exportar captura RX"; setOnClickListener { exportLog() } }
+        root.addView(save, lp(-1, -2))
         val clear = Button(this).apply { text = "Limpiar registro"; setOnClickListener { log.text = "" } }
         root.addView(clear, lp(-1, -2))
         setContentView(root)
     }
 
     private fun lp(w: Int, h: Int) = LinearLayout.LayoutParams(w, h)
+
+    private fun exportLog() {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TITLE, "cheviexplorer-captura-${System.currentTimeMillis()}.txt")
+        }
+        startActivityForResult(intent, REQUEST_SAVE_LOG)
+    }
+
+    @Deprecated("Deprecated in Android API, retained for minSdk compatibility")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_SAVE_LOG && resultCode == RESULT_OK && data?.data != null) {
+            try {
+                contentResolver.openOutputStream(data.data!!)?.use { output ->
+                    output.write(log.text.toString().toByteArray(Charsets.UTF_8))
+                } ?: throw IllegalStateException("No se pudo abrir el archivo de destino")
+                Toast.makeText(this, "Captura exportada", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                appendLog("ERROR al exportar captura: ${e.message ?: e.javaClass.simpleName}")
+                Toast.makeText(this, "No se pudo guardar la captura", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     private fun requestUsbConnection() {
         if (port != null) { disconnect(); return }
