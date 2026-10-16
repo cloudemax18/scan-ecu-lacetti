@@ -175,11 +175,15 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
 
         val isEngine = ecuProfile.selectedItemPosition == 0
         val profile = if (isEngine) "MR-140" else "ZF 4HP16"
+        // The original WriteReadComm receives a length of 4, sums the first
+        // four bytes, writes the low checksum byte at index 4, and transmits 5 bytes.
         val frame = if (isEngine) {
-            byteArrayOf(0x81.toByte(), 0x11, 0xF1.toByte(), 0x83.toByte())
+            byteArrayOf(0x81.toByte(), 0x11, 0xF1.toByte(), 0x81.toByte(), 0x00)
         } else {
-            byteArrayOf(0x81.toByte(), 0x18, 0xF1.toByte(), 0x8A.toByte())
+            byteArrayOf(0x81.toByte(), 0x18, 0xF1.toByte(), 0x81.toByte(), 0x00)
         }
+        val checksum = frame.take(4).sumOf { it.toInt() and 0xFF } and 0xFF
+        frame[4] = checksum.toByte()
         val selectedBaud = when (baud.selectedItemPosition) {
             1 -> 9600
             2 -> 38400
