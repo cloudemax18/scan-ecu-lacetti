@@ -44,6 +44,23 @@ class KwpProtocolTest {
     }
 
     @Test
+    fun recognizesPositiveResponseToEcuIdentificationService() {
+        val response = KwpProtocol.findResponse(hex("83 F1 11 5A 01 02 E2"), expectedSource = 0x11)
+        assertNotNull(response)
+        assertTrue(response!!.valid)
+        assertTrue(KwpProtocol.isPositiveResponseTo(response, 0x1A))
+        assertFalse(KwpProtocol.isPositiveResponseTo(response, 0x81))
+    }
+
+    @Test
+    fun recognizesNegativeResponseToEcuIdentificationService() {
+        val response = KwpProtocol.findResponse(hex("83 F1 11 7F 1A 31 4F"), expectedSource = 0x11)
+        assertNotNull(response)
+        assertTrue(response!!.valid)
+        assertTrue(KwpProtocol.isNegativeResponseTo(response, 0x1A))
+    }
+
+    @Test
     fun rejectsBadChecksumForSemanticClassification() {
         val corrupt = hex("83 F1 11 C1 EF 8F 00")
         val frame = KwpProtocol.findResponse(corrupt, expectedSource = 0x11)
