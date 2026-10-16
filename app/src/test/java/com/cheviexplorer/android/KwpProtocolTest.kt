@@ -44,6 +44,17 @@ class KwpProtocolTest {
     }
 
     @Test
+    fun parsesExtendedLengthIdentificationResponse() {
+        // Format 0x80 means the payload length follows the target/source address bytes.
+        val response = KwpProtocol.findResponse(hex("80 F1 11 03 5A 80 01 60"), expectedSource = 0x11)
+        assertNotNull(response)
+        assertTrue(response!!.valid)
+        assertArrayEquals(hex("80 F1 11 03 5A 80 01 60"), response.bytes)
+        assertArrayEquals(hex("5A 80 01"), response.payload)
+        assertTrue(KwpProtocol.isPositiveResponseTo(response, 0x1A))
+    }
+
+    @Test
     fun recognizesPositiveResponseToEcuIdentificationService() {
         val response = KwpProtocol.findResponse(hex("83 F1 11 5A 01 02 E2"), expectedSource = 0x11)
         assertNotNull(response)
