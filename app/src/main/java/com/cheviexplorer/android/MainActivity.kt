@@ -102,13 +102,18 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             setOnClickListener { requestEcuIdentification() }
         }
         root.addView(identifyButton, lp(-1, -2))
+        val dtcButton = Button(this).apply {
+            text = "Leer códigos de avería (DTC) · solo lectura"
+            setOnClickListener { readDtcCodes() }
+        }
+        root.addView(dtcButton, lp(-1, -2))
         val testerPresentButton = Button(this).apply {
             text = "Enviar TesterPresent · mantener sesión"
             setOnClickListener { sendTesterPresentOnce() }
         }
         root.addView(testerPresentButton, lp(-1, -2))
         val note = TextView(this).apply {
-            text = "La consulta 1A 80 reproduce el servicio de identificación de solo lectura observado en el programa original. Primero inicializa el perfil seleccionado; la respuesta se registra en hexadecimal y no se decodifica como identidad hasta validar su formato. DTC, borrado, seguridad y actuadores siguen deshabilitados."
+            text = "Las consultas de identificación y DTC reconstruyen solicitudes de lectura del programa Delphi original. Inicializa primero el perfil seleccionado. Los DTC se registran en hexadecimal hasta validar el formato de respuesta de cada ECU. Borrado de códigos, seguridad y actuadores no están habilitados."
             textSize = 13f; setTextColor(0xFFFFD180.toInt()); setPadding(0, 12, 0, 12)
         }
         root.addView(note, lp(-1, -2))
@@ -571,6 +576,94 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             } catch (e: Exception) {
                 synchronized(initRxLock) { captureInitRx = false }
                 appendLog("ERROR IDENT ECU $profile en $stage: ${e.javaClass.simpleName}: ${e.message ?: "(sin mensaje)"}")
+            }
+        }
+    }
+
+    /**
+     * Sends the read-only DTC request reconstructed from Button_DTCClick in main.pas.
+     * The ECU-specific response payload is logged raw until its record layout is verified.
+     */
+    private fun readDtcCodes() {
+        val serialPort = port
+        if (serialPort == null || !serialPort.isOpen) {
+            appendLog("LECTURA DTC cancelada: conecta primero el adaptador USB.")
+            Toast.makeText(this, "Primero conecta el adaptador USB", Toast.LENGTH_LONG).show()
+            return
+        }
+        val isEngine = ecuProfile.selectedItemPosition == 0
+        val profile = if (isEngine) "MR-140" else "ZF 4HP16"
+        val source = if (isEngine) 0x11 else 0x18
+        val requestService = if (isEngine) 0x19 else 0x18
+        if (validatedStartProfile != profile) {
+            appendLog("LECTURA DTC cancelada: inicializa primero $profile y confirma StartCommunication.")
+            Toast.makeText(this, "Inicializa primero el perfil seleccionado", Toast.LENGTH_LONG).show()
+            return
+        }
+        val selectedBaud = when (baud.selectedItemPosition) { 1 -> 9600; 2 -> 38400; 3 -> 4800; else -> 10400 }
+        if (selectedBaud != 10400) {
+            appendLog("LECTURA DTC cancelada: $profile requiere 10400 baudios.")
+            Toast.makeText(this, "Selecciona 10400 baudios", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val frame = KwpProtocol.buildDtcReadRequest(source, isEngine)
+        appendLog("LECTURA DTC $profile: solicitud de solo lectura reconstruida de main.pas.")
+        executor.execute {
+            var stage = "preparación de captura"
+            try {
+                synchronized(initRxLock) {
+                    initRxBuffer.reset()
+                    captureInitRx = true
+                }
+                stage = "envío de solicitud DTC"
+                appendLog("TX DTC $profile  ${frame.toHex()}")
+                serialPort.write(frame, 1000)
+                stage = "espera de respuesta"
+                Thread.sleep(1800)
+                val rxBytes = synchronized(initRxLock) {
+                    captureInitRx = false
+                    initRxBuffer.toByteArray()
+                }
+                if (rxBytes.isEmpty()) {
+                    appendLog("LECTURA DTC $profile: sin respuesta RX durante 1800 ms.")
+                    return@execute
+                }
+
+                val echoAt = indexOfFrame(rxBytes, frame)
+                val candidate = if (echoAt >= 0) {
+                    appendLog("ECO TX DTC detectado: ${frame.toHex()}")
+                    rxBytes.copyOfRange(echoAt + frame.size, rxBytes.size)
+                } else rxBytes
+                if (candidate.isEmpty()) {
+                    appendLog("LECTURA DTC $profile: solo eco TX; no se recibió respuesta ECU.")
+                    return@execute
+                }
+                val response = KwpProtocol.findResponse(candidate, expectedSource = source)
+                if (response == null) {
+                    appendLog("LECTURA DTC $profile: RX sin trama KWP reconocible: ${candidate.toHex()}")
+                    return@execute
+                }
+                appendLog("RX DTC CANDIDATA $profile: ${response.bytes.toHex()}")
+                appendLog("VALIDACIÓN DTC: ${response.description}")
+                when {
+                    !response.valid -> appendLog("LECTURA DTC $profile: checksum inválido; no se interpretan datos.")
+                    KwpProtocol.isPositiveResponseTo(response, requestService) -> {
+                        appendLog("LECTURA DTC $profile: respuesta positiva 0x%02X.".format(requestService + 0x40))
+                        appendLog("DATOS DTC RAW $profile (sin decodificar): ${response.payload.toHex()}")
+                        appendLog("No se muestran códigos traducidos hasta verificar el formato de registros de esta ECU.")
+                    }
+                    KwpProtocol.isNegativeResponseTo(response, requestService) -> {
+                        val nrc = response.payload[2].toInt() and 0xFF
+                        appendLog("LECTURA DTC $profile: respuesta negativa KWP, NRC=0x%02X.".format(nrc))
+                    }
+                    else -> appendLog("LECTURA DTC $profile: trama válida, pero el SID no coincide con la respuesta esperada.")
+                }
+                val remaining = candidate.drop(response.bytes.size).toByteArray()
+                if (remaining.isNotEmpty()) appendLog("RX DTC restante/no clasificada: ${remaining.toHex()}")
+            } catch (e: Exception) {
+                synchronized(initRxLock) { captureInitRx = false }
+                appendLog("ERROR LECTURA DTC $profile en $stage: ${e.javaClass.simpleName}: ${e.message ?: "(sin mensaje)"}")
             }
         }
     }
