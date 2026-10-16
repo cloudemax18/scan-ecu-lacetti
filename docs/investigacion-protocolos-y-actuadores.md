@@ -55,3 +55,29 @@ Cadenas visibles del perfil de motor incluyen prueba de relé de bomba de combus
 - Direccionamiento y protocolo exacto del TCM ZF 4HP16 de este vehículo.
 - Identificadores y parámetros de cada prueba de actuador, y condiciones que exige cada ECU/TCM.
 - Confirmación práctica con una captura real RX/TX del vehículo y del software de referencia.
+
+
+## Hallazgos nuevos de la ayuda original CheviExplorer 1.7 (CHM)
+
+Se extrajo el archivo `CheviExplorer.chm` con 7-Zip y se revisaron sus páginas HTML (texto original en Windows-1251). La ayuda aporta evidencia importante sobre la interfaz física y el flujo de uso:
+
+- **No funciona con ELM/ELM327.** La ayuda dice explícitamente que requiere un adaptador K-Line convencional, no un lector ELM.
+- La conexión PC–ECU se hace por puerto serie y adaptador K-Line. Para USB-serie, la ayuda recomienda FTDI porque algunos convertidores no soportan velocidades no estándar; los adaptadores Prolific PL23xx pueden requerir ajuste del controlador.
+- La tabla de pines de diagnóstico indicada por la ayuda asigna el **pin 7** a ECU del tren motriz (motor y transmisión), y el pin 16 a +12 V. La propia ayuda señala que ciertas otras líneas pueden variar por vehículo; no se debe asumir que el TCM está en un pin alternativo sin confirmar el esquema exacto del Lacetti.
+- Para conectar, la ayuda indica seleccionar el puerto, encender el contacto y elegir el perfil de ECU. Si falla la conexión, propone activar «Alternativa inicialización ECU». Esto confirma que existen al menos dos rutas de inicialización en el software, pero no revela sus bytes.
+- La ayuda documenta perfiles separados para **MR-140/HV-240** y **ZF-4P16 (1.8L)**. La transmisión ZF tiene perfil propio en el programa, no debe tratarse como si fuera simplemente el motor MR-140.
+- La función de control de actuadores se habilita después de comenzar la solicitud de parámetros; la lista depende del tipo de ECU. La ayuda también documenta «Tester del adaptador K-Line» y funciones de servicio.
+- El manual recomienda preferir FTDI y menciona problemas con velocidades no estándar. Nuestro adaptador identificado anteriormente como VID=1A86/PID=7523 corresponde a la familia CH340/CH341; por tanto, aún debemos comprobar experimentalmente que su driver Android y la interfaz física soporten la velocidad y los tiempos requeridos.
+
+## Evidencia estática reproducible
+
+Se añadió el workflow de GitHub Actions `.github/workflows/analizar-cheviexplorer.yml`, que inspecciona el EXE sin ejecutarlo y extrae las páginas de ayuda. La ejecución terminó correctamente:
+https://github.com/cloudemax18/scan-ecu-lacetti/actions/runs/38913822863
+
+Artefactos del análisis (caducan según la retención de Actions):
+- Informe de cadenas e importaciones: https://github.com/cloudemax18/scan-ecu-lacetti/actions/runs/38913822863
+- Ayuda CHM extraída: https://github.com/cloudemax18/scan-ecu-lacetti/actions/runs/38913822863
+
+En el PE32 aparecen las funciones `PortInit`, `WriteReadComm`, `Altinit`, `TimerTesterPresentTimer`, `Button_ECUIdentClick`, `SecurityAccess`, `MenuItem_TestClick`, `test_ONClick` y `test_OFFClick`. Las importaciones incluyen `SetCommBreak`, `ClearCommBreak`, `SetCommState`, `SetCommTimeouts`, `PurgeComm`, `ReadFile`, `WriteFile` y `Sleep`. Esto refuerza que la inicialización y sus tiempos son relevantes. La cadena `10400` aparece en el ejecutable y es una velocidad candidata para investigar, no una confirmación universal para ambos módulos.
+
+**Límite actual:** el informe de cadenas no identifica todavía los bytes transmitidos por `PortInit`/ `Altinit`, el checksum, la dirección de destino ni los identificadores de actuadores. No se han añadido comandos TX a la app. El siguiente paso de ingeniería inversa es mapear las referencias a esas cadenas y desensamblar las rutinas de inicialización/escritura; después contrastarlas con una captura real de conexión exitosa.
