@@ -83,7 +83,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
         root.addView(initButton, lp(-1, -2))
         val note = TextView(this).apply {
-            text = "Funciones: detección USB, enlace serie, inicialización K-Line de prueba para MR-140 o ZF 4HP16, registro hexadecimal RX y exportación. La respuesta se clasifica por formato, dirección y checksum; esto no habilita lectura de parámetros, borrado de averías ni activación de actuadores."
+            text = "Funciones: detección USB, inicio KWP para MR-140 o ZF 4HP16, validación de trama/checksum y extracción de bytes de clave de StartCommunication. La solicitud de identificación 1A 80 reconstruida del programa original aún no se transmite. No se habilitan lectura de parámetros, borrado de averías ni actuadores."
             textSize = 13f; setTextColor(0xFFFFD180.toInt()); setPadding(0, 12, 0, 12)
         }
         root.addView(note, lp(-1, -2))
