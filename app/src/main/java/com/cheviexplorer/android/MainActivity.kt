@@ -29,6 +29,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 
 class MainActivity : Activity(), SerialInputOutputManager.Listener {
     companion object { private const val ACTION_USB_PERMISSION = "com.cheviexplorer.android.USB_PERMISSION" }
@@ -42,7 +45,8 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     private var port: UsbSerialPort? = null
     private var ioManager: SerialInputOutputManager? = null
     private val REQUEST_SAVE_LOG = 7104
-    private val executor = Executors.newSingleThreadExecutor()
+    private val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+    @Volatile private var testerPresentTask: ScheduledFuture<*>? = null
     private val initRxLock = Any()
     private val initRxBuffer = ByteArrayOutputStream()
     @Volatile private var captureInitRx = false
@@ -384,10 +388,11 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 serialPort.write(frame, 1000)
                 stage = "espera de respuesta"
                 Thread.sleep(1500)
-                val rxBytes = synchronized(initRxLock) {
+                val rawRxBytes = synchronized(initRxLock) {
                     captureInitRx = false
                     initRxBuffer.toByteArray()
                 }
+                val rxBytes = discardLeadingInitZero(rawRxBytes, profile)
                 classifyInitResult(profile, frame, rxBytes)
             } catch (e: Exception) {
                 synchronized(initRxLock) { captureInitRx = false }
@@ -430,6 +435,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     val keyHex = keys.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
                     appendLog("KWP StartCommunication: respuesta positiva 0xC1 al servicio 0x81; bytes de clave=$keyHex.")
                     validatedStartProfile = profile
+                    startAutomaticTesterPresent(profile, if (profile == "MR-140") 0x11 else 0x18, serialPort = port)
                     appendLog("Estas claves no son una identificación de ECU; se puede probar el servicio de identificación 1A 80.")
                 } else {
                     appendLog("Respuesta estructural válida, pero no se ha confirmado respuesta positiva al servicio StartCommunication.")
@@ -631,6 +637,36 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
      * found in the original Delphi TimerTesterPresentTimer. Manual only
      * until the original timer interval is confirmed.
      */
+    private fun discardLeadingInitZero(bytes: ByteArray, profile: String): ByteArray {
+        // Some CH340/CH341 adapters report the K-Line initialization BREAK as a leading 00 byte.
+        // Drop only that single leading byte; never alter bytes in the middle of a response.
+        if (bytes.isNotEmpty() && bytes[0].toInt() == 0) {
+            appendLog("INIT $profile: descartado byte RX 00 inicial compatible con BREAK del CH340/CH341.")
+            return bytes.copyOfRange(1, bytes.size)
+        }
+        return bytes
+    }
+
+    private fun startAutomaticTesterPresent(profile: String, targetAddress: Int, serialPort: UsbSerialPort?) {
+        testerPresentTask?.cancel(false)
+        if (serialPort == null || !serialPort.isOpen) return
+        val frame = KwpProtocol.buildTesterPresentRequest(targetAddress)
+        appendLog("TESTER PRESENT automático activado para $profile: intervalo de 2 s mientras la sesión esté abierta.")
+        testerPresentTask = executor.scheduleAtFixedRate({
+            try {
+                if (validatedStartProfile != profile || port !== serialPort || !serialPort.isOpen) {
+                    testerPresentTask?.cancel(false)
+                    return@scheduleAtFixedRate
+                }
+                serialPort.write(frame, 500)
+                appendLog("TX TESTER PRESENT automático $profile  ${frame.toHex()}")
+            } catch (e: Exception) {
+                appendLog("ERROR TESTER PRESENT automático $profile: ${e.message ?: e.javaClass.simpleName}")
+                testerPresentTask?.cancel(false)
+            }
+        }, 2, 2, TimeUnit.SECONDS)
+    }
+
     private fun sendTesterPresentOnce() {
         val serialPort = port
         if (serialPort == null || !serialPort.isOpen) {
@@ -654,7 +690,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
 
         val frame = KwpProtocol.buildTesterPresentRequest(source)
-        appendLog("TESTER PRESENT $profile: envío único de 0x3E; temporizador automático desactivado.")
+        appendLog("TESTER PRESENT $profile: envío manual de 0x3E (también hay mantenimiento automático si la sesión está validada).")
         executor.execute {
             var stage = "preparación de captura"
             try {
@@ -710,6 +746,8 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
 
     private fun disconnect() {
+        testerPresentTask?.cancel(false)
+        testerPresentTask = null
         try { ioManager?.listener = null; ioManager?.stop() } catch (_: Exception) {}
         ioManager = null
         try { port?.close() } catch (_: Exception) {}
