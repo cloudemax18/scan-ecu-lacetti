@@ -81,3 +81,24 @@ Artefactos del análisis (caducan según la retención de Actions):
 En el PE32 aparecen las funciones `PortInit`, `WriteReadComm`, `Altinit`, `TimerTesterPresentTimer`, `Button_ECUIdentClick`, `SecurityAccess`, `MenuItem_TestClick`, `test_ONClick` y `test_OFFClick`. Las importaciones incluyen `SetCommBreak`, `ClearCommBreak`, `SetCommState`, `SetCommTimeouts`, `PurgeComm`, `ReadFile`, `WriteFile` y `Sleep`. Esto refuerza que la inicialización y sus tiempos son relevantes. La cadena `10400` aparece en el ejecutable y es una velocidad candidata para investigar, no una confirmación universal para ambos módulos.
 
 **Límite actual:** el informe de cadenas no identifica todavía los bytes transmitidos por `PortInit`/ `Altinit`, el checksum, la dirección de destino ni los identificadores de actuadores. No se han añadido comandos TX a la app. El siguiente paso de ingeniería inversa es mapear las referencias a esas cadenas y desensamblar las rutinas de inicialización/escritura; después contrastarlas con una captura real de conexión exitosa.
+
+
+## Análisis adicional del desensamblado (16-10-2026)
+
+Se generó el desensamblado x86 completo y un informe de referencias cruzadas de cadenas en la ejecución de análisis estático:
+https://github.com/cloudemax18/scan-ecu-lacetti/actions/runs/38914390795
+
+La búsqueda de llamadas a las APIs importadas sitúa grupos de código que manipulan el puerto serie en estas direcciones virtuales del EXE (son direcciones de código, no bytes de protocolo):
+
+- `0x42A983` y `0x42AE96`: llamadas al wrapper de `SetCommState`, dentro de rutinas que preparan/configuran el puerto.
+- `0x42AF75` y `0x42B246`: llamadas al wrapper de `ClearCommBreak`.
+- `0x42B6A7`: llamada al wrapper de `SetCommBreak`.
+- `0x429C78`: llamada al wrapper de `SetCommTimeouts`.
+- `0x445C9D` y `0x445CDD`: llamadas al wrapper de `PurgeComm`.
+- `0x45A71B`: sitio de llamada a una función importada de escritura identificado en el desensamblado; se requiere validar la correspondencia exacta de argumentos antes de atribuirlo a una trama ECU.
+
+Esto estrecha el área a estudiar: las rutinas alrededor de `0x42A900–0x42B825` parecen pertenecer al componente de puerto serie y manejan configuración, BREAK, lectura y temporización. No es seguro traducir directamente esas direcciones a una secuencia K-Line; algunas pueden ser funciones genéricas del componente Delphi, no la rutina específica `PortInit` del perfil MR-140 o ZF-4P16.
+
+El informe de referencias cruzadas encontró que varios nombres de métodos (`PortInit`, `WriteReadComm`, `TimerTesterPresentTimer`, `SecurityAccess`) están almacenados como metadatos/cadenas, pero no tienen referencias absolutas directas en el código. Eso es habitual en aplicaciones Delphi: los métodos pueden enlazarse mediante tablas de clases/eventos, por lo que la ausencia de referencia directa no significa que estén sin usar.
+
+**Siguiente paso técnico:** resolver las tablas de métodos/eventos de Delphi y seguir desde el controlador de identificación hasta el código que arma el buffer de transmisión. Hasta que esa ruta o una captura TX/RX de referencia revele los bytes, se mantiene deshabilitado el envío de comandos desde Android.
