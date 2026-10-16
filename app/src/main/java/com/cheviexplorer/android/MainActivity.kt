@@ -327,7 +327,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     captureInitRx = true
                 }
                 stage = "envío de solicitud 1A 80"
-                appendLog("TX IDENT $profile  \${frame.toHex()}")
+                appendLog("TX IDENT $profile  ${frame.toHex()}")
                 serialPort.write(frame, 1000)
                 stage = "espera de respuesta"
                 Thread.sleep(1500)
@@ -350,7 +350,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     }
                 }
                 val candidate = if (echoIndex >= 0) {
-                    appendLog("ECO TX IDENT detectado: \${frame.toHex()}")
+                    appendLog("ECO TX IDENT detectado: ${frame.toHex()}")
                     rxBytes.copyOfRange(echoIndex + frame.size, rxBytes.size)
                 } else rxBytes
 
@@ -360,11 +360,11 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 }
                 val response = KwpProtocol.findResponse(candidate, expectedSource = source)
                 if (response == null) {
-                    appendLog("IDENT ECU $profile: RX sin trama reconocible: \${candidate.toHex()}")
+                    appendLog("IDENT ECU $profile: RX sin trama reconocible: ${candidate.toHex()}")
                     return@execute
                 }
-                appendLog("RX IDENT CANDIDATA $profile: \${response.bytes.toHex()}")
-                appendLog("VALIDACIÓN IDENT: \${response.description}")
+                appendLog("RX IDENT CANDIDATA $profile: ${response.bytes.toHex()}")
+                appendLog("VALIDACIÓN IDENT: ${response.description}")
                 when {
                     !response.valid -> appendLog("IDENT ECU $profile: checksum inválido; no se interpreta el contenido.")
                     KwpProtocol.isPositiveResponseTo(response, 0x1A) -> {
@@ -380,10 +380,10 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     else -> appendLog("IDENT ECU $profile: trama válida, pero el SID no coincide con una respuesta positiva/negativa reconocida para 1A.")
                 }
                 val remaining = candidate.drop(response.bytes.size).toByteArray()
-                if (remaining.isNotEmpty()) appendLog("RX IDENT restante/no clasificada: \${remaining.toHex()}")
+                if (remaining.isNotEmpty()) appendLog("RX IDENT restante/no clasificada: ${remaining.toHex()}")
             } catch (e: Exception) {
                 synchronized(initRxLock) { captureInitRx = false }
-                appendLog("ERROR IDENT ECU $profile en $stage: \${e.javaClass.simpleName}: \${e.message ?: "(sin mensaje)"}")
+                appendLog("ERROR IDENT ECU $profile en $stage: ${e.javaClass.simpleName}: ${e.message ?: "(sin mensaje)"}")
             }
         }
     }
