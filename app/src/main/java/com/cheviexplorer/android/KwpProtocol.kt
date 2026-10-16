@@ -25,6 +25,24 @@ internal object KwpProtocol {
         return frame
     }
 
+    /**
+     * Static reconstruction of the original CheviExplorer ECU-identification request.
+     * Intentionally not wired to serial TX until its response is validated on-vehicle.
+     */
+    fun buildEcuIdentificationRequest(targetAddress: Int): ByteArray {
+        require(targetAddress in 0..0xFF) { "Target address must be one byte" }
+        val frame = byteArrayOf(
+            0x82.toByte(),
+            targetAddress.toByte(),
+            0xF1.toByte(),
+            0x1A,
+            0x80.toByte(),
+            0x00
+        )
+        frame[5] = checksum(frame.copyOfRange(0, 5)).toByte()
+        return frame
+    }
+
     fun findResponse(bytes: ByteArray, expectedSource: Int): FrameCheck? {
         for (start in bytes.indices) {
             val format = bytes[start].toInt() and 0xFF
