@@ -146,3 +146,30 @@ El clasificador separa el eco TX y reconoce los bytes adicionales como una trama
 **Qué no demuestra todavía:** el significado de los tres bytes de datos, la identidad exacta de la ECU, ni que estén operativas la lectura de parámetros, la consulta/borrado de DTC o las pruebas de actuadores. El formato debe contrastarse con la rutina de recepción y decodificación del ejecutable original o con más capturas controladas.
 
 **Siguiente prueba recomendada:** guardar esta respuesta como referencia y probar por separado el perfil ZF 4HP16, usando `81 18 F1 81 0B`, con el vehículo detenido y sin emitir comandos de actuadores. Comparar si la caja responde con dirección de origen `18`, checksum coherente y un formato repetible. No reutilizar automáticamente la respuesta MR-140 como si fuera válida para la transmisión.
+
+
+## Captura Android: respuestas candidatas MR-140 y ZF 4HP16 (16-10-2026, 11:46)
+
+Nueva captura combinada de la app Android: adaptador CH340/CH341 (`VID=1A86 PID=7523`) abierto a 10400 baud, 8N1. En ambos perfiles se observa el eco exacto de la trama transmitida y, después, siete bytes adicionales que pasan la validación estructural y el checksum aditivo.
+
+### Motor MR-140
+
+- TX: `81 11 F1 81 04`
+- Eco: `81 11 F1 81 04`
+- Respuesta adicional: `83 F1 11 C1 EF 8F C4`
+- Interpretación provisional: formato `83`, destino `F1`, origen `11`, datos `C1 EF 8F`, checksum `C4`.
+- Checksum: la suma de los seis primeros bytes, módulo 256, da `C4`; coincide.
+
+### Transmisión ZF 4HP16
+
+- TX: `81 18 F1 81 0B`
+- Eco: `81 18 F1 81 0B`
+- Respuesta adicional: `83 F1 18 C1 EF 8F CB`
+- Interpretación provisional: formato `83`, destino `F1`, origen `18`, datos `C1 EF 8F`, checksum `CB`.
+- Checksum: la suma de los seis primeros bytes, módulo 256, da `CB`; coincide.
+
+### Conclusión y límites
+
+Esta prueba aporta evidencia sólida de que ambos perfiles reciben bytes adicionales al eco TX, con direcciones de origen diferentes (`11` para MR-140 y `18` para ZF) y checksum coherente. El patrón de datos observado es idéntico (`C1 EF 8F`) en esta captura. No se debe asumir todavía que esos tres bytes identifican el módulo ni que prueban que la comunicación de diagnóstico completa funciona: su significado requiere contrastarse con el decodificador del programa original y con más sesiones reproducibles.
+
+La captura no valida servicios de lectura de DTC, parámetros en vivo, borrado ni actuadores. Mantener esas funciones de transmisión deshabilitadas hasta confirmar servicios y condiciones de seguridad. Próxima fase: comparar la trama recibida con el camino de recepción/identificación del ejecutable Delphi y comprobar si la respuesta se repite tras reconexiones y ciclos de contacto.
