@@ -95,9 +95,9 @@ La búsqueda de llamadas a las APIs importadas sitúa grupos de código que mani
 - `0x42B6A7`: llamada al wrapper de `SetCommBreak`.
 - `0x429C78`: llamada al wrapper de `SetCommTimeouts`.
 - `0x445C9D` y `0x445CDD`: llamadas al wrapper de `PurgeComm`.
-- `0x45A71B`: sitio de llamada a una función importada de escritura identificado en el desensamblado; se requiere validar la correspondencia exacta de argumentos antes de atribuirlo a una trama ECU.
+- `0x45A71B`: no es una escritura K-Line. El contexto muestra un bucle de espera de aproximadamente 1 segundo (`GetTickCount`/comparación de tiempo) que llama a una función importada con argumento `0`; el salto indirecto en `0x407168` apunta a una entrada de importación compatible con `Sleep(0)`. Por tanto, este sitio se descarta como evidencia de transmisión de bytes ECU.
 
-Esto estrecha el área a estudiar: las rutinas alrededor de `0x42A900–0x42B825` parecen pertenecer al componente de puerto serie y manejan configuración, BREAK, lectura y temporización. No es seguro traducir directamente esas direcciones a una secuencia K-Line; algunas pueden ser funciones genéricas del componente Delphi, no la rutina específica `PortInit` del perfil MR-140 o ZF-4P16.
+Esto estrecha el área a estudiar: las rutinas alrededor de `0x42A900–0x42B825` parecen pertenecer al componente de puerto serie y manejan configuración, BREAK, lectura y temporización. No es seguro traducir directamente esas direcciones a una secuencia K-Line; algunas pueden ser funciones genéricas del componente Delphi, no la rutina específica `PortInit` del perfil MR-140 o ZF-4P16. Se corrigió además una atribución preliminar: `0x45A71B` es parte de una espera temporizada, no una llamada de transmisión identificada. Aún no se ha localizado de forma fiable el sitio que arma/escribe las tramas de diagnóstico.
 
 El informe de referencias cruzadas encontró que varios nombres de métodos (`PortInit`, `WriteReadComm`, `TimerTesterPresentTimer`, `SecurityAccess`) están almacenados como metadatos/cadenas, pero no tienen referencias absolutas directas en el código. Eso es habitual en aplicaciones Delphi: los métodos pueden enlazarse mediante tablas de clases/eventos, por lo que la ausencia de referencia directa no significa que estén sin usar.
 
