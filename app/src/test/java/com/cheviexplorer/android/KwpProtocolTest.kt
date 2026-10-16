@@ -19,6 +19,12 @@ class KwpProtocolTest {
     }
 
     @Test
+    fun reconstructsOriginalIdentificationRequestsWithoutSendingThem() {
+        assertArrayEquals(hex("82 11 F1 1A 80 1E"), KwpProtocol.buildEcuIdentificationRequest(0x11))
+        assertArrayEquals(hex("82 18 F1 1A 80 25"), KwpProtocol.buildEcuIdentificationRequest(0x18))
+    }
+
+    @Test
     fun validatesMr140ResponseAndExtractsStartCommunicationKeys() {
         val frame = KwpProtocol.findResponse(mr140Response, expectedSource = 0x11)
         assertNotNull(frame)
