@@ -168,37 +168,71 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             appendLog("INIT cancelada: el puerto serie no está abierto.")
             return
         }
+
         val isEngine = ecuProfile.selectedItemPosition == 0
         val profile = if (isEngine) "MR-140" else "ZF 4HP16"
-        val frame = if (isEngine) byteArrayOf(0x81.toByte(), 0x11, 0xF1.toByte(), 0x83.toByte())
-                    else byteArrayOf(0x81.toByte(), 0x18, 0xF1.toByte(), 0x8A.toByte())
-        val selectedBaud = when (baud.selectedItemPosition) { 1 -> 9600; 2 -> 38400; 3 -> 4800; else -> 10400 }
+        val frame = if (isEngine) {
+            byteArrayOf(0x81.toByte(), 0x11, 0xF1.toByte(), 0x83.toByte())
+        } else {
+            byteArrayOf(0x81.toByte(), 0x18, 0xF1.toByte(), 0x8A.toByte())
+        }
+        val selectedBaud = when (baud.selectedItemPosition) {
+            1 -> 9600
+            2 -> 38400
+            3 -> 4800
+            else -> 10400
+        }
         if (selectedBaud != 10400) {
             Toast.makeText(this, "Selecciona 10400 baudios para estos perfiles", Toast.LENGTH_LONG).show()
             appendLog("INIT cancelada: $profile requiere el perfil de prueba a 10400 baudios.")
             return
         }
-        appendLog("INIT $profile: secuencia candidata derivada estáticamente; no es una comunicación confirmada.")
+
+        appendLog("INIT $profile: comprobando soporte de inicialización K-Line; trama candidata, aún no validada.")
         executor.execute {
+            var stage = "limpieza de búfer"
             try {
-                serialPort.purgeHwBuffers(true, true)
-                Thread.sleep(300)
-                val delay = 24L
-                serialPort.setBreak(false)
-                Thread.sleep(delay)
-                serialPort.setBreak(true)
-                Thread.sleep(delay)
-                serialPort.setBreak(false)
-                Thread.sleep(delay)
+                // Some USB-serial drivers do not implement buffer purging. This is
+                // optional; record it and continue to the mandatory BREAK capability check.
+                try {
+                    serialPort.purgeHwBuffers(true, true)
+                } catch (e: UnsupportedOperationException) {
+                    appendLog("AVISO INIT $profile: el controlador no admite purgeHwBuffers(); se continúa.")
+                }
+
+                Thread.sleep(100)
+
+                // The original software uses a timed BREAK sequence before sending
+                // the init frame. Never send the frame if the adapter cannot generate
+                // BREAK: that would look like a valid attempt but is not a valid init.
+                stage = "prueba de señal BREAK"
+                try {
+                    serialPort.setBreak(true)
+                    Thread.sleep(24)
+                    serialPort.setBreak(false)
+                    Thread.sleep(24)
+                } catch (e: UnsupportedOperationException) {
+                    appendLog("ERROR INIT $profile: el controlador USB (${serialPort.javaClass.simpleName}) no admite BREAK.")
+                    appendLog("No se envió TX. La inicialización original requiere controlar la línea K-Line; esta biblioteca/controlador no expone esa función para este adaptador.")
+                    runOnUiThread {
+                        Toast.makeText(this@MainActivity, "El controlador no admite BREAK; no se envió la trama", Toast.LENGTH_LONG).show()
+                    }
+                    return@execute
+                }
+
+                stage = "envío de trama"
                 appendLog("TX $profile  " + frame.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) })
                 serialPort.write(frame, 1000)
+                stage = "espera de respuesta"
                 Thread.sleep(1500)
-                appendLog("INIT $profile finalizada; revisa si apareció RX después de TX.")
+                appendLog("INIT $profile finalizada; comprueba si apareció RX después de TX.")
             } catch (e: Exception) {
-                appendLog("ERROR INIT $profile: " + (e.message ?: e.javaClass.simpleName))
+                val detail = e.message?.takeIf { it.isNotBlank() } ?: "(sin mensaje)"
+                appendLog("ERROR INIT $profile en $stage: ${e.javaClass.simpleName}: $detail")
             }
         }
     }
+
     private fun disconnect() {
         try { ioManager?.listener = null; ioManager?.stop() } catch (_: Exception) {}
         ioManager = null
