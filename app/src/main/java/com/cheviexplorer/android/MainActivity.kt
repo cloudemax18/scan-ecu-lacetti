@@ -41,6 +41,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     private val initRxLock = Any()
     private val initRxBuffer = ByteArrayOutputStream()
     @Volatile private var captureInitRx = false
+    @Volatile private var validatedStartProfile: String? = null
     private val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
 
     private val permissionReceiver = object : BroadcastReceiver() {
@@ -82,8 +83,13 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             setOnClickListener { initializeSelectedEcu() }
         }
         root.addView(initButton, lp(-1, -2))
+        val identifyButton = Button(this).apply {
+            text = "Consultar identificación ECU · 1A 80"
+            setOnClickListener { requestEcuIdentification() }
+        }
+        root.addView(identifyButton, lp(-1, -2))
         val note = TextView(this).apply {
-            text = "Funciones: detección USB, inicio KWP para MR-140 o ZF 4HP16, validación de trama/checksum y extracción de bytes de clave de StartCommunication. La solicitud de identificación 1A 80 reconstruida del programa original aún no se transmite. No se habilitan lectura de parámetros, borrado de averías ni actuadores."
+            text = "La consulta 1A 80 reproduce el servicio de identificación de solo lectura observado en el programa original. Primero inicializa el perfil seleccionado; la respuesta se registra en hexadecimal y no se decodifica como identidad hasta validar su formato. DTC, borrado, seguridad y actuadores siguen deshabilitados."
             textSize = 13f; setTextColor(0xFFFFD180.toInt()); setPadding(0, 12, 0, 12)
         }
         root.addView(note, lp(-1, -2))
@@ -153,6 +159,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             val selectedBaud = when (baud.selectedItemPosition) { 1 -> 9600; 2 -> 38400; 3 -> 4800; else -> 10400 }
             serialPort.setParameters(selectedBaud, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE)
             port = serialPort
+            validatedStartProfile = null
             ioManager = SerialInputOutputManager(serialPort, this).also { it.start() }
             connectButton.text = "Desconectar"
             setStatus("Puerto serie abierto · $selectedBaud baud · protocolo ECU sin validar")
@@ -272,7 +279,8 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 if (keys != null) {
                     val keyHex = keys.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
                     appendLog("KWP StartCommunication: respuesta positiva 0xC1 al servicio 0x81; bytes de clave=$keyHex.")
-                    appendLog("Estas claves no son una identificación de ECU; siguiente solicitud aún pendiente de validar.")
+                    validatedStartProfile = profile
+                    appendLog("Estas claves no son una identificación de ECU; se puede probar el servicio de identificación 1A 80.")
                 } else {
                     appendLog("Respuesta estructural válida, pero no se ha confirmado respuesta positiva al servicio StartCommunication.")
                 }
@@ -287,6 +295,99 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
     }
 
+    private fun requestEcuIdentification() {
+        val serialPort = port
+        if (serialPort == null || !serialPort.isOpen) {
+            appendLog("IDENT ECU cancelada: conecta primero el adaptador USB.")
+            Toast.makeText(this, "Primero conecta el adaptador USB", Toast.LENGTH_LONG).show()
+            return
+        }
+        val isEngine = ecuProfile.selectedItemPosition == 0
+        val profile = if (isEngine) "MR-140" else "ZF 4HP16"
+        val source = if (isEngine) 0x11 else 0x18
+        if (validatedStartProfile != profile) {
+            appendLog("IDENT ECU cancelada: inicializa primero $profile y confirma la respuesta positiva StartCommunication.")
+            Toast.makeText(this, "Inicializa primero el perfil seleccionado", Toast.LENGTH_LONG).show()
+            return
+        }
+        val selectedBaud = when (baud.selectedItemPosition) { 1 -> 9600; 2 -> 38400; 3 -> 4800; else -> 10400 }
+        if (selectedBaud != 10400) {
+            appendLog("IDENT ECU cancelada: $profile requiere 10400 baudios en esta prueba.")
+            Toast.makeText(this, "Selecciona 10400 baudios", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val frame = KwpProtocol.buildEcuIdentificationRequest(source)
+        appendLog("IDENT ECU $profile: solicitud de lectura 1A 80 reconstruida del programa original.")
+        executor.execute {
+            var stage = "preparación de captura"
+            try {
+                synchronized(initRxLock) {
+                    initRxBuffer.reset()
+                    captureInitRx = true
+                }
+                stage = "envío de solicitud 1A 80"
+                appendLog("TX IDENT $profile  \${frame.toHex()}")
+                serialPort.write(frame, 1000)
+                stage = "espera de respuesta"
+                Thread.sleep(1500)
+                val rxBytes = synchronized(initRxLock) {
+                    captureInitRx = false
+                    initRxBuffer.toByteArray()
+                }
+                if (rxBytes.isEmpty()) {
+                    appendLog("IDENT ECU $profile: sin respuesta RX durante 1500 ms.")
+                    return@execute
+                }
+
+                var echoIndex = -1
+                if (rxBytes.size >= frame.size) {
+                    for (i in 0..(rxBytes.size - frame.size)) {
+                        if (rxBytes.copyOfRange(i, i + frame.size).contentEquals(frame)) {
+                            echoIndex = i
+                            break
+                        }
+                    }
+                }
+                val candidate = if (echoIndex >= 0) {
+                    appendLog("ECO TX IDENT detectado: \${frame.toHex()}")
+                    rxBytes.copyOfRange(echoIndex + frame.size, rxBytes.size)
+                } else rxBytes
+
+                if (candidate.isEmpty()) {
+                    appendLog("IDENT ECU $profile: solo eco TX; no se recibió respuesta adicional.")
+                    return@execute
+                }
+                val response = KwpProtocol.findResponse(candidate, expectedSource = source)
+                if (response == null) {
+                    appendLog("IDENT ECU $profile: RX sin trama reconocible: \${candidate.toHex()}")
+                    return@execute
+                }
+                appendLog("RX IDENT CANDIDATA $profile: \${response.bytes.toHex()}")
+                appendLog("VALIDACIÓN IDENT: \${response.description}")
+                when {
+                    !response.valid -> appendLog("IDENT ECU $profile: checksum inválido; no se interpreta el contenido.")
+                    KwpProtocol.isPositiveResponseTo(response, 0x1A) -> {
+                        val rawPayload = response.payload.toHex()
+                        appendLog("IDENT ECU $profile: respuesta positiva 0x5A al servicio 0x1A.")
+                        appendLog("Datos de identificación sin decodificar (incluye SID): $rawPayload")
+                        appendLog("No se asigna nombre/modelo de ECU hasta contrastar estos bytes con el parser Delphi.")
+                    }
+                    KwpProtocol.isNegativeResponseTo(response, 0x1A) -> {
+                        val nrc = response.payload[2].toInt() and 0xFF
+                        appendLog("IDENT ECU $profile: respuesta negativa KWP, NRC=0x%02X.".format(nrc))
+                    }
+                    else -> appendLog("IDENT ECU $profile: trama válida, pero el SID no coincide con una respuesta positiva/negativa reconocida para 1A.")
+                }
+                val remaining = candidate.drop(response.bytes.size).toByteArray()
+                if (remaining.isNotEmpty()) appendLog("RX IDENT restante/no clasificada: \${remaining.toHex()}")
+            } catch (e: Exception) {
+                synchronized(initRxLock) { captureInitRx = false }
+                appendLog("ERROR IDENT ECU $profile en $stage: \${e.javaClass.simpleName}: \${e.message ?: "(sin mensaje)"}")
+            }
+        }
+    }
+
     private fun ByteArray.toHex(): String =
         joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
 
@@ -295,6 +396,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         ioManager = null
         try { port?.close() } catch (_: Exception) {}
         port = null
+        validatedStartProfile = null
         connectButton.text = "Buscar / conectar cable"
         setStatus("Desconectado")
         appendLog("Puerto serie cerrado.")
