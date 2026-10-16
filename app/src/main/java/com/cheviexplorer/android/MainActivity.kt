@@ -200,20 +200,23 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     appendLog("AVISO INIT $profile: el controlador no admite purgeHwBuffers(); se continúa.")
                 }
 
-                Thread.sleep(100)
+                // The original program waits 300 ms, then performs the timed
+                // clear/set/clear BREAK sequence (24 ms per phase with Altinit off).
+                // On CH340, setBreak(false) releases TX high and setBreak(true)
+                // holds TX low; preserve the original edge order.
+                Thread.sleep(300)
 
-                // The original software uses a timed BREAK sequence before sending
-                // the init frame. Never send the frame if the adapter cannot generate
-                // BREAK: that would look like a valid attempt but is not a valid init.
                 stage = "prueba de señal BREAK"
                 try {
+                    serialPort.setBreak(false)
+                    Thread.sleep(24)
                     serialPort.setBreak(true)
                     Thread.sleep(24)
                     serialPort.setBreak(false)
                     Thread.sleep(24)
                 } catch (e: UnsupportedOperationException) {
                     appendLog("ERROR INIT $profile: el controlador USB (${serialPort.javaClass.simpleName}) no admite BREAK.")
-                    appendLog("No se envió TX. La inicialización original requiere controlar la línea K-Line; esta biblioteca/controlador no expone esa función para este adaptador.")
+                    appendLog("No se envió TX. Se cancela para evitar una inicialización K-Line inválida.")
                     runOnUiThread {
                         Toast.makeText(this@MainActivity, "El controlador no admite BREAK; no se envió la trama", Toast.LENGTH_LONG).show()
                     }
