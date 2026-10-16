@@ -64,7 +64,13 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
-        registerReceiver(permissionReceiver, IntentFilter(ACTION_USB_PERMISSION))
+        val usbPermissionFilter = IntentFilter(ACTION_USB_PERMISSION)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(permissionReceiver, usbPermissionFilter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("DEPRECATION")
+            registerReceiver(permissionReceiver, usbPermissionFilter)
+        }
         buildUi()
         setStatus("Desconectado · Chevrolet Lacetti 1.8 LDA · 2008")
         appendLog("Aplicación iniciada. Conecta el KKL mediante USB OTG.")
