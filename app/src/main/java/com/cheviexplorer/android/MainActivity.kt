@@ -28,6 +28,12 @@ import java.util.concurrent.Executors
 class MainActivity : Activity(), SerialInputOutputManager.Listener {
     companion object { private const val ACTION_USB_PERMISSION = "com.cheviexplorer.android.USB_PERMISSION" }
 
+    private data class KLineFrameCheck(
+        val valid: Boolean,
+        val description: String,
+        val bytes: ByteArray
+    )
+
     private lateinit var usbManager: UsbManager
     private lateinit var status: TextView
     private lateinit var log: TextView
@@ -83,7 +89,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
         root.addView(initButton, lp(-1, -2))
         val note = TextView(this).apply {
-            text = "Funciones: detección USB, enlace serie, inicialización K-Line de prueba para MR-140 o ZF 4HP16, registro hexadecimal RX y exportación. El botón de inicialización envía únicamente la trama inicial candidata del software original; no lee parámetros, no borra averías y no activa actuadores."
+            text = "Funciones: detección USB, enlace serie, inicialización K-Line de prueba para MR-140 o ZF 4HP16, registro hexadecimal RX y exportación. La respuesta se clasifica por formato, dirección y checksum; esto no habilita lectura de parámetros, borrado de averías ni activación de actuadores."
             textSize = 13f; setTextColor(0xFFFFD180.toInt()); setPadding(0, 12, 0, 12)
         }
         root.addView(note, lp(-1, -2))
@@ -200,20 +206,13 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         executor.execute {
             var stage = "limpieza de búfer"
             try {
-                // Some USB-serial drivers do not implement buffer purging. This is
-                // optional; record it and continue to the mandatory BREAK capability check.
                 try {
                     serialPort.purgeHwBuffers(true, true)
                 } catch (e: UnsupportedOperationException) {
                     appendLog("AVISO INIT $profile: el controlador no admite purgeHwBuffers(); se continúa.")
                 }
 
-                // The original program waits 300 ms, then performs the timed
-                // clear/set/clear BREAK sequence (24 ms per phase with Altinit off).
-                // On CH340, setBreak(false) releases TX high and setBreak(true)
-                // holds TX low; preserve the original edge order.
                 Thread.sleep(300)
-
                 stage = "prueba de señal BREAK"
                 try {
                     serialPort.setBreak(false)
@@ -244,33 +243,85 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     captureInitRx = false
                     initRxBuffer.toByteArray()
                 }
-                val rxHex = rxBytes.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
-                when {
-                    rxBytes.isEmpty() -> {
-                        appendLog("RESULTADO $profile: SIN RESPUESTA RX durante 1500 ms.")
-                        appendLog("No se confirma comunicación con la ECU; revisar BREAK, cableado K-Line y alimentación.")
-                    }
-                    rxBytes.contentEquals(frame) -> {
-                        appendLog("RESULTADO $profile: SOLO ECO TX (RX = trama enviada: $rxHex).")
-                        appendLog("Esto no demuestra respuesta de la ECU; no marcar como conectado.")
-                    }
-                    rxBytes.size > frame.size && rxBytes.copyOfRange(0, frame.size).contentEquals(frame) -> {
-                        val extra = rxBytes.copyOfRange(frame.size, rxBytes.size)
-                        appendLog("RESULTADO $profile: ECO TX + BYTES ADICIONALES RX: " +
-                            extra.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) })
-                        appendLog("Los bytes adicionales son candidatos a respuesta; todavía falta validar formato y checksum.")
-                    }
-                    else -> {
-                        appendLog("RESULTADO $profile: RX DISTINTO DE ECO: $rxHex")
-                        appendLog("Hay datos recibidos, pero no se confirma que sean una respuesta válida de la ECU.")
-                    }
-                }
+                classifyInitResult(profile, frame, rxBytes)
             } catch (e: Exception) {
+                synchronized(initRxLock) { captureInitRx = false }
                 val detail = e.message?.takeIf { it.isNotBlank() } ?: "(sin mensaje)"
                 appendLog("ERROR INIT $profile en $stage: ${e.javaClass.simpleName}: $detail")
             }
         }
     }
+
+    private fun classifyInitResult(profile: String, txFrame: ByteArray, rxBytes: ByteArray) {
+        val hex = rxBytes.toHex()
+        if (rxBytes.isEmpty()) {
+            appendLog("RESULTADO $profile: SIN RESPUESTA RX durante 1500 ms.")
+            appendLog("No se confirma comunicación con la ECU; revisar BREAK, cableado K-Line y alimentación.")
+            return
+        }
+
+        var candidate = rxBytes
+        var hadEcho = false
+        if (rxBytes.size >= txFrame.size && rxBytes.copyOfRange(0, txFrame.size).contentEquals(txFrame)) {
+            hadEcho = true
+            candidate = rxBytes.copyOfRange(txFrame.size, rxBytes.size)
+            appendLog("ECO TX detectado: ${txFrame.toHex()}")
+        }
+
+        if (candidate.isEmpty()) {
+            appendLog("RESULTADO $profile: SOLO ECO TX (RX = trama enviada).")
+            appendLog("Esto no demuestra respuesta de la ECU; no marcar como conectado.")
+            return
+        }
+
+        val frameCheck = findKLineResponse(candidate, expectedSource = if (profile == "MR-140") 0x11 else 0x18)
+        if (frameCheck != null) {
+            appendLog("RX CANDIDATA $profile: ${frameCheck.bytes.toHex()}")
+            appendLog("VALIDACIÓN DE TRAMA: ${frameCheck.description}")
+            if (frameCheck.valid) {
+                appendLog("RESULTADO $profile: trama con formato/dirección/checksum coherentes. Respuesta candidata; identidad y datos aún no decodificados.")
+            } else {
+                appendLog("RESULTADO $profile: se detectó una cabecera candidata, pero la trama no supera todas las validaciones.")
+            }
+            val remaining = candidate.drop(frameCheck.bytes.size).toByteArray()
+            if (remaining.isNotEmpty()) appendLog("RX restante/no clasificada: ${remaining.toHex()}")
+        } else {
+            appendLog("RESULTADO $profile: ${if (hadEcho) "ECO TX + " else ""}RX sin trama K-Line reconocible: $hex")
+            appendLog("No se confirma una respuesta válida de la ECU.")
+        }
+    }
+
+    /**
+     * Scans for a length-coded K-Line frame: format, target, source, payload, checksum.
+     * This is a structural/checksum check only, not semantic ECU identification.
+     */
+    private fun findKLineResponse(bytes: ByteArray, expectedSource: Int): KLineFrameCheck? {
+        for (start in bytes.indices) {
+            val format = bytes[start].toInt() and 0xFF
+            if ((format and 0x80) == 0) continue
+            val payloadLength = format and 0x3F
+            val frameLength = 1 + 2 + payloadLength + 1
+            if (payloadLength == 0 || start + frameLength > bytes.size) continue
+
+            val frame = bytes.copyOfRange(start, start + frameLength)
+            val target = frame[1].toInt() and 0xFF
+            val source = frame[2].toInt() and 0xFF
+            if (target != 0xF1 || source != expectedSource) continue
+
+            val expectedChecksum = frame.dropLast(1).sumOf { it.toInt() and 0xFF } and 0xFF
+            val actualChecksum = frame.last().toInt() and 0xFF
+            val checksumOk = expectedChecksum == actualChecksum
+            val description = "formato=0x%02X, longitud=%d, destino=0x%02X, origen=0x%02X, checksum recibido=0x%02X, esperado=0x%02X (%s)".format(
+                format, payloadLength, target, source, actualChecksum, expectedChecksum,
+                if (checksumOk) "OK" else "ERROR"
+            )
+            return KLineFrameCheck(checksumOk, description, frame)
+        }
+        return null
+    }
+
+    private fun ByteArray.toHex(): String =
+        joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
 
     private fun disconnect() {
         try { ioManager?.listener = null; ioManager?.stop() } catch (_: Exception) {}
