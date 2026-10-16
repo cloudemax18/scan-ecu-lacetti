@@ -185,3 +185,28 @@ Una segunda sesión, iniciada a las 11:51:51 y cerrada a las 11:52:45, repite ex
 El adaptador vuelve a identificarse como CH340/CH341 (`VID=1A86 PID=7523`) y el puerto abre a 10400 baud, 8N1. El aviso de que el driver no admite `purgeHwBuffers()` reaparece, pero no impide que se reciban ambas respuestas candidatas. El cierre del puerto también queda registrado.
 
 **Conclusión reforzada:** las dos respuestas son reproducibles en al menos dos sesiones y mantienen las mismas tramas, direcciones y checksums. Esto reduce la posibilidad de que el resultado anterior fuera un evento aislado. Sigue siendo una validación del intercambio observado, no una decodificación semántica de `C1 EF 8F` ni una prueba de lectura de DTC, parámetros, borrado o actuadores. Conservar ambas capturas como fixtures de referencia antes de avanzar a solicitudes de diagnóstico adicionales.
+
+
+## Decodificación KWP de la respuesta de inicio y siguiente solicitud encontrada en el EXE (16-10-2026)
+
+La segunda y tercera captura de Android contienen estas respuestas repetibles:
+
+- MR-140: `83 F1 11 C1 EF 8F C4`
+- ZF 4HP16: `83 F1 18 C1 EF 8F CB`
+
+La interpretación ahora puede ser más específica que una simple validación de checksum. En KWP2000, una respuesta positiva usa el identificador de servicio solicitado más `0x40`; por tanto, `C1` corresponde a la respuesta positiva del servicio `0x81` (`StartCommunication`). Los dos bytes siguientes, `EF 8F`, son bytes de clave del intercambio de inicio de comunicación. No deben confundirse con un identificador de ECU ni con una clave de `SecurityAccess`. La estructura de mensajes y la suma de checksum aditiva concuerdan con ISO 14230-2/3. Referencias: https://standards.theiteh.com/catalog/standards/iso/72bc82a0-3a3f-42a5-8608-c07cdc814acb/iso-14230-2-1999 y https://standards.theiteh.com/catalog/standards/iso/20c9a21d-a095-41d7-81fa-423494aa28e7/iso-14230-3-1999
+
+### Siguiente solicitud hallada en el código original
+
+En `TForm1.Button_ECUIdentClick`, el camino de los perfiles de motor `0x12` y transmisión `0x22` construye una solicitud con formato `0x82`, las direcciones del perfil y los bytes de servicio `1A 80`. `WriteReadComm` calcula el checksum a partir de los primeros cinco bytes. Esto identifica estáticamente el siguiente servicio usado por la función de identificación del programa original como `0x1A` con parámetro `0x80` (solicitud de identificación ECU en la familia KWP); no es una conjetura sobre un servicio genérico.
+
+Tramas calculadas a partir de ese código, todavía **no enviadas desde Android**:
+
+- MR-140: `82 11 F1 1A 80 1E`
+- ZF 4HP16: `82 18 F1 1A 80 25`
+
+El siguiente paso es comparar la respuesta de identificación del ejecutable original y comprobar cómo valida sus bytes para cada perfil. Aunque el servicio estático ya se ha localizado, la app Android no debe enviarlo automáticamente ni declarar identificada la ECU hasta que se valide la respuesta. No se han habilitado borrado de DTC, acceso de seguridad, escrituras ni pruebas de actuadores.
+
+### Pruebas automatizadas añadidas
+
+Se creó `KwpProtocol.kt` para centralizar el armado de las solicitudes de inicio, el análisis de trama, la verificación de checksum y la extracción de bytes de clave de una respuesta `C1`. Las pruebas unitarias cubren las dos solicitudes y respuestas observadas, checksum incorrecto, dirección de origen incorrecta y una respuesta precedida por el eco TX. El workflow de Android ejecuta ahora `testDebugUnitTest` antes de compilar el APK. Estas pruebas son de framing y clasificación; no sustituyen una prueba con la ECU ni una decodificación completa de la respuesta de identificación.
