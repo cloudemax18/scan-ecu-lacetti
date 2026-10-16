@@ -45,6 +45,9 @@ jobs:
           } > informe/analisis-estatico.txt
           strings -a -n 4 archivos/CheviExplorer.exe > informe/exe-strings-ascii.txt
           strings -el -n 4 archivos/CheviExplorer.exe > informe/exe-strings-utf16le.txt
+          objdump -h archivos/CheviExplorer.exe > informe/exe-secciones.txt
+          objdump -d -Mintel archivos/CheviExplorer.exe > informe/exe-desensamblado.txt
+          objdump -s -j .rdata archivos/CheviExplorer.exe > informe/exe-rdata.txt || true
           7z x -y -ochm_extraido archivos/CheviExplorer.chm >/dev/null || true
           find chm_extraido -type f -print > informe/chm-archivos.txt
           find chm_extraido -type f \( -iname '*.htm' -o -iname '*.html' -o -iname '*.hhc' -o -iname '*.hhk' -o -iname '*.txt' -o -iname '*.xml' \) -print0 |
