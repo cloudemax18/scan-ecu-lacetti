@@ -31,6 +31,12 @@ class KwpProtocolTest {
     }
 
     @Test
+    fun buildsReadOnlyDtcRequestsReconstructedFromOriginalDelphi() {
+        assertArrayEquals(hex("84 11 F1 19 DA FF 00 78"), KwpProtocol.buildDtcReadRequest(0x11, isMr140 = true))
+        assertArrayEquals(hex("84 18 F1 18 00 00 00 A5"), KwpProtocol.buildDtcReadRequest(0x18, isMr140 = false))
+    }
+
+    @Test
     fun validatesMr140ResponseAndExtractsStartCommunicationKeys() {
         val frame = KwpProtocol.findResponse(mr140Response, expectedSource = 0x11)
         assertNotNull(frame)
