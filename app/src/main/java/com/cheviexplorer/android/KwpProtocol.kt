@@ -54,14 +54,31 @@ internal object KwpProtocol {
             (frame.payload[1].toInt() and 0xFF) == requestService
     }
 
+    /**
+     * Supports normal KWP frames with the payload length in the format byte (e.g. 0x83)
+     * and long frames whose format byte is 0x80 and whose next byte after the addresses
+     * contains the payload length (as seen in ECU identification responses).
+     */
     fun findResponse(bytes: ByteArray, expectedSource: Int): FrameCheck? {
         for (start in bytes.indices) {
             val format = bytes[start].toInt() and 0xFF
             if ((format and 0x80) == 0) continue
 
-            val payloadLength = format and 0x3F
-            val frameLength = 1 + 2 + payloadLength + 1
-            if (payloadLength == 0 || start + frameLength > bytes.size) continue
+            val shortLength = format and 0x3F
+            val hasExtendedLength = shortLength == 0
+            val lengthIndex = start + 3
+            if (hasExtendedLength && lengthIndex >= bytes.size) continue
+
+            val payloadLength = if (hasExtendedLength) {
+                bytes[lengthIndex].toInt() and 0xFF
+            } else {
+                shortLength
+            }
+            if (payloadLength == 0) continue
+
+            val headerLength = if (hasExtendedLength) 4 else 3
+            val frameLength = headerLength + payloadLength + 1
+            if (start + frameLength > bytes.size) continue
 
             val frame = bytes.copyOfRange(start, start + frameLength)
             val target = frame[1].toInt() and 0xFF
@@ -70,15 +87,16 @@ internal object KwpProtocol {
 
             val expectedChecksum = checksum(frame.copyOfRange(0, frame.lastIndex))
             val actualChecksum = frame.last().toInt() and 0xFF
-            val description = "formato=0x%02X, longitud=%d, destino=0x%02X, origen=0x%02X, checksum recibido=0x%02X, esperado=0x%02X (%s)".format(
-                format, payloadLength, target, source, actualChecksum, expectedChecksum,
+            val description = "formato=0x%02X, longitud=%d%s, destino=0x%02X, origen=0x%02X, checksum recibido=0x%02X, esperado=0x%02X (%s)".format(
+                format, payloadLength, if (hasExtendedLength) " (extendida)" else "", target, source, actualChecksum, expectedChecksum,
                 if (expectedChecksum == actualChecksum) "OK" else "ERROR"
             )
+            val payloadStart = if (hasExtendedLength) 4 else 3
             return FrameCheck(
                 valid = expectedChecksum == actualChecksum,
                 description = description,
                 bytes = frame,
-                payload = frame.copyOfRange(3, frame.lastIndex)
+                payload = frame.copyOfRange(payloadStart, frame.lastIndex)
             )
         }
         return null
