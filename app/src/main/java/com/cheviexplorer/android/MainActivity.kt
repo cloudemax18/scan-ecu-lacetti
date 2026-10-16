@@ -112,7 +112,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             val selectedBaud = when (baud.selectedItemPosition) { 1 -> 9600; 2 -> 38400; 3 -> 4800; else -> 10400 }
             serialPort.setParameters(selectedBaud, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE)
             port = serialPort
-            ioManager = SerialInputOutputManager(serialPort, this).also { executor.submit(it) }
+            ioManager = SerialInputOutputManager(serialPort, this).also { it.start() }
             connectButton.text = "Desconectar"
             setStatus("Puerto serie abierto · $selectedBaud baud · protocolo ECU sin validar")
             appendLog("Puerto abierto: ${driver.javaClass.simpleName}, $selectedBaud baud, 8N1.")
