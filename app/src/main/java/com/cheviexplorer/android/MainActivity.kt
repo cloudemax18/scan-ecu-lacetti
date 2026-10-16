@@ -88,6 +88,11 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             setOnClickListener { requestEcuIdentification() }
         }
         root.addView(identifyButton, lp(-1, -2))
+        val testerPresentButton = Button(this).apply {
+            text = "Enviar TesterPresent · mantener sesión"
+            setOnClickListener { sendTesterPresentOnce() }
+        }
+        root.addView(testerPresentButton, lp(-1, -2))
         val note = TextView(this).apply {
             text = "La consulta 1A 80 reproduce el servicio de identificación de solo lectura observado en el programa original. Primero inicializa el perfil seleccionado; la respuesta se registra en hexadecimal y no se decodifica como identidad hasta validar su formato. DTC, borrado, seguridad y actuadores siguen deshabilitados."
             textSize = 13f; setTextColor(0xFFFFD180.toInt()); setPadding(0, 12, 0, 12)
@@ -386,6 +391,86 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 appendLog("ERROR IDENT ECU $profile en $stage: ${e.javaClass.simpleName}: ${e.message ?: "(sin mensaje)"}")
             }
         }
+    }
+
+    /**
+     * Sends one KWP TesterPresent (service 0x3E) using the frame shape
+     * found in the original Delphi TimerTesterPresentTimer. Manual only
+     * until the original timer interval is confirmed.
+     */
+    private fun sendTesterPresentOnce() {
+        val serialPort = port
+        if (serialPort == null || !serialPort.isOpen) {
+            appendLog("TESTER PRESENT cancelado: conecta primero el adaptador USB.")
+            Toast.makeText(this, "Primero conecta el adaptador USB", Toast.LENGTH_LONG).show()
+            return
+        }
+        val isEngine = ecuProfile.selectedItemPosition == 0
+        val profile = if (isEngine) "MR-140" else "ZF 4HP16"
+        val source = if (isEngine) 0x11 else 0x18
+        if (validatedStartProfile != profile) {
+            appendLog("TESTER PRESENT cancelado: inicializa primero $profile y confirma StartCommunication.")
+            Toast.makeText(this, "Inicializa primero el perfil seleccionado", Toast.LENGTH_LONG).show()
+            return
+        }
+        val selectedBaud = when (baud.selectedItemPosition) { 1 -> 9600; 2 -> 38400; 3 -> 4800; else -> 10400 }
+        if (selectedBaud != 10400) {
+            appendLog("TESTER PRESENT cancelado: $profile requiere 10400 baudios.")
+            Toast.makeText(this, "Selecciona 10400 baudios", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val frame = KwpProtocol.buildTesterPresentRequest(source)
+        appendLog("TESTER PRESENT $profile: envío único de 0x3E; temporizador automático desactivado.")
+        executor.execute {
+            var stage = "preparación de captura"
+            try {
+                synchronized(initRxLock) {
+                    initRxBuffer.reset()
+                    captureInitRx = true
+                }
+                stage = "envío del servicio 0x3E"
+                appendLog("TX TESTER PRESENT $profile  ${frame.toHex()}")
+                serialPort.write(frame, 1000)
+                stage = "espera de respuesta"
+                Thread.sleep(700)
+                val rxBytes = synchronized(initRxLock) {
+                    captureInitRx = false
+                    initRxBuffer.toByteArray()
+                }
+                if (rxBytes.isEmpty()) {
+                    appendLog("TESTER PRESENT $profile: sin RX durante 700 ms; puede no haber respuesta explícita.")
+                    return@execute
+                }
+                val echoAt = indexOfFrame(rxBytes, frame)
+                val candidate = if (echoAt >= 0) {
+                    appendLog("ECO TX TESTER PRESENT detectado: ${frame.toHex()}")
+                    rxBytes.copyOfRange(echoAt + frame.size, rxBytes.size)
+                } else rxBytes
+                if (candidate.isEmpty()) {
+                    appendLog("TESTER PRESENT $profile: solo eco TX; no se interpreta como respuesta ECU.")
+                } else {
+                    val response = KwpProtocol.findResponse(candidate, expectedSource = source)
+                    if (response == null) {
+                        appendLog("TESTER PRESENT $profile: RX adicional sin trama KWP reconocible: ${candidate.toHex()}")
+                    } else {
+                        appendLog("RX TESTER PRESENT CANDIDATA $profile: ${response.bytes.toHex()}")
+                        appendLog("VALIDACIÓN TESTER PRESENT: ${response.description}")
+                    }
+                }
+            } catch (e: Exception) {
+                synchronized(initRxLock) { captureInitRx = false }
+                appendLog("ERROR TESTER PRESENT $profile en $stage: ${e.javaClass.simpleName}: ${e.message ?: "(sin mensaje)"}")
+            }
+        }
+    }
+
+    private fun indexOfFrame(bytes: ByteArray, frame: ByteArray): Int {
+        if (bytes.size < frame.size) return -1
+        for (i in 0..(bytes.size - frame.size)) {
+            if (bytes.copyOfRange(i, i + frame.size).contentEquals(frame)) return i
+        }
+        return -1
     }
 
     private fun ByteArray.toHex(): String =
