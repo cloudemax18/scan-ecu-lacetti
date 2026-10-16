@@ -1,6 +1,13 @@
 package com.cheviexplorer.android
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.net.Uri
+import android.os.Build
+import android.text.InputType
+import android.widget.EditText
+import androidx.core.content.FileProvider
+import java.io.File
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -42,6 +49,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     private val initRxBuffer = ByteArrayOutputStream()
     @Volatile private var captureInitRx = false
     @Volatile private var validatedStartProfile: String? = null
+    private var pendingUpdateFile: File? = null
     private val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
 
     private val permissionReceiver = object : BroadcastReceiver() {
@@ -104,9 +112,177 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         val save = Button(this).apply { text = "Exportar captura RX"; setOnClickListener { exportLog() } }
         root.addView(save, lp(-1, -2))
+        val upload = Button(this).apply {
+            text = "Subir captura a GitHub (Gist secreto)"
+            setOnClickListener { promptUploadCapture() }
+        }
+        root.addView(upload, lp(-1, -2))
+        val update = Button(this).apply {
+            text = "Buscar actualización de CheviExplorer"
+            setOnClickListener { checkForUpdates() }
+        }
+        root.addView(update, lp(-1, -2))
         val clear = Button(this).apply { text = "Limpiar registro"; setOnClickListener { log.text = "" } }
         root.addView(clear, lp(-1, -2))
         setContentView(root)
+    }
+
+    private fun promptUploadCapture() {
+        val capture = log.text.toString()
+        if (capture.isBlank()) {
+            Toast.makeText(this, "No hay captura para subir", Toast.LENGTH_LONG).show()
+            return
+        }
+        val tokenInput = EditText(this).apply {
+            hint = "Token GitHub con permiso gist"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setSingleLine(true)
+        }
+        val message = TextView(this).apply {
+            text = "Se subirá el registro actual a un Gist secreto (no listado) de tu cuenta. No es un almacenamiento privado: cualquiera que tenga el enlace podrá verlo. La captura puede contener identificadores del vehículo. El token solo se usa en esta solicitud y no se guarda en la app. Crea un token clásico con alcance gist."
+            setPadding(36, 12, 36, 12)
+        }
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(message, lp(-1, -2))
+            addView(tokenInput, lp(-1, -2))
+            setPadding(18, 0, 18, 0)
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Subir captura a GitHub")
+            .setView(container)
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton("Subir captura") { _, _ ->
+                val token = tokenInput.text.toString().trim()
+                if (token.isBlank()) {
+                    Toast.makeText(this, "No se proporcionó token; no se subió nada", Toast.LENGTH_LONG).show()
+                    return@setPositiveButton
+                }
+                appendLog("SUBIDA GITHUB: envío explícito de la captura actual a un Gist no listado.")
+                executor.execute {
+                    try {
+                        val url = GitHubDistribution.uploadSecretGist(token, capture)
+                        appendLog("CAPTURA SUBIDA A GITHUB: $url")
+                        runOnUiThread {
+                            AlertDialog.Builder(this)
+                                .setTitle("Captura subida")
+                                .setMessage("Enlace al Gist secreto:\n$url\n\nGuárdalo de forma segura; cualquiera con el enlace podrá verlo.")
+                                .setPositiveButton("Cerrar", null)
+                                .show()
+                        }
+                    } catch (e: Exception) {
+                        appendLog("ERROR SUBIENDO CAPTURA: ${e.message ?: e.javaClass.simpleName}")
+                        runOnUiThread {
+                            Toast.makeText(this, "No se pudo subir la captura. Revisa token/permisos y conexión.", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
+            .show()
+    }
+
+    private fun checkForUpdates() {
+        if (BuildConfig.DEBUG) {
+            Toast.makeText(this, "La actualización in-app está reservada al APK release. El APK debug se descarga desde Actions.", Toast.LENGTH_LONG).show()
+            appendLog("ACTUALIZACIONES: esta es la variante debug; usa el artefacto de GitHub Actions.")
+            return
+        }
+        appendLog("ACTUALIZACIONES: consultando GitHub Releases.")
+        executor.execute {
+            try {
+                val latest = GitHubDistribution.fetchLatestRelease()
+                val remoteVersion = latest.tagName.removePrefix("v")
+                val localVersion = BuildConfig.VERSION_NAME
+                if (!isVersionNewer(remoteVersion, localVersion)) {
+                    appendLog("ACTUALIZACIONES: versión instalada $localVersion; release más reciente detectado ${latest.tagName}.")
+                    runOnUiThread {
+                        Toast.makeText(this, "CheviExplorer está actualizado ($localVersion)", Toast.LENGTH_LONG).show()
+                    }
+                    return@execute
+                }
+                runOnUiThread {
+                    AlertDialog.Builder(this)
+                        .setTitle("Actualización disponible")
+                        .setMessage("Versión instalada: $localVersion\nNueva versión: ${latest.tagName}\n\nSe descargará el APK release firmado desde GitHub.")
+                        .setNegativeButton("Ahora no", null)
+                        .setPositiveButton("Descargar e instalar") { _, _ -> downloadAndInstall(latest) }
+                        .show()
+                }
+            } catch (e: Exception) {
+                appendLog("ERROR BUSCANDO ACTUALIZACIÓN: ${e.message ?: e.javaClass.simpleName}")
+                runOnUiThread {
+                    Toast.makeText(this, "No se pudo comprobar GitHub Releases", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun isVersionNewer(remote: String, local: String): Boolean {
+        fun parts(value: String): List<Int> =
+            Regex("\\d+").findAll(value).take(4).mapNotNull { it.value.toIntOrNull() }.toList()
+        val a = parts(remote)
+        val b = parts(local)
+        if (a.isEmpty() || b.isEmpty()) return remote != local
+        for (i in 0 until maxOf(a.size, b.size)) {
+            val av = a.getOrElse(i) { 0 }
+            val bv = b.getOrElse(i) { 0 }
+            if (av != bv) return av > bv
+        }
+        return false
+    }
+
+    private fun downloadAndInstall(release: GitHubDistribution.ReleaseInfo) {
+        appendLog("ACTUALIZACIONES: descargando ${release.tagName} desde GitHub.")
+        executor.execute {
+            try {
+                val apk = File(cacheDir, "updates/CheviExplorer-release.apk")
+                GitHubDistribution.downloadApk(release.apkUrl, apk)
+                runOnUiThread {
+                    pendingUpdateFile = apk
+                    installDownloadedApk(apk)
+                }
+            } catch (e: Exception) {
+                appendLog("ERROR DESCARGANDO APK: ${e.message ?: e.javaClass.simpleName}")
+                runOnUiThread {
+                    Toast.makeText(this, "No se pudo descargar el APK de actualización", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun installDownloadedApk(apk: File) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !packageManager.canRequestPackageInstalls()) {
+            pendingUpdateFile = apk
+            AlertDialog.Builder(this)
+                .setTitle("Permitir instalación")
+                .setMessage("Android necesita permiso para instalar APK descargados fuera de Play Store. Actívalo para CheviExplorer y vuelve a la aplicación.")
+                .setNegativeButton("Cancelar") { _, _ -> pendingUpdateFile = null }
+                .setPositiveButton("Abrir ajustes") { _, _ ->
+                    startActivity(Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+                }
+                .show()
+            return
+        }
+        pendingUpdateFile = null
+        try {
+            val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", apk)
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            appendLog("ERROR ABRIENDO INSTALADOR: ${e.message ?: e.javaClass.simpleName}")
+            Toast.makeText(this, "No se pudo abrir el instalador de Android", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val apk = pendingUpdateFile
+        if (apk != null && (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || packageManager.canRequestPackageInstalls())) {
+            installDownloadedApk(apk)
+        }
     }
 
     private fun lp(w: Int, h: Int) = LinearLayout.LayoutParams(w, h)
