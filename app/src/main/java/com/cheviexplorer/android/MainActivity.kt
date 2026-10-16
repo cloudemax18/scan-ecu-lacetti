@@ -654,7 +654,8 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         appendLog("TESTER PRESENT automático activado para $profile: intervalo de 2 s mientras la sesión esté abierta.")
         testerPresentTask = executor.scheduleAtFixedRate({
             try {
-                if (validatedStartProfile != profile || port !== serialPort || !serialPort.isOpen) {
+                if (validatedStartProfile != profile || port !== serialPort || !serialPort.isOpen ||
+                    ecuProfile.selectedItemPosition != if (profile == "MR-140") 0 else 1) {
                     testerPresentTask?.cancel(false)
                     return@scheduleAtFixedRate
                 }
