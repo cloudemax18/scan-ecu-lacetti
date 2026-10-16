@@ -2,6 +2,10 @@
 
 Vehículo objetivo: Chevrolet/Daewoo Lacetti 2008, motor 1.8 LDA, transmisión automática ZF 4HP16. Interfaz disponible: KKL 409.1 USB con CH340/CH341 por USB-OTG, sin interruptor.
 
+## Hallazgos del ejecutable CheviExplorer_ES.exe
+
+Se inspeccionó la tabla de cadenas del ejecutable Windows Delphi (PE32, 1.31 MB). Aparecen nombres de funciones/controles `PortInit`, `Altinit`, `Button_ECUIdentClick`, `TimerTesterPresentTimer`, `test_ON`, `test_OFF`, `MenuItem_TestClick` y la pantalla «Control de actuadores». También contiene perfiles «Motor (MR-140/HV-240)», «Transmisión» y «ABS AVEO (Delphi)», así como etiquetas de actuadores y parámetros de transmisión. Estos nombres confirman que el programa original incluye rutinas de inicialización, keep-alive/TesterPresent, identificación y pruebas ON/OFF; la tabla de cadenas por sí sola no revela los bytes que transmiten esas rutinas. La siguiente fase de ingeniería inversa debe localizar esas rutinas en el código nativo y relacionarlas con capturas de tráfico conocidas.
+
 ## Estado confirmado
 
 - La app abre un puerto USB-serie y registra bytes recibidos en hexadecimal.
@@ -35,6 +39,10 @@ No se ha confirmado aún que el TCM ZF 4HP16 concreto de este vehículo sea acce
 - Manual de servicio, procedimientos EDS 3/EDS 6: https://www.carmanualsonline.info/daewoo-lacetti-2004-service-repair-manual/153
 - Perfil de diagnóstico T18SED MR140/HV240 y lista de actuadores reportada por ScanDoc: https://beta.scandoc.online/last/0/20/2/0/36
 - Nota de conexión en banco MR-140 (útil solo como referencia de pines en banco, no para conectar a ciegas en el vehículo): https://blog.obdii365.com/2025/02/05/tips-to-read-chevrolet-mr140-ecu-with-obdstar-dc706/
+
+## Elementos de interfaz y actuadores identificados en el ejecutable
+
+Cadenas visibles del perfil de motor incluyen prueba de relé de bomba de combustible, ventilador de alta/baja velocidad, luz de falla, válvula EGR, inyectores 1–4 y regulador de ralentí. Para transmisión aparecen parámetros como temperatura del aceite, corriente de los solenoides de presión, solenoides 1/2, bloqueo del convertidor y sincronización; también aparecen descripciones de DTC de solenoide 1 y 2. Estos nombres sirven para construir el catálogo de funciones, pero no se deben convertir en comandos TX hasta extraer las tablas/código que vinculan cada elemento con su identificador de prueba.
 
 ## Incógnitas pendientes
 
