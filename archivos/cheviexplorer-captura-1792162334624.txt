@@ -1,0 +1,10 @@
+[10:51:22] Aplicación iniciada. Conecta el KKL mediante USB OTG.
+[10:51:22] Esta versión prueba el enlace serie; el protocolo ECU específico aún debe validarse.
+[10:51:56] USB detectado: VID=1A86 PID=7523
+[10:52:00] USB detectado: VID=1A86 PID=7523
+[10:52:00] Puerto abierto: Ch34xSerialDriver, 10400 baud, 8N1.
+[10:52:00] No se han enviado bytes a la ECU. Esperando datos del enlace.
+[10:52:09] INIT MR-140: secuencia candidata derivada estáticamente; no es una comunicación confirmada.
+[10:52:09] ERROR INIT MR-140: UnsupportedOperationException
+[10:52:12] INIT MR-140: secuencia candidata derivada estáticamente; no es una comunicación confirmada.
+[10:52:12] ERROR INIT MR-140: UnsupportedOperationException
