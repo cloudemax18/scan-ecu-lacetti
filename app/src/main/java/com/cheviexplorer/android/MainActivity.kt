@@ -4,8 +4,6 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.net.Uri
 import android.os.Build
-import android.text.InputType
-import android.widget.EditText
 import androidx.core.content.FileProvider
 import java.io.File
 import android.app.PendingIntent
@@ -123,11 +121,6 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         val save = Button(this).apply { text = "Exportar captura RX"; setOnClickListener { exportLog() } }
         root.addView(save, lp(-1, -2))
-        val upload = Button(this).apply {
-            text = "Subir captura a GitHub (Gist secreto)"
-            setOnClickListener { promptUploadCapture() }
-        }
-        root.addView(upload, lp(-1, -2))
         val update = Button(this).apply {
             text = "Buscar actualización de CheviExplorer"
             setOnClickListener { checkForUpdates() }
@@ -138,64 +131,29 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         setContentView(root)
     }
 
-    private fun promptUploadCapture() {
-        val capture = log.text.toString()
-        if (capture.isBlank()) {
-            Toast.makeText(this, "No hay captura para subir", Toast.LENGTH_LONG).show()
-            return
-        }
-        val tokenInput = EditText(this).apply {
-            hint = "Token GitHub con permiso gist"
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            setSingleLine(true)
-        }
-        val message = TextView(this).apply {
-            text = "Se subirá el registro actual a un Gist secreto (no listado) de tu cuenta. No es un almacenamiento privado: cualquiera que tenga el enlace podrá verlo. La captura puede contener identificadores del vehículo. El token solo se usa en esta solicitud y no se guarda en la app. Crea un token clásico con alcance gist."
-            setPadding(36, 12, 36, 12)
-        }
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            addView(message, lp(-1, -2))
-            addView(tokenInput, lp(-1, -2))
-            setPadding(18, 0, 18, 0)
-        }
-        AlertDialog.Builder(this)
-            .setTitle("Subir captura a GitHub")
-            .setView(container)
-            .setNegativeButton("Cancelar", null)
-            .setPositiveButton("Subir captura") { _, _ ->
-                val token = tokenInput.text.toString().trim()
-                if (token.isBlank()) {
-                    Toast.makeText(this, "No se proporcionó token; no se subió nada", Toast.LENGTH_LONG).show()
-                    return@setPositiveButton
-                }
-                appendLog("SUBIDA GITHUB: envío explícito de la captura actual a un Gist no listado.")
-                executor.execute {
-                    try {
-                        val url = GitHubDistribution.uploadSecretGist(token, capture)
-                        appendLog("CAPTURA SUBIDA A GITHUB: $url")
-                        runOnUiThread {
-                            AlertDialog.Builder(this)
-                                .setTitle("Captura subida")
-                                .setMessage("Enlace al Gist secreto:\n$url\n\nGuárdalo de forma segura; cualquiera con el enlace podrá verlo.")
-                                .setPositiveButton("Cerrar", null)
-                                .show()
-                        }
-                    } catch (e: Exception) {
-                        appendLog("ERROR SUBIENDO CAPTURA: ${e.message ?: e.javaClass.simpleName}")
-                        runOnUiThread {
-                            Toast.makeText(this, "No se pudo subir la captura. Revisa token/permisos y conexión.", Toast.LENGTH_LONG).show()
-                        }
+    private fun checkForUpdates() {
+        if (BuildConfig.DEBUG) {
+            appendLog("ACTUALIZACIONES: buscando la última compilación debug exitosa en GitHub Actions.")
+            executor.execute {
+                try {
+                    val buildUrl = GitHubDistribution.fetchLatestSuccessfulDebugBuild()
+                    runOnUiThread {
+                        AlertDialog.Builder(this)
+                            .setTitle("Compilación debug disponible")
+                            .setMessage("Se encontró la última compilación exitosa de CheviExplorer en GitHub Actions. Abre la ejecución para descargar el artefacto APK debug. La instalación manual puede requerir desinstalar una compilación debug firmada con otra clave.")
+                            .setNegativeButton("Cancelar", null)
+                            .setPositiveButton("Abrir compilación") { _, _ ->
+                                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(buildUrl)))
+                            }
+                            .show()
+                    }
+                } catch (e: Exception) {
+                    appendLog("ERROR BUSCANDO DEBUG EN ACTIONS: ${e.message ?: e.javaClass.simpleName}")
+                    runOnUiThread {
+                        Toast.makeText(this, "No se pudo comprobar la compilación debug en GitHub Actions", Toast.LENGTH_LONG).show()
                     }
                 }
             }
-            .show()
-    }
-
-    private fun checkForUpdates() {
-        if (BuildConfig.DEBUG) {
-            Toast.makeText(this, "La actualización in-app está reservada al APK release. El APK debug se descarga desde Actions.", Toast.LENGTH_LONG).show()
-            appendLog("ACTUALIZACIONES: esta es la variante debug; usa el artefacto de GitHub Actions.")
             return
         }
         appendLog("ACTUALIZACIONES: consultando GitHub Releases.")
