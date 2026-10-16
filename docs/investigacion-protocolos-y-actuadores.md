@@ -173,3 +173,15 @@ Nueva captura combinada de la app Android: adaptador CH340/CH341 (`VID=1A86 PID=
 Esta prueba aporta evidencia sólida de que ambos perfiles reciben bytes adicionales al eco TX, con direcciones de origen diferentes (`11` para MR-140 y `18` para ZF) y checksum coherente. El patrón de datos observado es idéntico (`C1 EF 8F`) en esta captura. No se debe asumir todavía que esos tres bytes identifican el módulo ni que prueban que la comunicación de diagnóstico completa funciona: su significado requiere contrastarse con el decodificador del programa original y con más sesiones reproducibles.
 
 La captura no valida servicios de lectura de DTC, parámetros en vivo, borrado ni actuadores. Mantener esas funciones de transmisión deshabilitadas hasta confirmar servicios y condiciones de seguridad. Próxima fase: comparar la trama recibida con el camino de recepción/identificación del ejecutable Delphi y comprobar si la respuesta se repite tras reconexiones y ciclos de contacto.
+
+
+## Segunda captura Android: repetibilidad de las respuestas MR-140 y ZF 4HP16 (16-10-2026, 11:52)
+
+Una segunda sesión, iniciada a las 11:51:51 y cerrada a las 11:52:45, repite exactamente los resultados de la captura anterior:
+
+- MR-140: TX `81 11 F1 81 04`; eco idéntico; respuesta adicional `83 F1 11 C1 EF 8F C4`; origen `11`; checksum calculado/recibido `C4`.
+- ZF 4HP16: TX `81 18 F1 81 0B`; eco idéntico; respuesta adicional `83 F1 18 C1 EF 8F CB`; origen `18`; checksum calculado/recibido `CB`.
+
+El adaptador vuelve a identificarse como CH340/CH341 (`VID=1A86 PID=7523`) y el puerto abre a 10400 baud, 8N1. El aviso de que el driver no admite `purgeHwBuffers()` reaparece, pero no impide que se reciban ambas respuestas candidatas. El cierre del puerto también queda registrado.
+
+**Conclusión reforzada:** las dos respuestas son reproducibles en al menos dos sesiones y mantienen las mismas tramas, direcciones y checksums. Esto reduce la posibilidad de que el resultado anterior fuera un evento aislado. Sigue siendo una validación del intercambio observado, no una decodificación semántica de `C1 EF 8F` ni una prueba de lectura de DTC, parámetros, borrado o actuadores. Conservar ambas capturas como fixtures de referencia antes de avanzar a solicitudes de diagnóstico adicionales.
