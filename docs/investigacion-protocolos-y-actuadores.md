@@ -102,3 +102,28 @@ Esto estrecha el área a estudiar: las rutinas alrededor de `0x42A900–0x42B825
 El informe de referencias cruzadas encontró que varios nombres de métodos (`PortInit`, `WriteReadComm`, `TimerTesterPresentTimer`, `SecurityAccess`) están almacenados como metadatos/cadenas, pero no tienen referencias absolutas directas en el código. Eso es habitual en aplicaciones Delphi: los métodos pueden enlazarse mediante tablas de clases/eventos, por lo que la ausencia de referencia directa no significa que estén sin usar.
 
 **Siguiente paso técnico:** resolver las tablas de métodos/eventos de Delphi y seguir desde el controlador de identificación hasta el código que arma el buffer de transmisión. Hasta que esa ruta o una captura TX/RX de referencia revele los bytes, se mantiene deshabilitado el envío de comandos desde Android.
+
+
+## Hallazgo importante al revisar el volcado Delphi subido al repositorio (16-10-2026)
+
+La carpeta `archivos/dump/` contiene un volcado desensamblado de los métodos de CheviExplorer. Esto aporta evidencia más directa que el listado de cadenas, aunque sigue siendo código desensamblado y no una captura eléctrica real.
+
+### Configuración serie y trama de inicialización
+
+En `TForm1.PortInit` (dirección `0x004E27F0`), el ejecutable abre el puerto con `CreateFileA`, configura la cola serie, purga buffers y configura 8 bits de datos, sin paridad y un bit de parada. La selección de velocidad en este código es 9600 cuando el selector global vale el carácter ASCII `'1'`; para los perfiles MR-140 y ZF, los controladores de perfil asignan `0x12` y `0x22`, respectivamente, por lo que esta rama apunta a **10400 baudios**.
+
+Los métodos de selección de perfil establecen estos valores:
+
+- `N_MR140Click`: modo `0x12`, bytes de dirección `0x11 0xF1`.
+- `N_ZFClick`: modo `0x22`, bytes de dirección `0x18 0xF1`.
+- `N_SiriusClick`: modo `0x11`, dirección `0x11 0xF1` (perfil distinto; no confundir con MR-140).
+- `N_AisinClick`: modo `0x21`, dirección `0x18 0xF1` (perfil distinto; no confundir con ZF).
+
+En la ruta de inicio normal de MR-140 y ZF, el código ejecuta pulsos de BREAK mediante `ClearCommBreak`/`SetCommBreak`, con pausas calculadas desde la opción «Alternativa inicialización ECU», y después llama a `WriteReadComm` con el patrón de cuatro bytes `81 [dirección alta] [dirección baja] 81`. La función `WriteReadComm` suma los bytes anteriores y añade el byte bajo de la suma como checksum para los modos distintos de ASCII `'1'`; luego transmite y lee la respuesta.
+
+Por tanto, las tramas candidatas deducidas estáticamente son:
+
+- MR-140: `81 11 F1 81 04` (checksum aditivo de los cuatro bytes anteriores).
+- ZF 4HP16: `81 18 F1 81 0B` (checksum aditivo de los cuatro bytes anteriores).
+
+**Importante:** estas tramas son evidencia del volcado del software original, pero no se han probado con el Lacetti del usuario. El volcado muestra también que la inicialización depende de los pulsos BREAK y de retardos precisos. La versión Android actual solo abre el puerto USB-serie; no genera BREAK ni envía estas tramas, así que no se debe esperar RX con la versión actual. Antes de implementar el envío, hay que confirmar que la biblioteca/driver CH340 Android puede reproducir la temporización y el control de línea necesarios, y verificar la secuencia de respuesta esperada en el mismo método `Start`.
