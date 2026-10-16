@@ -26,6 +26,24 @@ internal object KwpProtocol {
     }
 
     /**
+     * Builds the standard-profile TesterPresent frame observed in the original
+     * Delphi timer: format 0x81, target, tester address 0xF1, service 0x3E,
+     * and additive checksum.
+     */
+    fun buildTesterPresentRequest(targetAddress: Int): ByteArray {
+        require(targetAddress in 0..0xFF) { "Target address must be one byte" }
+        val frame = byteArrayOf(
+            0x81.toByte(),
+            targetAddress.toByte(),
+            0xF1.toByte(),
+            0x3E,
+            0x00
+        )
+        frame[4] = checksum(frame.copyOfRange(0, 4)).toByte()
+        return frame
+    }
+
+    /**
      * Static reconstruction of the original CheviExplorer ECU-identification request.
      * Intentionally not wired to serial TX until its response is validated on-vehicle.
      */
