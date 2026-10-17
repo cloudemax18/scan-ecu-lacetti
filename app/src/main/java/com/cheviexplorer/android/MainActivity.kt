@@ -1453,6 +1453,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
 
     private fun disconnect() {
+        if (::liveStartButton.isInitialized) stopLiveParameterPolling()
         testerPresentTask?.cancel(false)
         testerPresentTask = null
         try { ioManager?.listener = null; ioManager?.stop() } catch (_: Exception) {}
@@ -1491,6 +1492,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         try { unregisterReceiver(permissionReceiver) } catch (_: Exception) {}
         executor.shutdownNow()
         testerPresentExecutor.shutdownNow()
+        liveDataExecutor.shutdownNow()
         super.onDestroy()
     }
 }
