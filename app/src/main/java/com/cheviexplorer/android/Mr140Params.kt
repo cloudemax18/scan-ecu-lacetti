@@ -2,7 +2,7 @@ package com.cheviexplorer.android
 
 /**
  * Parámetros en vivo del MR-140 (Lacetti 1.8), extraídos del CheviExplorer original.
- * NO COMPILADO NI PROBADO en este entorno: revisar antes de integrar.
+ * Tabla preliminar integrada en la app; las fórmulas y offsets aún requieren validación con capturas físicas.
  *
  * Petición: [0x82, 0x11, 0xF1, 0x21, localId, checksum]  (checksum = suma de bytes mod 256)
  * Respuesta positiva: [fmt, 0xF1, 0x11, 0x61, localId, datos..., checksum]
