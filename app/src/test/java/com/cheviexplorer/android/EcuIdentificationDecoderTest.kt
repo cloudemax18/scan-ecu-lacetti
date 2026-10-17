@@ -11,7 +11,7 @@ class EcuIdentificationDecoderTest {
         "8Z1JJ51388V322946".toByteArray(Charsets.US_ASCII).copyInto(data, 0)
         "03h014h005".toByteArray(Charsets.US_ASCII).copyInto(data, 48)
         byteArrayOf(0x12, 0x34, 0x56, 0x78).map { it.toByte() }.toByteArray().copyInto(data, 64)
-        val payload = byteArrayOf(0x5A, 0x80.toByte()) + data
+        val payload = byteArrayOf(0x5A.toByte(), 0x80.toByte()) + data
 
         val values = EcuIdentificationDecoder.decode("MR-140", payload)
         assertEquals("8Z1JJ51388V32294", values.first { it.name.startsWith("VIN") }.value)
