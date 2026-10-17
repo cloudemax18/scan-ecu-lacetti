@@ -18,7 +18,7 @@ Se compararon con el código actual de CheviExplorer, la reconstrucción de la t
 1. **Reutilizar ideas de arquitectura K-Line, no copiar el protocolo genérico como si fuera el perfil Delphi del Lacetti.** La librería K-Line separa capa física/tiempos, encuadre, protocolo y definiciones ECU específicas. Esa separación es una buena referencia para organizar CheviExplorer.
 2. **La conexión del coche ya está probada con KWP físico** a 10400 baudios, 8N1 y direcciones de destino MR-140 `0x11` y ZF `0x18`. No reemplazar esta secuencia por auto-detección OBD genérica ni asumir que las direcciones/servicios del ejemplo de Arduino aplican a estas ECUs.
 3. **El escáner KWP actual debe mejorar su contabilidad de resultados.** El resumen del barrido puede declarar el total planificado aunque se haya detenido antes; además no separa checksum inválido, RX no reconocible y excepción de I/O. Esta auditoría corrige ese resumen.
-4. **No activar actuadores.** El documento `arquitectura_completa_scanner.md` propone servicio `0x30`, IDs de actuador, interlock basado en RPM y apagado a 30 s, pero no aporta evidencia específica de que MR-140/ZF acepten esos comandos ni que ese formato sea correcto. No se implementa control de actuadores.
+4. **Los actuadores deben portarse desde el EXE, no inventarse desde ejemplos genéricos.** La revisión adicional de `archivos/dumps1.8/Graf.pas` sí contiene los handlers `DriverIM`, `test_ONClick` y `test_OFFClick` para el selector MR-140. Android ahora reproduce esos IDs y formatos exactos con confirmación, validación de respuesta y un intento de OFF temporal. No se habilitó la ZF porque ese handler usa destino `0x11`.
 5. **No decodificar los bloques `0x21` como sensores aún.** Las capturas han confirmado respuestas positivas a algunos IDs, no el significado, endianess, escala o relación de cada byte con los offsets del buffer Delphi.
 6. **No integrar CAN en el camino KKL.** La librería CAN es para ISO 15765-4 sobre CAN (normalmente pines OBD 6/14 y transceptor CAN); el KKL usado por esta app opera K-Line en el pin 7. El proyecto CAN puede ser referencia futura para otra interfaz, no una dependencia actual.
 
@@ -76,7 +76,7 @@ La adaptación de acelerador es otra rutina: `Button_ObuchenieClick` envía `30 
 
 ### D. Encuadre, eco y checksum deben comprobarse por separado
 
-El código de referencia K-Line muestra que los tiempos y el eco dependen del adaptador y que distintos protocolos usan distintos formatos. CheviExplorer ya comprueba checksum y dirección en el parser de respuestas; no debe adoptar reglas universales como “si el primer byte coincide, siempre hay eco” sin verificar el resto de la trama. La corrección de este cambio se limita al informe de resultados del barrido, no reemplaza el parser de transporte.
+El código de referencia K-Line muestra que los tiempos y el eco dependen del adaptador y que distintos protocolos usan distintos formatos. CheviExplorer ya comprueba checksum y dirección en el parser de respuestas; no debe adoptar reglas universales como “si el primer byte coincide, siempre hay eco” sin verificar el resto de la trama. La corrección del resumen del barrido y el portado de los handlers de actuadores no reemplazan el parser de transporte.
 
 ### E. OBD-II estándar frente a diagnóstico propietario
 
@@ -95,7 +95,9 @@ Se ajustó el resumen del barrido de identificadores locales para informar por s
 - Errores de ejecución/I/O.
 - Resultado final: completado, detenido o interrumpido.
 
-Así una detención temprana no se presenta como un barrido exhaustivo. La app sigue siendo de solo lectura.
+Así una detención temprana no se presenta como un barrido exhaustivo. El barrido sigue siendo de solo lectura; el panel DriverIM es una función separada y explícita de control de actuadores.
+
+Además, se reconstruyó el menú MR-140 de `Graf.pas`, se añadieron los constructores de tramas `0x30` y pruebas unitarias de checksum para lectura de estado, ON/OFF, selección de inyector y adaptación del acelerador. La interfaz se rediseñó con un dashboard nativo de tarjetas redondeadas inspirado visualmente en OBD2-Diagnostic-UI, sin copiar su frontend web ni su transporte WebSocket. El detalle de las funciones portadas está en `PORTADO_DELPHI_ACTUADORES.md`.
 
 ## Próximas pruebas recomendadas
 
