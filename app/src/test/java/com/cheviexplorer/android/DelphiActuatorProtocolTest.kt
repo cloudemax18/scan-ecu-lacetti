@@ -8,7 +8,7 @@ import org.junit.Test
 class DelphiActuatorProtocolTest {
     @Test
     fun buildsMr140ActuatorStatusRequestFromDelphiDriverRoutine() {
-        assertArrayEquals(hex("83 11 F1 30 15 01 D1"), KwpProtocol.buildMr140ActuatorStatusRequest(0x15))
+        assertArrayEquals(hex("83 11 F1 30 15 01 CB"), KwpProtocol.buildMr140ActuatorStatusRequest(0x15))
     }
 
     @Test
