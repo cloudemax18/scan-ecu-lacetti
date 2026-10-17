@@ -120,7 +120,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
         root.addView(testerPresentButton, lp(-1, -2))
         val note = TextView(this).apply {
-            text = "Las consultas de identificación y DTC reconstruyen solicitudes de lectura del programa Delphi original. Inicializa primero el perfil seleccionado. Los DTC se decodifican con el formato de registros reconstruido del Delphi; el resultado de ZF debe confirmarse en vehículo. Borrado de códigos, seguridad y actuadores no están habilitados."
+            text = "Inicializa primero la ECU. MR-140: registros DTC de 4 bytes; ZF 4HP16: registros de 3 bytes. El parser Delphi indica que 59 00 significa sin averías y que el estado 0x60 es intermitente. Los parámetros F0/F1 son preliminares y deben contrastarse con capturas reales. Borrado, seguridad y actuadores siguen deshabilitados."
             textSize = 13f; setTextColor(0xFFFFD180.toInt()); setPadding(0, 12, 0, 12)
         }
         root.addView(note, lp(-1, -2))
@@ -734,7 +734,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                         appendLog("DATOS DTC RAW $profile (incluye SID): ${decoded.rawPayload.toHex()}")
                         when {
                             decoded.noFaultsConfirmed -> {
-                                appendLog("DTC $profile: sin averías reportadas por la respuesta Delphi 59 00.")
+                                appendLog("DTC $profile: sin averías (contador 0 confirmado por el parser Delphi).")
                             }
                             decoded.records.isNotEmpty() -> {
                                 decoded.records.forEach { record ->
@@ -751,7 +751,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                             else -> appendLog("DTC $profile: bytes de registro incompletos: ${decoded.recordBytes.toHex()}")
                         }
                         if (decoded.malformedTail.isNotEmpty()) {
-                            appendLog("DTC: cola incompleta fuera de un registro de 3 bytes: ${decoded.malformedTail.toHex()}")
+                            appendLog("DTC: bytes sobrantes fuera de un registro completo: ${decoded.malformedTail.toHex()}")
                         }
                         if (decoded.recordBytes.isNotEmpty()) {
                             appendLog("REGISTROS DTC RAW: ${decoded.recordBytes.toHex()}")
