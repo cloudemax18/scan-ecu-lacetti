@@ -94,7 +94,7 @@ Esta es la rutina de aprendizaje/adaptación del acelerador del EXE, no uno de l
 - `MainActivity.kt`: sección de pruebas de actuadores separada del barrido de solo lectura, con consulta de estado, activación temporal y OFF.
 - `DelphiActuatorProtocolTest.kt`: pruebas unitarias para checksum, framing, los cuatro casos de inyector y el comando de adaptación.
 
-La app verifica el checksum y exige una respuesta positiva `0x70` con local ID/opción coincidentes. Una respuesta negativa `7F 30 NRC`, checksum inválido o ausencia de RX no se muestra como éxito.
+La app verifica el checksum y exige una respuesta positiva `0x70` con el local ID solicitado. En la respuesta positiva KWP el byte siguiente no se debe asumir como eco de la opción de control; los bytes restantes se conservan como estado bruto. Una respuesta negativa `7F 30 NRC`, checksum inválido o ausencia de RX no se muestra como éxito.
 
 ## Salvaguardas añadidas en Android
 
