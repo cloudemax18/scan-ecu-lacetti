@@ -91,68 +91,282 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     }
 
     private fun buildUi() {
-        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(20, 22, 20, 18); setBackgroundColor(0xFF101820.toInt()) }
-        val title = TextView(this).apply { text = "CheviExplorer"; textSize = 28f; setTextColor(0xFFFFFFFF.toInt()); gravity = Gravity.CENTER_VERTICAL }
-        root.addView(title, lp(-1, -2))
-        root.addView(TextView(this).apply { text = "ANDROID · KKL 409.1 · CH340/CH341"; textSize = 12f; setTextColor(0xFFFF6B6B.toInt()); setPadding(0, 4, 0, 16) }, lp(-1, -2))
-        status = TextView(this).apply { textSize = 14f; setTextColor(0xFFFFFFFF.toInt()); setPadding(12, 14, 12, 14); setBackgroundColor(0xFF263541.toInt()) }
-        root.addView(status, lp(-1, -2))
-        root.addView(TextView(this).apply { text = "Velocidad serie"; textSize = 14f; setTextColor(0xFFCFD8DC.toInt()); setPadding(0, 16, 0, 4) }, lp(-1, -2))
-        baud = Spinner(this).apply { adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, listOf("10400 baud (K-line, por validar)", "9600 baud", "38400 baud", "4800 baud")) }
-        root.addView(baud, lp(-1, -2))
-        root.addView(TextView(this).apply { text = "Perfil de ECU"; textSize = 14f; setTextColor(0xFFCFD8DC.toInt()); setPadding(0, 12, 0, 4) }, lp(-1, -2))
-        ecuProfile = Spinner(this).apply { adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, listOf("Motor Delphi MR-140", "Transmisión ZF 4HP16")) }
-        root.addView(ecuProfile, lp(-1, -2))
-        connectButton = Button(this).apply { text = "Buscar / conectar cable"; setOnClickListener { requestUsbConnection() } }
-        root.addView(connectButton, lp(-1, -2))
-        val initButton = Button(this).apply {
-            text = "Inicializar ECU · solo identificación"
-            setOnClickListener { initializeSelectedEcu() }
+        val pageBackground = 0xFF101820.toInt()
+        val cardBackground = 0xFF1B2A35.toInt()
+        val accent = 0xFF56C7B5.toInt()
+        val primaryText = 0xFFF3F7FA.toInt()
+        val secondaryText = 0xFFB0BEC5.toInt()
+
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(16, 12, 16, 8)
+            setBackgroundColor(pageBackground)
         }
-        root.addView(initButton, lp(-1, -2))
-        val identifyButton = Button(this).apply {
-            text = "Consultar identificación ECU · 1A 80"
-            setOnClickListener { requestEcuIdentification() }
+
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(2, 4, 2, 10)
         }
-        root.addView(identifyButton, lp(-1, -2))
-        val dtcButton = Button(this).apply {
-            text = "Leer códigos de avería (DTC) · solo lectura"
-            setOnClickListener { readDtcCodes() }
+        val title = TextView(this).apply {
+            text = "CheviExplorer"
+            textSize = 25f
+            setTextColor(primaryText)
+            setTypeface(null, android.graphics.Typeface.BOLD)
         }
-        root.addView(dtcButton, lp(-1, -2))
-        val liveParamsButton = Button(this).apply {
-            text = "Leer datos MR-140 · IDs confirmados 02/03/04"
-            setOnClickListener { readMr140Parameters() }
+        header.addView(title, lp(-1, -2))
+        header.addView(TextView(this).apply {
+            text = "LACETTI 1.8 · KKL 409.1"
+            textSize = 11f
+            letterSpacing = 0.08f
+            setTextColor(accent)
+            setPadding(0, 2, 0, 8)
+        }, lp(-1, -2))
+        status = TextView(this).apply {
+            text = "Desconectado"
+            textSize = 13f
+            setTextColor(primaryText)
+            setPadding(12, 10, 12, 10)
+            setBackgroundColor(cardBackground)
         }
-        root.addView(liveParamsButton, lp(-1, -2))
-        val testerPresentButton = Button(this).apply {
-            text = "Enviar TesterPresent · mantener sesión"
-            setOnClickListener { sendTesterPresentOnce() }
+        header.addView(status, lp(-1, -2))
+        root.addView(header, lp(-1, -2))
+
+        val screenHost = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
         }
-        root.addView(testerPresentButton, lp(-1, -2))
-        val probeButton = Button(this).apply {
-            text = "Explorar IDs KWP 0x21 · solo lectura"
-            setOnClickListener { probeLocalIdentifiers() }
+        root.addView(screenHost, LinearLayout.LayoutParams(-1, 0, 1f))
+
+        val screens = linkedMapOf<String, ScrollView>()
+        fun makeScreen(name: String): LinearLayout {
+            val body = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, 4, 0, 14)
+            }
+            val scroll = ScrollView(this).apply {
+                isFillViewport = true
+                visibility = android.view.View.GONE
+                addView(body)
+            }
+            screens[name] = scroll
+            screenHost.addView(scroll, LinearLayout.LayoutParams(-1, -1))
+            return body
         }
-        root.addView(probeButton, lp(-1, -2))
-        val note = TextView(this).apply {
-            text = "Inicializa primero la ECU. MR-140: registros DTC de 4 bytes; ZF 4HP16: registros de 3 bytes. El parser Delphi indica que 59 00 significa sin averías y que el estado 0x60 es intermitente. Los datos MR-140 02/03/04 se muestran en bruto hasta verificar su mapa y fórmulas. Borrado, seguridad y actuadores siguen deshabilitados."
-            textSize = 13f; setTextColor(0xFFFFD180.toInt()); setPadding(0, 12, 0, 12)
+        fun addSection(parent: LinearLayout, heading: String, subtitle: String? = null) {
+            parent.addView(TextView(this).apply {
+                text = heading
+                textSize = 19f
+                setTextColor(primaryText)
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setPadding(2, 10, 2, 4)
+            }, lp(-1, -2))
+            if (subtitle != null) parent.addView(TextView(this).apply {
+                text = subtitle
+                textSize = 13f
+                setTextColor(secondaryText)
+                setPadding(2, 0, 2, 10)
+            }, lp(-1, -2))
         }
-        root.addView(note, lp(-1, -2))
-        root.addView(TextView(this).apply { text = "REGISTRO DE COMUNICACIÓN"; textSize = 12f; setTextColor(0xFF90A4AE.toInt()); setPadding(0, 6, 0, 8) }, lp(-1, -2))
-        log = TextView(this).apply { textSize = 12f; typeface = android.graphics.Typeface.MONOSPACE; setTextColor(0xFFECEFF1.toInt()); setPadding(10, 10, 10, 10) }
-        val scroll = ScrollView(this).apply { setBackgroundColor(0xFF18232C.toInt()); addView(log) }
-        root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
-        val save = Button(this).apply { text = "Exportar captura RX"; setOnClickListener { exportLog() } }
-        root.addView(save, lp(-1, -2))
-        val update = Button(this).apply {
-            text = "Buscar actualización de CheviExplorer"
-            setOnClickListener { checkForUpdates() }
+        fun addCard(parent: LinearLayout, content: LinearLayout) {
+            content.setPadding(14, 12, 14, 12)
+            content.setBackgroundColor(cardBackground)
+            val params = lp(-1, -2).apply { bottomMargin = 10 }
+            parent.addView(content, params)
         }
-        root.addView(update, lp(-1, -2))
-        val clear = Button(this).apply { text = "Limpiar registro"; setOnClickListener { log.text = "" } }
-        root.addView(clear, lp(-1, -2))
+        fun addLabel(parent: LinearLayout, label: String) {
+            parent.addView(TextView(this).apply {
+                text = label
+                textSize = 13f
+                setTextColor(secondaryText)
+                setPadding(0, 8, 0, 4)
+            }, lp(-1, -2))
+        }
+        fun addAction(parent: LinearLayout, label: String, onClick: () -> Unit): Button {
+            val button = Button(this).apply {
+                text = label
+                isAllCaps = false
+                textSize = 14f
+                setOnClickListener { onClick() }
+            }
+            parent.addView(button, lp(-1, -2).apply { bottomMargin = 4 })
+            return button
+        }
+
+        // Inicio: conexión y selección del módulo.
+        val home = makeScreen("Inicio")
+        addSection(home, "Conexión", "Conecta el adaptador al teléfono mediante USB OTG.")
+        val connectionCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        addLabel(connectionCard, "Módulo seleccionado")
+        ecuProfile = Spinner(this).apply {
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                listOf("Motor Delphi MR-140", "Transmisión ZF 4HP16"))
+        }
+        connectionCard.addView(ecuProfile, lp(-1, -2))
+        addLabel(connectionCard, "La velocidad habitual de K-Line es 10400 baud.")
+        baud = Spinner(this).apply {
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                listOf("10400 baud · K-Line", "9600 baud", "38400 baud", "4800 baud"))
+        }
+        connectionCard.addView(baud, lp(-1, -2))
+        connectButton = Button(this).apply {
+            text = "Buscar / conectar cable"
+            isAllCaps = false
+            setOnClickListener { requestUsbConnection() }
+        }
+        connectionCard.addView(connectButton, lp(-1, -2).apply { topMargin = 10 })
+        addCard(home, connectionCard)
+        addSection(home, "Acceso rápido", "Las funciones avanzadas están separadas por categoría.")
+        val quickCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        addAction(quickCard, "Inicializar ECU") { initializeSelectedEcu() }
+        addAction(quickCard, "Leer códigos de avería") { readDtcCodes() }
+        addCard(home, quickCard)
+        addSection(home, "Vehículo")
+        val vehicleCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        vehicleCard.addView(TextView(this).apply {
+            text = "Chevrolet Lacetti · 1.8 LDA · automático · 2008"
+            textSize = 14f
+            setTextColor(primaryText)
+        }, lp(-1, -2))
+        vehicleCard.addView(TextView(this).apply {
+            text = "Adaptador compatible esperado: KKL 409.1 con CH340/CH341."
+            textSize = 12f
+            setTextColor(secondaryText)
+            setPadding(0, 6, 0, 0)
+        }, lp(-1, -2))
+        addCard(home, vehicleCard)
+
+        // Diagnóstico: acciones de identificación y averías.
+        val diagnosis = makeScreen("Diagnóstico")
+        addSection(diagnosis, "Diagnóstico", "Consultas de solo lectura para el módulo seleccionado.")
+        val diagnosisCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        addAction(diagnosisCard, "Inicializar comunicación con ECU") { initializeSelectedEcu() }
+        addAction(diagnosisCard, "Consultar identificación · 1A 80") { requestEcuIdentification() }
+        addAction(diagnosisCard, "Leer códigos de avería (DTC)") { readDtcCodes() }
+        addCard(diagnosis, diagnosisCard)
+        val safetyCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        safetyCard.addView(TextView(this).apply {
+            text = "Solo lectura"
+            textSize = 15f
+            setTextColor(accent)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        }, lp(-1, -2))
+        safetyCard.addView(TextView(this).apply {
+            text = "El borrado de averías, funciones de seguridad y activación de actuadores no están habilitados."
+            textSize = 13f
+            setTextColor(secondaryText)
+            setPadding(0, 5, 0, 0)
+        }, lp(-1, -2))
+        addCard(diagnosis, safetyCard)
+
+        // Datos ECU: lecturas confirmadas y sondeo exploratorio.
+        val ecuData = makeScreen("Datos ECU")
+        addSection(ecuData, "Datos de la ECU", "Se muestran respuestas confirmadas; los bytes sin mapa validado permanecen en hexadecimal.")
+        val dataCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        addAction(dataCard, "Leer datos MR-140 · IDs 02 / 03 / 04") { readMr140Parameters() }
+        addAction(dataCard, "Enviar Tester Present") { sendTesterPresentOnce() }
+        addAction(dataCard, "Explorar IDs KWP 0x21 · solo lectura") { probeLocalIdentifiers() }
+        addCard(ecuData, dataCard)
+        val rawCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        rawCard.addView(TextView(this).apply {
+            text = "Importante sobre la interpretación"
+            textSize = 15f
+            setTextColor(accent)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        }, lp(-1, -2))
+        rawCard.addView(TextView(this).apply {
+            text = "Los IDs MR-140 02/03/04 tienen respuestas positivas reales, pero aún no se ha validado el mapa de campos ni sus fórmulas. No se etiquetan como RPM, temperatura u otros valores hasta confirmarlo."
+            textSize = 13f
+            setTextColor(secondaryText)
+            setPadding(0, 6, 0, 0)
+        }, lp(-1, -2))
+        addCard(ecuData, rawCard)
+
+        // Registro: el log es independiente de las pantallas de diagnóstico.
+        val logs = makeScreen("Registro")
+        addSection(logs, "Registro de comunicación", "Tramas y respuestas recibidas durante esta sesión.")
+        log = TextView(this).apply {
+            textSize = 12f
+            typeface = android.graphics.Typeface.MONOSPACE
+            setTextColor(0xFFECEFF1.toInt())
+            setPadding(12, 12, 12, 12)
+            setTextIsSelectable(true)
+        }
+        val logCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        logCard.setPadding(0, 0, 0, 0)
+        logCard.addView(log, lp(-1, -2))
+        logCard.setBackgroundColor(cardBackground)
+        logs.addView(logCard, lp(-1, -2).apply { bottomMargin = 10 })
+        val logActions = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        addAction(logActions, "Exportar captura RX") { exportLog() }
+        addAction(logActions, "Limpiar registro") { log.text = "" }
+        addCard(logs, logActions)
+
+        // Ajustes: notas y distribución de la app.
+        val settings = makeScreen("Ajustes")
+        addSection(settings, "Ajustes", "Configuración del adaptador y mantenimiento de la aplicación.")
+        val serialCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        addLabel(serialCard, "Velocidad serie")
+        // El selector de velocidad vive en Inicio; este texto evita duplicar controles.
+        serialCard.addView(TextView(this).apply {
+            text = "La velocidad se configura desde Inicio. Usa 10400 baud para K-Line salvo que las pruebas indiquen otra cosa."
+            textSize = 13f
+            setTextColor(secondaryText)
+        }, lp(-1, -2))
+        addAction(serialCard, "Buscar actualización de CheviExplorer") { checkForUpdates() }
+        addCard(settings, serialCard)
+        val notesCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        notesCard.addView(TextView(this).apply {
+            text = "Estado de desarrollo"
+            textSize = 15f
+            setTextColor(accent)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        }, lp(-1, -2))
+        notesCard.addView(TextView(this).apply {
+            text = "MR-140: lectura DTC y datos 02/03/04 en bruto. ZF 4HP16: inicialización y exploración de IDs comprobadas. La decodificación de parámetros de transmisión y los mapas de datos siguen en investigación."
+            textSize = 13f
+            setTextColor(secondaryText)
+            setPadding(0, 6, 0, 0)
+        }, lp(-1, -2))
+        addCard(settings, notesCard)
+
+        val nav = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 6, 0, 2)
+            setBackgroundColor(pageBackground)
+        }
+        val navNames = listOf("Inicio", "Diagnóstico", "Datos ECU", "Registro", "Ajustes")
+        fun showScreen(name: String) {
+            screens.forEach { (screenName, view) ->
+                view.visibility = if (screenName == name) android.view.View.VISIBLE else android.view.View.GONE
+            }
+        }
+        navNames.forEach { name ->
+            val navButton = TextView(this).apply {
+                text = when (name) {
+                    "Diagnóstico" -> "DTC"
+                    "Datos ECU" -> "Datos"
+                    else -> name
+                }
+                textSize = 11f
+                gravity = Gravity.CENTER
+                setTextColor(if (name == "Inicio") accent else secondaryText)
+                setPadding(2, 10, 2, 10)
+                setOnClickListener {
+                    showScreen(name)
+                    for (i in 0 until nav.childCount) {
+                        val child = nav.getChildAt(i) as TextView
+                        val selected = child.tag == name
+                        child.setTextColor(if (selected) accent else secondaryText)
+                        child.setTypeface(null, if (selected) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
+                    }
+                }
+                tag = name
+            }
+            nav.addView(navButton, LinearLayout.LayoutParams(0, -2, 1f))
+        }
+        root.addView(nav, lp(-1, -2))
+        showScreen("Inicio")
         setContentView(root)
     }
 
