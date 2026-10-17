@@ -1139,17 +1139,17 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     }
 
     private fun validateLiveParameterMap() {
-        runLocalIdentifierScan((0x01..0x40).toList() + listOf(0xF0, 0xF1, 0xFB), "base")
+        runLocalIdentifierScan(KwpLaboratoryPlan.baseIds, "base")
     }
 
     private fun confirmExtendedLocalIdentifierScan() {
         AlertDialog.Builder(this)
             .setTitle("Barrido KWP ampliado")
-            .setMessage("Se enviarán hasta 189 consultas de lectura 0x21 a IDs aún no validados (41–EF y F2–FF). La ECU puede rechazar la mayoría; el proceso puede tardar varios minutos. No se envían comandos de escritura ni actuadores. Hazlo con el vehículo inmóvil y solo si la comunicación base es estable. ¿Continuar?")
+            .setMessage("Se enviarán ${KwpLaboratoryPlan.extendedIds.size} consultas de lectura 0x21 a IDs aún no validados (41–EF, F2–FA y FC–FF). La ECU puede rechazar la mayoría; el proceso puede tardar varios minutos. No se envían comandos de escritura ni actuadores. Hazlo con el vehículo inmóvil y solo si la comunicación base es estable. ¿Continuar?")
             .setNegativeButton("Cancelar", null)
             .setPositiveButton("Iniciar barrido") { _, _ ->
                 setLabStatus("Paso 5: barrido ampliado en curso. No desconectes el adaptador.")
-                runLocalIdentifierScan((0x41..0xEF).toList() + (0xF2..0xFF).toList(), "ampliado")
+                runLocalIdentifierScan(KwpLaboratoryPlan.extendedIds, "ampliado")
             }
             .show()
     }
