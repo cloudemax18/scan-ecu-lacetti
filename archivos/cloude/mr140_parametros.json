@@ -1,0 +1,870 @@
+[
+ {
+  "id": 1,
+  "nombre_es": "Presión absoluta del colector de admisión",
+  "nombre_ru": "Абсолютное давление во впускном коллекторе",
+  "unidad": "kPa",
+  "peticion_local_id": 240,
+  "indice_datos": 0,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "x",
+  "rango_grafica": [
+   0,
+   100
+  ]
+ },
+ {
+  "id": 2,
+  "nombre_es": "Velocidad del vehículo",
+  "nombre_ru": "Скорость",
+  "unidad": "km/h",
+  "peticion_local_id": 240,
+  "indice_datos": 1,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "x",
+  "rango_grafica": [
+   0,
+   120
+  ]
+ },
+ {
+  "id": 3,
+  "nombre_es": "Avance de encendido",
+  "nombre_ru": "Угол опережения зажигания",
+  "unidad": "° cigüeñal",
+  "peticion_local_id": 240,
+  "indice_datos": 2,
+  "tipo": "u8",
+  "decimales": 1,
+  "formula": "((x/2)-64)",
+  "rango_grafica": [
+   -10,
+   50
+  ]
+ },
+ {
+  "id": 4,
+  "nombre_es": "Temperatura del aire de admisión",
+  "nombre_ru": "Температура впускного воздуха",
+  "unidad": "°C",
+  "peticion_local_id": 240,
+  "indice_datos": 3,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "(x-40)",
+  "rango_grafica": [
+   10,
+   50
+  ]
+ },
+ {
+  "id": 5,
+  "nombre_es": "Posición de la mariposa",
+  "nombre_ru": "Положение ДЗ",
+  "unidad": "%",
+  "peticion_local_id": 240,
+  "indice_datos": 4,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "(x/2.56)",
+  "rango_grafica": [
+   0,
+   100
+  ]
+ },
+ {
+  "id": 6,
+  "nombre_es": "Caudal másico de aire",
+  "nombre_ru": "Массовый расход воздуха",
+  "unidad": "g/s",
+  "peticion_local_id": 240,
+  "indice_datos": 5,
+  "tipo": "u16_be",
+  "decimales": 0,
+  "formula": "(x/128)",
+  "rango_grafica": [
+   0,
+   100
+  ]
+ },
+ {
+  "id": 7,
+  "nombre_es": "Carga del motor",
+  "nombre_ru": "Нагрузка на двигатель",
+  "unidad": "%",
+  "peticion_local_id": 240,
+  "indice_datos": 7,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "(x/2.56)",
+  "rango_grafica": [
+   0,
+   100
+  ]
+ },
+ {
+  "id": 8,
+  "nombre_es": "RPM de ralentí deseadas",
+  "nombre_ru": "Желаемые обороты ХХ",
+  "unidad": "rpm",
+  "peticion_local_id": 240,
+  "indice_datos": 8,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "(x*12.5)",
+  "rango_grafica": [
+   0,
+   1000
+  ]
+ },
+ {
+  "id": 9,
+  "nombre_es": "RPM del motor",
+  "nombre_ru": "Обороты двигателя",
+  "unidad": "rpm",
+  "peticion_local_id": 240,
+  "indice_datos": 9,
+  "tipo": "u16_be",
+  "decimales": 0,
+  "formula": "(x/4)",
+  "rango_grafica": [
+   0,
+   3500
+  ]
+ },
+ {
+  "id": 11,
+  "nombre_es": "Tensión de la red de a bordo",
+  "nombre_ru": "Напряжение БС",
+  "unidad": "V",
+  "peticion_local_id": 240,
+  "indice_datos": 13,
+  "tipo": "u8",
+  "decimales": 1,
+  "formula": "(x/10)",
+  "rango_grafica": [
+   10,
+   15
+  ]
+ },
+ {
+  "id": 12,
+  "nombre_es": "Señal del sensor de posición de mariposa",
+  "nombre_ru": "Сигнал ДПДЗ",
+  "unidad": "V",
+  "peticion_local_id": 240,
+  "indice_datos": 14,
+  "tipo": "u8",
+  "decimales": 1,
+  "formula": "(x/51)",
+  "rango_grafica": [
+   0,
+   5
+  ]
+ },
+ {
+  "id": 13,
+  "nombre_es": "Señal del sensor de oxígeno 1",
+  "nombre_ru": "Сигнал ДК1",
+  "unidad": "V",
+  "peticion_local_id": 240,
+  "indice_datos": 15,
+  "tipo": "u8",
+  "decimales": 3,
+  "formula": "(x/230)",
+  "rango_grafica": [
+   0,
+   1
+  ]
+ },
+ {
+  "id": 14,
+  "nombre_es": "Señal del sensor de oxígeno 2",
+  "nombre_ru": "Сигнал ДК2",
+  "unidad": "V",
+  "peticion_local_id": 240,
+  "indice_datos": 16,
+  "tipo": "u8",
+  "decimales": 3,
+  "formula": "(x/230)",
+  "rango_grafica": [
+   0,
+   1
+  ]
+ },
+ {
+  "id": 15,
+  "nombre_es": "Corrección de combustible a largo plazo",
+  "nombre_ru": "Долгосрочная коррекция топливоподачи",
+  "unidad": "%",
+  "peticion_local_id": 240,
+  "indice_datos": 17,
+  "tipo": "u8",
+  "decimales": 1,
+  "formula": "(((x*200)/256)-100)",
+  "rango_grafica": [
+   -10,
+   10
+  ]
+ },
+ {
+  "id": 17,
+  "nombre_es": "Señal del sensor de nivel de combustible",
+  "nombre_ru": "Сигнал датчика уровня топлива",
+  "unidad": "V",
+  "peticion_local_id": 240,
+  "indice_datos": 19,
+  "tipo": "u8",
+  "decimales": 1,
+  "formula": "(x/51)",
+  "rango_grafica": [
+   0,
+   5
+  ]
+ },
+ {
+  "id": 18,
+  "nombre_es": "Luz de nivel bajo de combustible",
+  "nombre_ru": "Лампа низкого уровня топлива",
+  "unidad": null,
+  "peticion_local_id": 240,
+  "indice_datos": 20,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x10)>>4)",
+  "estados": [
+   "Apagado",
+   "Encendido"
+  ]
+ },
+ {
+  "id": 19,
+  "nombre_es": "Corte de combustible",
+  "nombre_ru": "Отсечка топлива",
+  "unidad": null,
+  "peticion_local_id": 240,
+  "indice_datos": 20,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x40)>>6)",
+  "estados": [
+   "Apagado",
+   "Encendido"
+  ]
+ },
+ {
+  "id": 21,
+  "nombre_es": "Luz de avería (MIL)",
+  "nombre_ru": "Лампа неисправности",
+  "unidad": null,
+  "peticion_local_id": 240,
+  "indice_datos": 20,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x4)>>2)",
+  "estados": [
+   "Apagado",
+   "Encendido"
+  ]
+ },
+ {
+  "id": 22,
+  "nombre_es": "Posición de la válvula de purga del canister",
+  "nombre_ru": "Положение клапана продувки адсорбера",
+  "unidad": "%",
+  "peticion_local_id": 240,
+  "indice_datos": 21,
+  "tipo": "u8",
+  "decimales": 1,
+  "formula": "(x/2.56)",
+  "rango_grafica": [
+   0,
+   100
+  ]
+ },
+ {
+  "id": 24,
+  "nombre_es": "Posición del motor de ralentí (IAC)",
+  "nombre_ru": "Положение РХХ",
+  "unidad": "pasos",
+  "peticion_local_id": 240,
+  "indice_datos": 23,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "x",
+  "rango_grafica": [
+   0,
+   100
+  ]
+ },
+ {
+  "id": 26,
+  "nombre_es": "Temperatura del refrigerante",
+  "nombre_ru": "Температура ОЖ",
+  "unidad": "°C",
+  "peticion_local_id": 240,
+  "indice_datos": 25,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "(x-40)",
+  "rango_grafica": [
+   0,
+   100
+  ]
+ },
+ {
+  "id": 27,
+  "nombre_es": "Corrección de combustible a corto plazo",
+  "nombre_ru": "Кратковременная коррекция топливоподачи",
+  "unidad": "%",
+  "peticion_local_id": 240,
+  "indice_datos": 26,
+  "tipo": "u8",
+  "decimales": 1,
+  "formula": "(((x*200)/256)-100)",
+  "rango_grafica": [
+   -10,
+   10
+  ]
+ },
+ {
+  "id": 28,
+  "nombre_es": "Presión barométrica",
+  "nombre_ru": "Барометрическое давление",
+  "unidad": "kPa",
+  "peticion_local_id": 240,
+  "indice_datos": 27,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "(((x*94)/256)+10)",
+  "rango_grafica": [
+   0,
+   100
+  ]
+ },
+ {
+  "id": 29,
+  "nombre_es": "Relación aire-combustible",
+  "nombre_ru": "Соотношение воздух-топливо",
+  "unidad": null,
+  "peticion_local_id": 240,
+  "indice_datos": 28,
+  "tipo": "u8",
+  "decimales": 1,
+  "formula": "(x/10)",
+  "rango_grafica": [
+   0,
+   15
+  ]
+ },
+ {
+  "id": 31,
+  "nombre_es": "Tiempo de funcionamiento del motor",
+  "nombre_ru": "Время работы двигателя",
+  "unidad": "s",
+  "peticion_local_id": 241,
+  "indice_datos": 1,
+  "tipo": "u16_be",
+  "decimales": 0,
+  "formula": "x"
+ },
+ {
+  "id": 32,
+  "nombre_es": "Retardo del ángulo de encendido",
+  "nombre_ru": "Отскок угла зажигания",
+  "unidad": "° cigüeñal",
+  "peticion_local_id": 241,
+  "indice_datos": 3,
+  "tipo": "u8",
+  "decimales": 1,
+  "formula": "(x/11.6)",
+  "rango_grafica": [
+   0,
+   10
+  ]
+ },
+ {
+  "id": 33,
+  "nombre_es": "Tiempo de inyección",
+  "nombre_ru": "Время впрыска",
+  "unidad": "ms",
+  "peticion_local_id": 241,
+  "indice_datos": 4,
+  "tipo": "u16_be",
+  "decimales": 2,
+  "formula": "(x/65.5)",
+  "rango_grafica": [
+   0,
+   20
+  ]
+ },
+ {
+  "id": 34,
+  "nombre_es": "Posición deseada del motor de ralentí",
+  "nombre_ru": "Желаемое положение РХХ",
+  "unidad": "pasos",
+  "peticion_local_id": 241,
+  "indice_datos": 6,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "x",
+  "rango_grafica": [
+   0,
+   100
+  ]
+ },
+ {
+  "id": 35,
+  "nombre_es": "Solicitud de A/C",
+  "nombre_ru": "Запрос кондиционера",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 7,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x10)>>4)",
+  "estados": [
+   "No",
+   "Sí"
+  ]
+ },
+ {
+  "id": 36,
+  "nombre_es": "Relé del compresor de A/C",
+  "nombre_ru": "Реле компрессора кондиционера",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 7,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x20)>>5)",
+  "estados": [
+   "Apagado",
+   "Encendido"
+  ]
+ },
+ {
+  "id": 37,
+  "nombre_es": "Protección del catalizador",
+  "nombre_ru": "Защита катализатора",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 7,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x40)>>6)",
+  "estados": [
+   "Apagado",
+   "Encendido"
+  ]
+ },
+ {
+  "id": 38,
+  "nombre_es": "Relé de la bomba de combustible",
+  "nombre_ru": "Реле бензонасоса",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 7,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x80)>>7)",
+  "estados": [
+   "Apagado",
+   "Encendido"
+  ]
+ },
+ {
+  "id": 39,
+  "nombre_es": "Solenoide de purga del canister",
+  "nombre_ru": "Соленоид продувки адсорбера",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 8,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x10)>>4)",
+  "estados": [
+   "Cerrado",
+   "Abierto"
+  ]
+ },
+ {
+  "id": 40,
+  "nombre_es": "Control de la mezcla (lazo)",
+  "nombre_ru": "Управление составом топливной смеси",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 9,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "(int(x)&0x1)",
+  "estados": [
+   "Lazo abierto",
+   "Lazo cerrado"
+  ]
+ },
+ {
+  "id": 41,
+  "nombre_es": "Sensor de oxígeno 1 listo",
+  "nombre_ru": "Датчик кислорода 1 готов",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 9,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x2)>>1)",
+  "estados": [
+   "No",
+   "Sí"
+  ]
+ },
+ {
+  "id": 42,
+  "nombre_es": "Inmovilizador",
+  "nombre_ru": "Иммобилайзер",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 9,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x4)>>2)",
+  "estados": [
+   "Apagado",
+   "Encendido"
+  ]
+ },
+ {
+  "id": 43,
+  "nombre_es": "Aprendizaje de combustible",
+  "nombre_ru": "Обучение топливоподачи",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 9,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x8)>>3)",
+  "estados": [
+   "No",
+   "Sí"
+  ]
+ },
+ {
+  "id": 44,
+  "nombre_es": "Aumento de potencia",
+  "nombre_ru": "Увеличение мощности",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 9,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x10)>>4)",
+  "estados": [
+   "Apagado",
+   "Encendido"
+  ]
+ },
+ {
+  "id": 45,
+  "nombre_es": "Relé del ventilador (baja velocidad)",
+  "nombre_ru": "Реле низкой скорости ветилятора охлаждения",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 10,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x1)>>0)",
+  "estados": [
+   "Apagado",
+   "Encendido"
+  ]
+ },
+ {
+  "id": 46,
+  "nombre_es": "Relé del ventilador (alta velocidad)",
+  "nombre_ru": "Реле высокой скорости ветилятора охлаждения",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 10,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x2)>>1)",
+  "estados": [
+   "Apagado",
+   "Encendido"
+  ]
+ },
+ {
+  "id": 47,
+  "nombre_es": "Solenoide del embrague del convertidor",
+  "nombre_ru": "Соленоид муфты гидротрансформатора",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 10,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x8)>>3)",
+  "estados": [
+   "Apagado",
+   "Encendido"
+  ]
+ },
+ {
+  "id": 48,
+  "nombre_es": "Palanca en posición P/N",
+  "nombre_ru": "Рычаг в положении P/N",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 10,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((int(x)&0x40)>>6)",
+  "estados": [
+   "No",
+   "Sí"
+  ]
+ },
+ {
+  "id": 49,
+  "nombre_es": "Contador de activaciones del sensor de detonación",
+  "nombre_ru": "Счетчик включения датчика детонации",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 11,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "x"
+ },
+ {
+  "id": 50,
+  "nombre_es": "Tensión de referencia 5 V",
+  "nombre_ru": "Опорное напряжение 5В",
+  "unidad": "V",
+  "peticion_local_id": 241,
+  "indice_datos": 12,
+  "tipo": "u8",
+  "decimales": 2,
+  "formula": "(x/51.2)",
+  "rango_grafica": [
+   0,
+   5
+  ]
+ },
+ {
+  "id": 51,
+  "nombre_es": "Temperatura del refrigerante al arranque",
+  "nombre_ru": "Температура ОЖ при запуске",
+  "unidad": "°C",
+  "peticion_local_id": 241,
+  "indice_datos": 13,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "(x-40)",
+  "rango_grafica": [
+   -40,
+   120
+  ]
+ },
+ {
+  "id": 52,
+  "nombre_es": "Temperatura del aire de admisión al arranque",
+  "nombre_ru": "Температура впускного воздуха при запуске",
+  "unidad": "°C",
+  "peticion_local_id": 241,
+  "indice_datos": 14,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "(x-40)",
+  "rango_grafica": [
+   -40,
+   40
+  ]
+ },
+ {
+  "id": 53,
+  "nombre_es": "Señal del circuito de alta presión del A/C",
+  "nombre_ru": "Сигнал контура выс. давления кондиционера",
+  "unidad": "V",
+  "peticion_local_id": 241,
+  "indice_datos": 15,
+  "tipo": "u8",
+  "decimales": 2,
+  "formula": "(x/51.2)",
+  "rango_grafica": [
+   0,
+   5
+  ]
+ },
+ {
+  "id": 54,
+  "nombre_es": "Total de fallos de encendido",
+  "nombre_ru": "Общее число пропусков воспламенения",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 16,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "x"
+ },
+ {
+  "id": 55,
+  "nombre_es": "Fallos de encendido cilindro 1",
+  "nombre_ru": "Число пропусков воспламенения в 1 цилиндре",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 17,
+  "tipo": "u16_be",
+  "decimales": 0,
+  "formula": "x"
+ },
+ {
+  "id": 56,
+  "nombre_es": "Fallos de encendido cilindro 2",
+  "nombre_ru": "Число пропусков воспламенения во 2 цилиндре",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 19,
+  "tipo": "u16_be",
+  "decimales": 0,
+  "formula": "x"
+ },
+ {
+  "id": 57,
+  "nombre_es": "Fallos de encendido cilindro 3",
+  "nombre_ru": "Число пропусков воспламенения в 3 цилиндре",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 21,
+  "tipo": "u16_be",
+  "decimales": 0,
+  "formula": "x"
+ },
+ {
+  "id": 58,
+  "nombre_es": "Fallos de encendido cilindro 4",
+  "nombre_ru": "Число пропусков воспламенения в 4 цилиндре",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 23,
+  "tipo": "u16_be",
+  "decimales": 0,
+  "formula": "x"
+ },
+ {
+  "id": 59,
+  "nombre_es": "Temperatura del catalizador",
+  "nombre_ru": "Температура катализатора",
+  "unidad": "°C",
+  "peticion_local_id": 241,
+  "indice_datos": 25,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "((x*3)+300)",
+  "rango_grafica": [
+   0,
+   1000
+  ]
+ },
+ {
+  "id": 61,
+  "nombre_es": "Transiciones mezcla pobre/rica",
+  "nombre_ru": "Число переходов бедная/богатая смесь",
+  "unidad": null,
+  "peticion_local_id": 241,
+  "indice_datos": 27,
+  "tipo": "u16_be",
+  "decimales": 0,
+  "formula": "x"
+ },
+ {
+  "id": 62,
+  "nombre_es": "Posición deseada de EGR",
+  "nombre_ru": "Желаемое положение EGR",
+  "unidad": "%",
+  "peticion_local_id": 241,
+  "indice_datos": 29,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "(x/2.56)",
+  "rango_grafica": [
+   0,
+   100
+  ]
+ },
+ {
+  "id": 64,
+  "nombre_es": "Posición de EGR",
+  "nombre_ru": "Положение EGR",
+  "unidad": "%",
+  "peticion_local_id": 241,
+  "indice_datos": 32,
+  "tipo": "u8",
+  "decimales": 0,
+  "formula": "(x/2.56)",
+  "rango_grafica": [
+   0,
+   100
+  ]
+ },
+ {
+  "id": 67,
+  "nombre_es": "Consumo horario instantáneo",
+  "nombre_ru": "Мгновенный часовой расход топлива",
+  "unidad": "l/h",
+  "peticion_local_id": 241,
+  "indice_datos": null,
+  "tipo": "calculado",
+  "decimales": 2,
+  "formula": null,
+  "nota": "Calculado por el programa a partir de otros parámetros; fórmula pendiente de extraer."
+ },
+ {
+  "id": 68,
+  "nombre_es": "Consumo instantáneo por distancia",
+  "nombre_ru": "Мгновенный путевой расход топлива",
+  "unidad": "l/100 km",
+  "peticion_local_id": 241,
+  "indice_datos": null,
+  "tipo": "calculado",
+  "decimales": 1,
+  "formula": null,
+  "nota": "Calculado por el programa a partir de otros parámetros; fórmula pendiente de extraer."
+ },
+ {
+  "id": 69,
+  "nombre_es": "Combustible consumido en la sesión",
+  "nombre_ru": "Израсходовано топлива за сеанс связи",
+  "unidad": "l",
+  "peticion_local_id": 241,
+  "indice_datos": null,
+  "tipo": "calculado",
+  "decimales": 3,
+  "formula": null,
+  "nota": "Calculado por el programa a partir de otros parámetros; fórmula pendiente de extraer."
+ },
+ {
+  "id": 70,
+  "nombre_es": "Distancia recorrida en la sesión",
+  "nombre_ru": "Пробег за сеанс связи",
+  "unidad": "km",
+  "peticion_local_id": 241,
+  "indice_datos": null,
+  "tipo": "calculado",
+  "decimales": 3,
+  "formula": null,
+  "nota": "Calculado por el programa a partir de otros parámetros; fórmula pendiente de extraer."
+ },
+ {
+  "id": 71,
+  "nombre_es": "Consumo calculado",
+  "nombre_ru": "Расчетный расход топлива",
+  "unidad": "l/100 km",
+  "peticion_local_id": 241,
+  "indice_datos": null,
+  "tipo": "calculado",
+  "decimales": 1,
+  "formula": null,
+  "nota": "Calculado por el programa a partir de otros parámetros; fórmula pendiente de extraer."
+ }
+]

@@ -1,0 +1,431 @@
+{
+ "nota": "Petición 1A 80 (82 dst F1 1A 80 chk) para Sirius D42/D32, MR-140, Bosch, Nissan EFI, Aisin y ZF. 'indice_datos' cuenta desde el byte siguiente a '5A 80' en la respuesta. 'indice_buffer' es el del programa original (incluye 6 bytes de eco). Otros ECUs usan otra petición. Todos los campos ASCII relleno 0x00/0xFF/0x20 = 'no grabado'. El original lee 16 caracteres de VIN en el MR-140; la ECU devuelve 17.",
+ "ecus": {
+  "Sirius D42": [
+   {
+    "campo": "VIN",
+    "campo_ru": "VIN",
+    "formato": "ascii",
+    "largo": 16,
+    "indice_buffer": 158,
+    "indice_datos": 146
+   },
+   {
+    "campo": "Identificador de ECU",
+    "campo_ru": "Идентификатор ЭБУ",
+    "formato": "ascii",
+    "largo": 4,
+    "indice_buffer": 33,
+    "indice_datos": 21
+   },
+   {
+    "campo": "Número de programa",
+    "campo_ru": "Номер программы",
+    "formato": "ascii",
+    "largo": 12,
+    "indice_buffer": 68,
+    "indice_datos": 56
+   },
+   {
+    "campo": "Código de software",
+    "campo_ru": "Код ПО",
+    "formato": "ascii",
+    "largo": 8,
+    "indice_buffer": 120,
+    "indice_datos": 108
+   },
+   {
+    "campo": "Número de pieza",
+    "campo_ru": "Номер зап.части",
+    "formato": "hex",
+    "largo": 4,
+    "indice_buffer": 40,
+    "indice_datos": 28
+   },
+   {
+    "campo": "Fecha de programación",
+    "campo_ru": "Дата програмирования",
+    "formato": "hex",
+    "largo": 4,
+    "indice_buffer": 12,
+    "indice_datos": 0
+   },
+   {
+    "campo": "Lugar de programación",
+    "campo_ru": "Место програмирования",
+    "formato": "ascii",
+    "largo": 5,
+    "indice_buffer": 22,
+    "indice_datos": 10
+   },
+   {
+    "campo": "Número de tester",
+    "campo_ru": "Номер тестера",
+    "formato": "ascii",
+    "largo": 6,
+    "indice_buffer": 16,
+    "indice_datos": 4
+   },
+   {
+    "campo": "Kilometraje al programar",
+    "campo_ru": "Пробег на момент програмирования",
+    "formato": "u16_be",
+    "largo": 2,
+    "indice_buffer": 27,
+    "indice_datos": 15
+   },
+   {
+    "campo": "Kilometraje en la ECU",
+    "campo_ru": "Пробег в ЭБУ",
+    "formato": "especial",
+    "largo": 3,
+    "indice_buffer": 40,
+    "indice_datos": 28
+   }
+  ],
+  "MR-140": [
+   {
+    "campo": "VIN",
+    "campo_ru": "VIN",
+    "formato": "ascii",
+    "largo": 16,
+    "indice_buffer": 12,
+    "indice_datos": 0
+   },
+   {
+    "campo": "Número de programa",
+    "campo_ru": "Номер программы",
+    "formato": "ascii",
+    "largo": 10,
+    "indice_buffer": 60,
+    "indice_datos": 48
+   },
+   {
+    "campo": "Fecha de programación",
+    "campo_ru": "Дата програмирования",
+    "formato": "hex",
+    "largo": 4,
+    "indice_buffer": 76,
+    "indice_datos": 64
+   }
+  ],
+  "Sirius D32": [
+   {
+    "campo": "VIN",
+    "campo_ru": "VIN",
+    "formato": "ascii",
+    "largo": 16,
+    "indice_buffer": 158,
+    "indice_datos": 146
+   },
+   {
+    "campo": "Identificador de ECU",
+    "campo_ru": "Идентификатор ЭБУ",
+    "formato": "ascii",
+    "largo": 4,
+    "indice_buffer": 33,
+    "indice_datos": 21
+   },
+   {
+    "campo": "Número de programa",
+    "campo_ru": "Номер программы",
+    "formato": "ascii",
+    "largo": 12,
+    "indice_buffer": 68,
+    "indice_datos": 56
+   },
+   {
+    "campo": "Código de software",
+    "campo_ru": "Код ПО",
+    "formato": "ascii",
+    "largo": 8,
+    "indice_buffer": 120,
+    "indice_datos": 108
+   },
+   {
+    "campo": "Número de pieza",
+    "campo_ru": "Номер зап.части",
+    "formato": "hex",
+    "largo": 4,
+    "indice_buffer": 40,
+    "indice_datos": 28
+   },
+   {
+    "campo": "Fecha de programación",
+    "campo_ru": "Дата програмирования",
+    "formato": "hex",
+    "largo": 4,
+    "indice_buffer": 12,
+    "indice_datos": 0
+   },
+   {
+    "campo": "Lugar de programación",
+    "campo_ru": "Место програмирования",
+    "formato": "ascii",
+    "largo": 5,
+    "indice_buffer": 22,
+    "indice_datos": 10
+   },
+   {
+    "campo": "Número de tester",
+    "campo_ru": "Номер тестера",
+    "formato": "ascii",
+    "largo": 6,
+    "indice_buffer": 16,
+    "indice_datos": 4
+   },
+   {
+    "campo": "Kilometraje al programar",
+    "campo_ru": "Пробег на момент програмирования",
+    "formato": "u16_be",
+    "largo": 2,
+    "indice_buffer": 27,
+    "indice_datos": 15
+   }
+  ],
+  "Bosch M7.9.7.1": [
+   {
+    "campo": "VIN",
+    "campo_ru": "VIN",
+    "formato": "ascii",
+    "largo": 17,
+    "indice_buffer": 12,
+    "indice_datos": 0
+   },
+   {
+    "campo": "Número de programa",
+    "campo_ru": "Номер программы",
+    "formato": "ascii",
+    "largo": 8,
+    "indice_buffer": 29,
+    "indice_datos": 17
+   },
+   {
+    "campo": "Código de software",
+    "campo_ru": "Код ПО",
+    "formato": "ascii",
+    "largo": 10,
+    "indice_buffer": 129,
+    "indice_datos": 117
+   },
+   {
+    "campo": "Número de pieza",
+    "campo_ru": "Номер зап.части",
+    "formato": "ascii",
+    "largo": 10,
+    "indice_buffer": 59,
+    "indice_datos": 47
+   },
+   {
+    "campo": "Tipo de motor",
+    "campo_ru": "Тип двигателя",
+    "formato": "ascii",
+    "largo": 5,
+    "indice_buffer": 79,
+    "indice_datos": 67
+   }
+  ],
+  "Aisin-81": [
+   {
+    "campo": "Número de pieza",
+    "campo_ru": "Номер зап.части",
+    "formato": "ascii",
+    "largo": 8,
+    "indice_buffer": 12,
+    "indice_datos": 0
+   },
+   {
+    "campo": "Número de hardware",
+    "campo_ru": "Номер аппаратной реализации",
+    "formato": "ascii",
+    "largo": 11,
+    "indice_buffer": 20,
+    "indice_datos": 8
+   },
+   {
+    "campo": "Número de programa",
+    "campo_ru": "Номер программы",
+    "formato": "ascii",
+    "largo": 10,
+    "indice_buffer": 31,
+    "indice_datos": 19
+   },
+   {
+    "campo": "Versión de software",
+    "campo_ru": "Версия ПО",
+    "formato": "ascii",
+    "largo": 7,
+    "indice_buffer": 41,
+    "indice_datos": 29
+   },
+   {
+    "campo": "Tipo de motor",
+    "campo_ru": "Тип двигателя",
+    "formato": "ascii",
+    "largo": 19,
+    "indice_buffer": 51,
+    "indice_datos": 39
+   },
+   {
+    "campo": "Número de calibración",
+    "campo_ru": "Номер калибровки",
+    "formato": "ascii",
+    "largo": 8,
+    "indice_buffer": 93,
+    "indice_datos": 81
+   }
+  ],
+  "ZF-4P16": [
+   {
+    "campo": "Código de software",
+    "campo_ru": "Код ПО",
+    "formato": "ascii",
+    "largo": 8,
+    "indice_buffer": 12,
+    "indice_datos": 0
+   },
+   {
+    "campo": "Número de programa de arranque (boot)",
+    "campo_ru": "Номер загрузочной программы",
+    "formato": "ascii",
+    "largo": 12,
+    "indice_buffer": 32,
+    "indice_datos": 20
+   },
+   {
+    "campo": "Número de programa",
+    "campo_ru": "Номер программы",
+    "formato": "ascii",
+    "largo": 12,
+    "indice_buffer": 44,
+    "indice_datos": 32
+   },
+   {
+    "campo": "Número de calibración",
+    "campo_ru": "Номер калибровки",
+    "formato": "ascii",
+    "largo": 10,
+    "indice_buffer": 56,
+    "indice_datos": 44
+   },
+   {
+    "campo": "Número de pieza",
+    "campo_ru": "Номер зап.части",
+    "formato": "ascii",
+    "largo": 8,
+    "indice_buffer": 104,
+    "indice_datos": 92
+   }
+  ],
+  "Airbag SRS.0": [
+   {
+    "campo": "Número de pieza",
+    "campo_ru": "Номер зап.части",
+    "formato": "ascii",
+    "largo": 8,
+    "indice_buffer": 3
+   },
+   {
+    "campo": "Código de software",
+    "campo_ru": "Код ПО",
+    "formato": "ascii",
+    "largo": 4,
+    "indice_buffer": 11
+   }
+  ],
+  "Airbag SRS.1": [
+   {
+    "campo": "Número de pieza",
+    "campo_ru": "Номер зап.части",
+    "formato": "ascii",
+    "largo": 8,
+    "indice_buffer": 13
+   }
+  ],
+  "ABS Bosch": [
+   {
+    "campo": "Número de pieza",
+    "campo_ru": "Номер зап.части",
+    "formato": "ascii",
+    "largo": 10,
+    "indice_buffer": 11
+   },
+   {
+    "campo": "Versión de diagnóstico",
+    "campo_ru": "Версия диагностики",
+    "formato": "u16_be",
+    "largo": 2,
+    "indice_buffer": 22
+   },
+   {
+    "campo": "Tipo de motor",
+    "campo_ru": "Тип двигателя",
+    "formato": "ascii",
+    "largo": 6,
+    "indice_buffer": 24
+   },
+   {
+    "campo": "Versión de hardware",
+    "campo_ru": "Аппаратная версия блока",
+    "formato": "hex",
+    "largo": 5,
+    "indice_buffer": 31
+   },
+   {
+    "campo": "Versión de software",
+    "campo_ru": "Версия ПО",
+    "formato": "hex",
+    "largo": 3,
+    "indice_buffer": 36
+   }
+  ],
+  "ABS Teves": [
+   {
+    "campo": "Número de hardware",
+    "campo_ru": "Номер аппаратной реализации",
+    "formato": "ascii",
+    "largo": 11,
+    "indice_buffer": 13
+   }
+  ],
+  "ABS Aveo 3": [
+   {
+    "campo": "Tipo de chasis",
+    "campo_ru": "Тип шасси",
+    "formato": "ascii",
+    "largo": 8,
+    "indice_buffer": 11
+   },
+   {
+    "campo": "Número de serie",
+    "campo_ru": "Серийный номер",
+    "formato": "ascii",
+    "largo": 17,
+    "indice_buffer": 23
+   }
+  ],
+  "ABS Aveo 1": [
+   {
+    "campo": "Número de pieza",
+    "campo_ru": "Номер зап.части",
+    "formato": "hex",
+    "largo": 4,
+    "indice_buffer": 29
+   },
+   {
+    "campo": "Número de hardware",
+    "campo_ru": "Номер аппаратной реализации",
+    "formato": "hex",
+    "largo": 4,
+    "indice_buffer": 17
+   },
+   {
+    "campo": "Número de programa",
+    "campo_ru": "Номер программы",
+    "formato": "hex",
+    "largo": 4,
+    "indice_buffer": 23
+   }
+  ]
+ }
+}
