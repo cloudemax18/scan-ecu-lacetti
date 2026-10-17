@@ -121,7 +121,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
         root.addView(dtcButton, lp(-1, -2))
         val liveParamsButton = Button(this).apply {
-            text = "Leer parámetros en vivo MR-140 · F0/F1"
+            text = "Leer datos MR-140 · IDs confirmados 02/03/04"
             setOnClickListener { readMr140Parameters() }
         }
         root.addView(liveParamsButton, lp(-1, -2))
@@ -136,7 +136,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
         root.addView(probeButton, lp(-1, -2))
         val note = TextView(this).apply {
-            text = "Inicializa primero la ECU. MR-140: registros DTC de 4 bytes; ZF 4HP16: registros de 3 bytes. El parser Delphi indica que 59 00 significa sin averías y que el estado 0x60 es intermitente. Los parámetros F0/F1 son preliminares y deben contrastarse con capturas reales. Borrado, seguridad y actuadores siguen deshabilitados."
+            text = "Inicializa primero la ECU. MR-140: registros DTC de 4 bytes; ZF 4HP16: registros de 3 bytes. El parser Delphi indica que 59 00 significa sin averías y que el estado 0x60 es intermitente. Los datos MR-140 02/03/04 se muestran en bruto hasta verificar su mapa y fórmulas. Borrado, seguridad y actuadores siguen deshabilitados."
             textSize = 13f; setTextColor(0xFFFFD180.toInt()); setPadding(0, 12, 0, 12)
         }
         root.addView(note, lp(-1, -2))
@@ -573,7 +573,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
 
 
     /**
-     * Read-only live-data query using the extracted MR-140 local identifier table.
+     * Read-only raw-data query for MR-140 identifiers confirmed by physical captures.
      * The ZF profile is intentionally not supported until its own parameter map is verified.
      */
     private fun readMr140Parameters() {
@@ -600,9 +600,9 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             return
         }
 
-        appendLog("PARÁMETROS MR-140: lectura de solo lectura de grupos F0/F1. Fórmulas extraídas; validación en vehículo pendiente.")
+        appendLog("MR-140: lectura de solo lectura de IDs 02/03/04 confirmados por capturas físicas; datos sin decodificar.")
         executor.execute {
-            for (localId in listOf(0xF0, 0xF1)) {
+            for (localId in listOf(0x02, 0x03, 0x04)) {
                 var stage = "captura"
                 try {
                     val frame = KwpProtocol.buildMr140ParameterRequest(localId)
@@ -659,13 +659,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                         (payload[1].toInt() and 0xFF) == localId) {
                         val data = payload.copyOfRange(2, payload.size)
                         appendLog("DATOS GRUPO %02X (%d bytes): %s".format(localId, data.size, data.toHex()))
-                        val readings = Mr140.decodeGroup(localId, data)
-                        if (readings.isEmpty()) {
-                            appendLog("MR-140 grupo %02X: no hay parámetros decodificables con esta longitud.".format(localId))
-                        } else {
-                            readings.forEach { appendLog("DATO MR-140: ${it.display()}") }
-                            appendLog("AVISO: valores preliminares; comparar con datos conocidos del vehículo antes de considerarlos calibrados.")
-                        }
+                        appendLog("MR-140 ID %02X: datos brutos solamente; aún no hay un mapa de campos validado.".format(localId))
                     } else if (payload.size >= 3 && (payload[0].toInt() and 0xFF) == 0x7F &&
                         (payload[1].toInt() and 0xFF) == 0x21) {
                         appendLog("MR-140 grupo %02X: respuesta negativa KWP NRC=0x%02X.".format(localId, payload[2].toInt() and 0xFF))
