@@ -98,6 +98,23 @@ class KwpProtocolTest {
     }
 
     @Test
+    fun selectsRequestedMr140ResponseWhenTesterPresentFrameIsAlsoCaptured() {
+        val testerPresentResponse = hex("82 F1 11 7E 00 02")
+        val f0Response = hex("83 F1 11 61 F0 01 D7")
+        val combined = testerPresentResponse + f0Response
+
+        val response = KwpProtocol.findResponse(
+            combined,
+            expectedSource = 0x11,
+            expectedPayloadPrefix = hex("61 F0")
+        )
+
+        assertNotNull(response)
+        assertArrayEquals(f0Response, response!!.bytes)
+        assertArrayEquals(hex("61 F0 01"), response.payload)
+    }
+
+    @Test
     fun findsResponseAfterExactTransmitEcho() {
         val txEcho = hex("81 11 F1 81 04")
         val combined = txEcho + mr140Response
