@@ -8,15 +8,18 @@ package com.cheviexplorer.android
  *   byte 1: SAE DTC low byte
  *   byte 2: status; the Delphi UI maps (status & 0x60) to stored/current/non-permanent.
  *
- * The MR-140 request (19 DA FF 00) is ECU-specific. The observed 59 00 response
- * contains no records and matches the original Delphi "Ошибок нет" branch.
+ * MR-140 (service 0x19, subfunction DA FF 00) uses four-byte records;
+ * ZF 4HP16 (service 0x18) uses three-byte records. Both start with a count.
+ * The observed MR-140 59 00 response is count=0 ("Ошибок нет" in Delphi).
+ * The observed ZF 58 01 07 03 68 response is one P0703 record with status 0x68,
+ * whose 0x60 mask maps to intermittent according to the Delphi status table.
  */
 internal object DtcResponseDecoder {
     enum class RecordState(val labelEs: String) {
         UNKNOWN("Estado no identificado"),
         STORED("Guardado"),
         CURRENT("Actual"),
-        NON_PERMANENT("No permanente")
+        INTERMITTENT("Intermitente")
     }
 
     data class DtcRecord(
@@ -68,8 +71,13 @@ internal object DtcResponseDecoder {
         val recordBytes = payload.copyOfRange(recordsStart, payload.size)
         val records = mutableListOf<DtcRecord>()
         var index = 0
-        if (requestService == 0x18) {
-            while (index + 2 < recordBytes.size) {
+        val recordSize = if (isMr140 && requestService == 0x19) 4 else 3
+        val count = second ?: 0
+        if ((requestService == 0x18 || requestService == 0x19) && count > 0) {
+            repeat(count) {
+                if (index + 2 >= recordBytes.size) return Result.Invalid(
+                    "contador DTC indica $count registro(s), pero los bytes están truncados"
+                )
                 val a = recordBytes[index].toInt() and 0xFF
                 val b = recordBytes[index + 1].toInt() and 0xFF
                 val status = recordBytes[index + 2].toInt() and 0xFF
@@ -80,7 +88,7 @@ internal object DtcResponseDecoder {
                     statusByte = status,
                     state = stateFromDelphiStatus(status)
                 )
-                index += 3
+                index += recordSize
             }
         }
         val tail = if (index < recordBytes.size) recordBytes.copyOfRange(index, recordBytes.size) else byteArrayOf()
@@ -113,7 +121,7 @@ internal object DtcResponseDecoder {
         when (status and 0x60) {
             0x20 -> RecordState.STORED
             0x40 -> RecordState.CURRENT
-            0x60 -> RecordState.NON_PERMANENT
+            0x60 -> RecordState.INTERMITTENT
             else -> RecordState.UNKNOWN
         }
 }
