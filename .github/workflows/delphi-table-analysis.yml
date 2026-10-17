@@ -8,7 +8,7 @@ on:
       - ".github/workflows/delphi-table-analysis.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   extract-static-table:
@@ -20,16 +20,27 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-      - name: Parse PE table and publish descriptors
+      - name: Extract and validate descriptors
         run: |
           python tools/reconstruct_delphi_table.py >> "$GITHUB_STEP_SUMMARY"
-          python tools/reconstruct_delphi_table.py --json > /tmp/delphi_parameter_table.json
+          python tools/reconstruct_delphi_table.py --json > archivos/cloude/delphi_parameter_table.json
           python - <<'PY'
           import json
-          p = json.load(open("/tmp/delphi_parameter_table.json", encoding="utf-8"))
+          p = json.load(open("archivos/cloude/delphi_parameter_table.json", encoding="utf-8"))
           assert p["entry_count"] == 376
           assert p["entry_size"] == 36
           assert len(p["rows"]) == 376
           assert any(r["selector"] == 0x12 for r in p["rows"])
           print("Validated table dimensions and MR-140 selector.")
           PY
+      - name: Commit reconstructed table
+        run: |
+          if git diff --quiet -- archivos/cloude/delphi_parameter_table.json; then
+            echo "Extracted table is unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add archivos/cloude/delphi_parameter_table.json
+          git commit -m "Extract Delphi static parameter table"
+          git push
