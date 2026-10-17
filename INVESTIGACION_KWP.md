@@ -269,29 +269,93 @@ Las secuencias se repiten a lo largo del archivo, con bytes de tiempo/estado ent
 
 Por tanto, el archivo solo aporta **candidatas** de registros asociados a solicitudes `21 F0` y `21 F1` con los bytes `61 F0` y `61 F1` en posiciones compatibles con una respuesta positiva; todavía no prueba que la ECU entregara tramas positivas válidas. Esto contrasta con las sesiones físicas recientes de la app, donde esas peticiones recibieron NRC `0x31`, pero no podemos concluir que exista una contradicción hasta reconstruir el registro y validar límites/checksums. No cambiar la app ni dar por universalmente válidos esos IDs.
 
-### 12.3 Tabla interna estática del ejecutable
+### 12.3 Tabla interna estática del ejecutable — reconstrucción completada
 
-En `RaschetParam` (bloque de código alrededor de `004E6B70`) se observa:
-- La tabla empieza en la dirección `0x004F22AC`.
-- El tamaño de registro se recorre con `add eax, 0x24`: **36 bytes por entrada**.
-- El bucle compara el byte del desplazamiento `+0x00` con el selector global `[$004F6DA7]` y el valor de 32 bits en `+0x04` con el ID solicitado.
-- El límite de búsqueda es el índice `0x177` inclusive: **376 entradas** (`0x178` en total).
-- El campo de 32 bits en `+0x10` se compara con 1 y 2 en `VichMaxNomParam`, que calcula máximos separados según ese campo.
-- La rutina lee además campos en `+0x14` y `+0x18` para seleccionar bytes del búfer `[$004F6DF8]` y convertirlos a un valor numérico. En los caminos observados combina bytes como `byte0 × 256 + byte1` o usa un byte solo. El significado completo de cada campo, la regla de signo/escala y la relación con los nombres del catálogo siguen pendientes.
+Se creó un extractor reproducible, `tools/reconstruct_delphi_table.py`, y se ejecutó en GitHub Actions contra `archivos/CheviExplorer1.8.exe`. La tabla extraída se guardó en `archivos/cloude/delphi_parameter_table.json` con los 376 registros completos, sus bytes originales y las cadenas recuperables del ejecutable.
 
-Esta estructura confirma que el ejecutable tiene metadatos por unidad e ID y lógica para extraer/construir valores desde el búfer de respuesta. **No equivale todavía a un mapa completo de parámetros legible**, porque el contenido de la tabla está embebido en el ejecutable y aún no se ha reconstruido cada entrada.
+Resultados del PE:
+- Base de imagen: `0x00400000`.
+- Dirección virtual de la tabla: `0x004F22AC`; desplazamiento correspondiente en el archivo: `0xF10AC`.
+- **376 registros × 36 bytes** (`0x24`), índices 0–375.
+- La extracción valida las dimensiones de la tabla y se ejecuta en un flujo de CI separado del APK.
 
-### 12.4 Diferencia entre el catálogo y el sondeo físico
+#### Estructura de cada registro
 
-`archivos/CE.ini` contiene la sección `NaborParam12` con una lista seleccionada de números (01–71) y `SelectNaborParam12=*`. Esos números son coherentes con una selección/lista de parámetros de la familia seleccionada, pero no debe suponerse que todos sean IDs KWP enviados directamente sin seguir cada flujo de interfaz.
+| Desplazamiento | Campo reconstruido | Interpretación |
+|---|---|---|
+| `+0x00` | `selector` (byte) | Selector de ECU, comparado con el global `[$004F6DA7]` |
+| `+0x04` | `id` (DWORD) | ID local del parámetro |
+| `+0x08` | `name_ptr` | Puntero a nombre en ruso |
+| `+0x0C` | `unit_ptr` | Puntero a unidad; cero en entradas que usan etiquetas enumeradas |
+| `+0x10` | `max_group` (DWORD) | Grupo 1/2; `VichMaxNomParam` calcula máximos por separado |
+| `+0x14` | `data_offset` (DWORD) | Desplazamiento utilizado para extraer datos del búfer |
+| `+0x18` | `read_mode` (DWORD) | Modo de extracción/conversión inicial |
+| `+0x1C` | `precision` (DWORD) | Precisión decimal pasada a la rutina de formato |
+| `+0x20` | `display_ptr` | Texto de rango de gráfica o lista de etiquetas enumeradas |
 
-El catálogo `archivos/cloude/mr140_parametros.json` describe parámetros individuales con posiciones y fórmulas, y en sus entradas iniciales asocia `peticion_local_id: 240` (decimal, `0xF0`). Por otra parte, `VspomRaschetParam` construye una petición genérica `82 <dst> <src> 21 <BL> <checksum>` en la rama usada por el selector MR-140 `0x12`, donde `BL` proviene del parámetro seleccionado. Esto sugiere que hay más de un flujo/modo de consulta en el Delphi (por ejemplo, lectura por ID frente a lectura de bloques locales), pero la relación exacta todavía no está demostrada.
+Los nombres de campo son etiquetas de análisis, no nombres originales de Delphi. Los punteros se resuelven contra las cadenas estáticas del ejecutable; `raw_hex` conserva los 36 bytes para poder auditar cada interpretación.
+
+#### Modos de lectura observados en `RaschetParam`
+
+- `read_mode = 0`: combina dos bytes en orden little-endian.
+- `read_mode = 1`: toma un byte.
+- `read_mode = 2`: combina dos bytes en orden big-endian.
+- `read_mode = 3`: camino calculado; no usa un desplazamiento de datos directo en esa entrada.
+
+La unidad en `+0x0C` no es la fórmula: por ejemplo, el parámetro MR-140 1 apunta a `КПа`, mientras `display_values` contiene `0*100`. En parámetros enumerados la unidad suele ser nula y `display_values` contiene etiquetas como `Выкл.;Вкл.`. El texto de rango y la precisión no bastan por sí solos para inferir una fórmula física; se conserva la fórmula separada del catálogo cuando existe.
+
+#### Distribución de los 376 registros por selector
+
+| Selector | Registros |
+|---|---:|
+| `0x11` | 56 |
+| `0x12` (MR-140) | 61 |
+| `0x13` | 51 |
+| `0x14` | 63 |
+| `0x15` | 2 |
+| `0x21` | 35 |
+| `0x22` (ZF) | 30 |
+| `0x32` | 17 |
+| `0x41` | 8 |
+| `0x42` | 9 |
+| `0x43` | 27 |
+| `0x44` | 16 |
+| `0xDC` | 1 |
+| **Total** | **376** |
+
+#### Correlación confirmada con el catálogo MR-140
+
+El selector `0x12` tiene 61 entradas y sus IDs coinciden exactamente con los 61 IDs de `archivos/cloude/mr140_parametros.json` y con la lista de `NaborParam12` de `archivos/CE.ini`. La tabla permite cerrar varias incógnitas:
+
+- Las entradas con `max_group = 1` corresponden al bloque local `0xF0` (decimal 240); las entradas de grupo 2 corresponden al bloque `0xF1` (decimal 241).
+- En las **56 entradas que leen bytes directamente**, `data_offset = indice_datos + 11` coincide con el catálogo. Esto incluye parámetros que comparten byte, como IDs 18, 19 y 21; sus fórmulas/mascaras separadas explican por qué no tienen desplazamientos distintos.
+- Los IDs 67–71 usan `read_mode = 3`, `data_offset = 0` y son valores calculados (consumo y distancia de sesión); no deben interpretarse como bytes directos de la ECU.
+- La tabla estática proporciona unidad, rango/etiquetas, desplazamiento, modo y precisión; el catálogo aporta las fórmulas ya documentadas. La coincidencia de metadatos no valida por sí sola una lectura física ni autoriza a aplicar una fórmula a bytes de una captura distinta.
+
+#### Primeros hallazgos de la tabla ZF 4HP16
+
+El selector `0x22` contiene 30 entradas, IDs 1–30. Ejemplos extraídos del ejecutable:
+
+| ID | Nombre del ejecutable | Offset | Modo |
+|---:|---|---:|---:|
+| 1 | Posición de la palanca selectora | 11 | 1 byte; etiquetas enumeradas |
+| 2 | Sensor de freno | 12 | 1 byte; apagado/encendido |
+| 7 | Temperatura del aceite de transmisión | 15 | 2 bytes little-endian |
+| 9 | RPM del motor | 18 | 2 bytes little-endian |
+| 10 | RPM del eje de entrada | 20 | 2 bytes little-endian |
+| 12 | RPM del eje de salida | 24 | 2 bytes little-endian |
+| 28 | Marcha actual | 49 | 1 byte; etiquetas enumeradas |
+
+Estos son metadatos estáticos del programa, no una validación de escala o endianess contra la captura física de la ZF. No añadir fórmulas a la app hasta cotejar cada campo con bytes RX completos y válidos.
+
+### 12.4 Diferencia entre consulta local y bloque de datos
+
+La correlación del catálogo aclara la relación entre las dos vías: los parámetros MR-140 de grupo 1 se asocian al bloque local `0xF0`; los de grupo 2, al bloque `0xF1`. El campo `data_offset` apunta dentro del búfer que maneja el Delphi, y los índices de catálogo comienzan 11 bytes antes de ese desplazamiento. Esto demuestra una relación estructural entre el catálogo y la tabla, pero no resuelve todavía los límites/checksums de las secuencias candidatas del archivo `.cedat` descritas en §12.2 ni contradice los NRC observados en las pruebas físicas.
 
 ### 12.5 Próximos pasos concretos
 
-1. Describir todos los campos de los bloques de 64 bytes del `.cedat` y aislar los bytes reales de TX, RX, tiempo y metadatos.
-2. Validar longitud y checksum de las secuencias `21 F0` y `21 F1` almacenadas; compararlas con capturas físicas recientes, manteniendo cada sesión separada.
-3. Reconstruir los 376 registros de 36 bytes de la tabla estática desde el ejecutable o desde las fuentes disponibles, con los campos `+0x00`, `+0x04`, `+0x10`, `+0x14`, `+0x18` como primeros candidatos.
-4. Relacionar las entradas del selector `0x12` con `mr140_parametros.json` y la lista `NaborParam12`, sin asumir equivalencia entre índice de catálogo, ID de servicio KWP e índice de datos.
-5. Repetir la misma reconstrucción para el selector ZF `0x22`; no reutilizar automáticamente las fórmulas MR-140.
-6. Mantener la app en solo lectura y sin cambios de decodificación hasta obtener una correlación repetible entre ID, bytes de respuesta, fórmula y lectura física conocida.
+1. Usar la tabla reconstruida para crear un mapa de datos por parámetro, manteniendo separados selector, ID local, bloque `0xF0/0xF1`, offset, modo, unidad, precisión y fórmula.
+2. Validar las fórmulas MR-140 con capturas físicas completas, empezando por parámetros con interpretación independiente conocida; no inferir escala a partir del rango gráfico.
+3. Analizar por separado las 30 entradas ZF `0x22` y cotejar sus offsets/modos con las respuestas físicas de IDs 01–04 y 11; no reutilizar automáticamente fórmulas MR-140.
+4. Continuar la reconstrucción de los bloques de 64 bytes del `.cedat` y validar los límites/checksums de las candidatas `21 F0` y `21 F1`.
+5. Mantener la app en solo lectura hasta que cada fórmula esté corroborada por una captura completa y repetible.
