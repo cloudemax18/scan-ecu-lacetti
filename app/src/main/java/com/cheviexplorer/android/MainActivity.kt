@@ -346,6 +346,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         addSection(lab, "Secuencia recomendada", "Paso 1–3 establecen el enlace y una línea base; 4–6 reúnen el máximo de datos de lectura.")
         val labSteps = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         addAction(labSteps, "1 · Inicializar ECU seleccionada") { setLabStatus("Paso 1: inicialización solicitada. Confirma en Registro que StartCommunication tuvo checksum válido."); initializeSelectedEcu() }
+        addAction(labSteps, "Comprobación opcional · Tester Present (3E)") { setLabStatus("Comprobación de mantenimiento de sesión: revisa la respuesta 7E y su checksum en Registro."); sendTesterPresentOnce() }
         addAction(labSteps, "2 · Leer identificación ECU (1A 80)") { setLabStatus("Paso 2: consultando identificación. Los campos se aceptan solo si SID y checksum coinciden."); requestEcuIdentification() }
         addAction(labSteps, "3 · Leer DTC actuales (solo lectura)") { setLabStatus("Paso 3: leyendo DTC. Repite al final para comprobar si la sesión cambió."); readDtcCodes() }
         addAction(labSteps, "4 · Barrido base 01–40, F0, F1, FB") { setLabStatus("Paso 4: exploración base del servicio 0x21. Los positivos se conservan en bruto; NRC y timeouts se registran por ID."); validateLiveParameterMap() }
