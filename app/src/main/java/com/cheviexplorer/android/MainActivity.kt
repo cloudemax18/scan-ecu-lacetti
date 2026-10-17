@@ -1239,7 +1239,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
 
     /**
      * Sends one exact Delphi DriverIM transaction and validates the KWP checksum, response SID,
-     * local identifier and control option before reporting success.
+     * local identifier before reporting success; response data is preserved as raw status.
      */
     private fun exchangeMr140ActuatorFrame(
         serialPort: UsbSerialPort,
@@ -1281,12 +1281,14 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             return false
         }
         val payload = response.payload
-        if (payload.size >= 3 && (payload[0].toInt() and 0xFF) == 0x70 &&
-            (payload[1].toInt() and 0xFF) == localId &&
-            (payload[2].toInt() and 0xFF) == expectedControlOption
+        if (payload.size >= 2 && (payload[0].toInt() and 0xFF) == 0x70 &&
+            (payload[1].toInt() and 0xFF) == localId
         ) {
-            val state = payload.copyOfRange(3, payload.size)
-            appendLog("ACTUADOR $label: respuesta positiva 70 ID CONTROL confirmada; estado raw=${state.toHex().ifEmpty { "(sin bytes de estado)" }}.")
+            // KWP positive response echoes SID + local ID; the remaining bytes are status data,
+            // not an echo of the requested control option.
+            val state = payload.copyOfRange(2, payload.size)
+            appendLog("ACTUADOR $label: respuesta positiva 0x70 e ID 0x%02X confirmados; estado raw=${state.toHex().ifEmpty { "(sin bytes de estado)" }}."
+                .format(localId))
             return true
         }
         if (payload.size >= 3 && (payload[0].toInt() and 0xFF) == 0x7F &&
