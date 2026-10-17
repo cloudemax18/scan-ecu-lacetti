@@ -35,7 +35,7 @@ jobs:
           PY
       - name: Commit reconstructed table
         run: |
-          if git diff --quiet -- archivos/cloude/delphi_parameter_table.json; then
+          if [ -z "$(git status --porcelain -- archivos/cloude/delphi_parameter_table.json)" ]; then
             echo "Extracted table is unchanged."
             exit 0
           fi
