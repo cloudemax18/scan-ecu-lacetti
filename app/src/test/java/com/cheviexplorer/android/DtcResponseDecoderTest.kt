@@ -6,50 +6,42 @@ import org.junit.Test
 
 class DtcResponseDecoderTest {
     @Test
-    fun classifiesPositiveMr140ResponseWithoutClaimingNoFaults() {
-        val frame = KwpProtocol.FrameCheck(
-            valid = true,
-            description = "synthetic test frame",
-            bytes = byteArrayOf(),
-            payload = hex("59 00")
-        )
-
-        val result = DtcResponseDecoder.decode(frame, requestService = 0x19)
+    fun decodesObservedZfRecordAsP0703AndNonPermanent() {
+        val frame = frame("58 01 07 03 68")
+        val result = DtcResponseDecoder.decode(frame, requestService = 0x18)
 
         assertTrue(result is DtcResponseDecoder.Result.Positive)
         result as DtcResponseDecoder.Result.Positive
-        assertEquals(0x59, result.responseService)
-        assertEquals(0x00, result.subfunctionOrStatus)
-        assertTrue(result.recordBytes.isEmpty())
+        assertEquals(1, result.records.size)
+        assertEquals("P0703", result.records.single().code)
+        assertEquals(0x68, result.records.single().statusByte)
+        assertEquals(DtcResponseDecoder.RecordState.NON_PERMANENT, result.records.single().state)
+        assertEquals("07 03 68", result.recordBytes.toHex())
     }
 
     @Test
-    fun preservesBytesAfterPositiveResponseStatusWithoutInventingCodes() {
-        val frame = KwpProtocol.FrameCheck(
-            valid = true,
-            description = "synthetic test frame",
-            bytes = byteArrayOf(),
-            payload = hex("59 00 01 02 03")
-        )
-
-        val result = DtcResponseDecoder.decode(frame, requestService = 0x19)
+    fun classifiesObservedMr140EmptyResponseAsNoFaults() {
+        val result = DtcResponseDecoder.decode(frame("59 00"), requestService = 0x19, isMr140 = true)
 
         assertTrue(result is DtcResponseDecoder.Result.Positive)
         result as DtcResponseDecoder.Result.Positive
-        assertEquals("01 02 03", result.recordBytes.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) })
+        assertTrue(result.recordBytes.isEmpty())
+        assertTrue(result.noFaultsConfirmed)
+    }
+
+    @Test
+    fun doesNotAssumeEmptyZfResponseMeansNoFaults() {
+        val result = DtcResponseDecoder.decode(frame("58 01"), requestService = 0x18)
+
+        assertTrue(result is DtcResponseDecoder.Result.Positive)
+        result as DtcResponseDecoder.Result.Positive
+        assertTrue(result.records.isEmpty())
+        assertTrue(!result.noFaultsConfirmed)
     }
 
     @Test
     fun extractsNegativeResponseCodeForMatchingService() {
-        val frame = KwpProtocol.FrameCheck(
-            valid = true,
-            description = "synthetic test frame",
-            bytes = byteArrayOf(),
-            payload = hex("7F 19 31")
-        )
-
-        val result = DtcResponseDecoder.decode(frame, requestService = 0x19)
-
+        val result = DtcResponseDecoder.decode(frame("7F 19 31"), requestService = 0x19)
         assertTrue(result is DtcResponseDecoder.Result.Negative)
         result as DtcResponseDecoder.Result.Negative
         assertEquals(0x31, result.nrc)
@@ -64,6 +56,16 @@ class DtcResponseDecoderTest {
         assertTrue(DtcResponseDecoder.decode(unexpected, 0x19) is DtcResponseDecoder.Result.Unexpected)
     }
 
+    private fun frame(payload: String) = KwpProtocol.FrameCheck(
+        valid = true,
+        description = "synthetic test frame",
+        bytes = byteArrayOf(),
+        payload = hex(payload)
+    )
+
     private fun hex(value: String): ByteArray =
         value.split(" ").map { it.toInt(16).toByte() }.toByteArray()
+
+    private fun ByteArray.toHex(): String =
+        joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
 }
