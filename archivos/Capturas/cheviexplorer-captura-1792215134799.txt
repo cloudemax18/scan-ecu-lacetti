@@ -1,0 +1,365 @@
+[01:28:06] Aplicación iniciada. Conecta el KKL mediante USB OTG.
+[01:28:06] Esta versión prueba el enlace serie; el protocolo ECU específico aún debe validarse.
+[01:30:30] USB detectado: VID=1A86 PID=7523
+[01:30:33] USB detectado: VID=1A86 PID=7523
+[01:30:33] Puerto abierto: Ch34xSerialDriver, 10400 baud, 8N1.
+[01:30:33] No se han enviado bytes a la ECU. Esperando datos del enlace.
+[01:30:33] RX  00
+[01:30:39] INIT MR-140: comprobando soporte de inicialización K-Line; trama candidata, aún no validada.
+[01:30:39] AVISO INIT MR-140: el controlador no admite purgeHwBuffers(); se continúa.
+[01:30:40] RX  00
+[01:30:40] TX MR-140  81 11 F1 81 04
+[01:30:40] RX  81 11 F1 81 04
+[01:30:40] RX  83 F1 11 C1 EF 8F C4
+[01:30:41] ECO TX detectado: 81 11 F1 81 04
+[01:30:41] RX CANDIDATA MR-140: 83 F1 11 C1 EF 8F C4
+[01:30:41] VALIDACIÓN DE TRAMA: formato=0x83, longitud=3, destino=0xF1, origen=0x11, checksum recibido=0xC4, esperado=0xC4 (OK)
+[01:30:41] RESULTADO MR-140: trama con formato/dirección/checksum coherentes.
+[01:30:41] KWP StartCommunication: respuesta positiva 0xC1 al servicio 0x81; bytes de clave=EF 8F.
+[01:30:41] TESTER PRESENT automático activado para MR-140: intervalo de 2 s mientras la sesión esté abierta.
+[01:30:41] Estas claves no son una identificación de ECU; se puede probar el servicio de identificación 1A 80.
+[01:30:43] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:30:43] RX  81 11 F1 3E C1
+[01:30:43] RX  81 F1 11 7E 01
+[01:30:45] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:30:45] RX  81 11 F1 3E C1
+[01:30:45] LECTURA DTC MR-140: solicitud de solo lectura reconstruida de main.pas.
+[01:30:45] TX DTC MR-140  84 11 F1 19 DA FF 00 78
+[01:30:45] RX  84 11 F1 19 DA FF 00 78
+[01:30:45] RX  81 F1 11 7E 01
+[01:30:47] ECO TX DTC detectado: 84 11 F1 19 DA FF 00 78
+[01:30:47] RX DTC CANDIDATA MR-140: 81 F1 11 7E 01
+[01:30:47] VALIDACIÓN DTC: formato=0x81, longitud=1, destino=0xF1, origen=0x11, checksum recibido=0x01, esperado=0x01 (OK)
+[01:30:47] LECTURA DTC MR-140: SID inesperado; payload RX: 7E
+[01:30:47] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:30:47] RX  81 11 F1 3E C1
+[01:30:47] RX  81 F1 11 7E 01
+[01:30:49] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:30:49] RX  81 11 F1 3E C1
+[01:30:49] RX  81 F1 11 7E 01
+[01:30:51] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:30:51] RX  81 11 F1 3E C1
+[01:30:51] RX  81 F1 11 7E 01
+[01:30:53] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:30:53] RX  81 11 F1 3E C1
+[01:30:53] RX  81 F1 11 7E 01
+[01:30:55] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:30:55] RX  81 11 F1 3E C1
+[01:30:55] RX  81 F1 11 7E 01
+[01:30:57] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:30:57] RX  81 11 F1 3E C1
+[01:30:57] RX  81 F1 11 7E 01
+[01:30:59] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:30:59] RX  81 11 F1 3E C1
+[01:30:59] RX  81 F1 11 7E 01
+[01:31:00] DATOS ECU MR-140: consulta de solo lectura para IDs con respuestas positivas previas: 0x02, 0x03, 0x04. Sin decodificación de campos.
+[01:31:00] TX MR-140 ID 02: 82 11 F1 21 02 A7
+[01:31:00] RX  82 11 F1 21 02 A7
+[01:31:00] RX  96 F1 11 61 02 66 FF 30 48 30 33 30 30 38 30 37 31 39 31 67 44 FF FF FF FF 7C
+[01:31:01] ECO TX MR-140 ID 02 detectado.
+[01:31:01] RX MR-140 ID 02: 96 F1 11 61 02 66 FF 30 48 30 33 30 30 38 30 37 31 39 31 67 44 FF FF FF FF 7C
+[01:31:01] VALIDACIÓN MR-140 ID 02: formato=0x96, longitud=22, destino=0xF1, origen=0x11, checksum recibido=0x7C, esperado=0x7C (OK)
+[01:31:01] DATOS RAW MR-140 ID 02 (20 bytes): 66 FF 30 48 30 33 30 30 38 30 37 31 39 31 67 44 FF FF FF FF
+[01:31:01] TX MR-140 ID 03: 82 11 F1 21 03 A8
+[01:31:01] RX  82 11 F1 21 03 A8
+[01:31:01] RX  86 F1 11 61 03 05 BF 9A 4C 96
+[01:31:02] ECO TX MR-140 ID 03 detectado.
+[01:31:02] RX MR-140 ID 03: 86 F1 11 61 03 05 BF 9A 4C 96
+[01:31:02] VALIDACIÓN MR-140 ID 03: formato=0x86, longitud=6, destino=0xF1, origen=0x11, checksum recibido=0x96, esperado=0x96 (OK)
+[01:31:02] DATOS RAW MR-140 ID 03 (4 bytes): 05 BF 9A 4C
+[01:31:03] TX MR-140 ID 04: 82 11 F1 21 04 A9
+[01:31:03] RX  82 11 F1 21 04 A9
+[01:31:03] RX  86 F1 11 61 04 00 BA 5B DA DC
+[01:31:04] ECO TX MR-140 ID 04 detectado.
+[01:31:04] RX MR-140 ID 04: 86 F1 11 61 04 00 BA 5B DA DC
+[01:31:04] VALIDACIÓN MR-140 ID 04: formato=0x86, longitud=6, destino=0xF1, origen=0x11, checksum recibido=0xDC, esperado=0xDC (OK)
+[01:31:04] DATOS RAW MR-140 ID 04 (4 bytes): 00 BA 5B DA
+[01:31:04] DATOS ECU MR-140 finalizados. Revisa RX/checksum; no se asignan unidades a bytes sin mapa validado.
+[01:31:04] TESTER PRESENT automático activado para MR-140: intervalo de 2 s mientras la sesión esté abierta.
+[01:31:05] TESTER PRESENT MR-140: envío manual de 0x3E (también hay mantenimiento automático si la sesión está validada).
+[01:31:05] TX TESTER PRESENT MR-140  81 11 F1 3E C1
+[01:31:05] RX  81 11 F1 3E C1
+[01:31:05] RX  81 F1 11 7E 01
+[01:31:06] ECO TX TESTER PRESENT detectado: 81 11 F1 3E C1
+[01:31:06] RX TESTER PRESENT CANDIDATA MR-140: 81 F1 11 7E 01
+[01:31:06] VALIDACIÓN TESTER PRESENT: formato=0x81, longitud=1, destino=0xF1, origen=0x11, checksum recibido=0x01, esperado=0x01 (OK)
+[01:31:06] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:31:06] RX  81 11 F1 3E C1
+[01:31:06] RX  81 F1 11 7E 01
+[01:31:06] SONDEO KWP MR-140: inicio de IDs 0x21 (exploratorio; coche detenido).
+[01:31:07] KWP BUS MR-140: TX 82 11 F1 21 01 A6
+[01:31:07] RX  82 11 F1 21 01 A6
+[01:31:07] KWP BUS MR-140: Eco TX confirmado
+[01:31:07] RX  83 F1 11 7F 21 31 56
+[01:31:07] KWP BUS MR-140: RX 83 F1 11 7F 21 31 56 checksum=OK
+[01:31:07] KWP BUS MR-140: TX 82 11 F1 21 02 A7
+[01:31:07] KWP BUS MR-140: Eco TX confirmado
+[01:31:07] RX  82 11 F1 21 02 A7
+[01:31:07] KWP BUS MR-140: RX 96 F1 11 61 02 66 FF 30 48 30 33 30 30 38 30 37 31 39 31 67 44 FF FF FF FF 7C checksum=OK
+[01:31:07] RX  96 F1 11 61 02 66 FF 30 48 30 33 30 30 38 30 37 31 39 31 67 44 FF FF FF FF 7C
+[01:31:07] KWP BUS MR-140: TX 82 11 F1 21 03 A8
+[01:31:07] KWP BUS MR-140: Eco TX confirmado
+[01:31:07] RX  82 11 F1 21 03 A8
+[01:31:07] RX  86 F1 11 61 03 05 BF 9A 4C 96
+[01:31:07] KWP BUS MR-140: RX 86 F1 11 61 03 05 BF 9A 4C 96 checksum=OK
+[01:31:07] KWP BUS MR-140: TX 82 11 F1 21 04 A9
+[01:31:07] KWP BUS MR-140: Eco TX confirmado
+[01:31:07] RX  82 11 F1 21 04 A9
+[01:31:07] RX  86 F1 11 61 04 00 BA 5B DA DC
+[01:31:07] KWP BUS MR-140: RX 86 F1 11 61 04 00 BA 5B DA DC checksum=OK
+[01:31:07] KWP BUS MR-140: TX 82 11 F1 21 11 B6
+[01:31:07] KWP BUS MR-140: Eco TX confirmado
+[01:31:07] RX  82 11 F1 21 11 B6
+[01:31:07] RX  83 F1 11 7F 21 31 56
+[01:31:07] KWP BUS MR-140: RX 83 F1 11 7F 21 31 56 checksum=OK
+[01:31:07] KWP BUS MR-140: TX 82 11 F1 21 20 C5
+[01:31:07] KWP BUS MR-140: Eco TX confirmado
+[01:31:07] RX  82 11 F1 21 20 C5
+[01:31:07] RX  83 F1 11 7F 21 31 56
+[01:31:07] KWP BUS MR-140: RX 83 F1 11 7F 21 31 56 checksum=OK
+[01:31:08] KWP BUS MR-140: TX 82 11 F1 21 F0 95
+[01:31:08] KWP BUS MR-140: Eco TX confirmado
+[01:31:08] RX  82 11 F1 21 F0 95
+[01:31:08] RX  83 F1 11 7F 21 31 56
+[01:31:08] KWP BUS MR-140: RX 83 F1 11 7F 21 31 56 checksum=OK
+[01:31:08] KWP BUS MR-140: TX 82 11 F1 21 F1 96
+[01:31:08] KWP BUS MR-140: Eco TX confirmado
+[01:31:08] RX  82 11 F1 21 F1 96
+[01:31:08] RX  83 F1 11 7F 21 31 56
+[01:31:08] KWP BUS MR-140: RX 83 F1 11 7F 21 31 56 checksum=OK
+[01:31:08] KWP BUS MR-140: TX 82 11 F1 21 FB A0
+[01:31:08] KWP BUS MR-140: Eco TX confirmado
+[01:31:08] RX  82 11 F1 21 FB A0
+[01:31:08] RX  83 F1 11 7F 21 31 56
+[01:31:08] KWP BUS MR-140: RX 83 F1 11 7F 21 31 56 checksum=OK
+[01:31:08] ID 0x01: NRC 0x31
+[01:31:08] ID 0x02: respuesta positiva; 20 bytes de datos · datos=66 FF 30 48 30 33 30 30 38 30 37 31 39 31 67 44 FF FF FF FF
+[01:31:08] ID 0x03: respuesta positiva; 4 bytes de datos · datos=05 BF 9A 4C
+[01:31:08] ID 0x04: respuesta positiva; 4 bytes de datos · datos=00 BA 5B DA
+[01:31:08] ID 0x11: NRC 0x31
+[01:31:08] ID 0x20: NRC 0x31
+[01:31:08] ID 0xF0: NRC 0x31
+[01:31:08] ID 0xF1: NRC 0x31
+[01:31:08] ID 0xFB: NRC 0x31
+[01:31:08] SONDEO KWP MR-140 finalizado. IDs sin respuesta no se consideran compatibles.
+[01:31:08] TESTER PRESENT automático activado para MR-140: intervalo de 2 s mientras la sesión esté abierta.
+[01:31:10] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:31:10] RX  81 11 F1 3E C1
+[01:31:10] RX  81 F1 11 7E 01
+[01:31:12] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:31:12] RX  81 11 F1 3E C1
+[01:31:12] RX  81 F1 11 7E 01
+[01:31:14] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:31:14] RX  81 11 F1 3E C1
+[01:31:14] RX  81 F1 11 7E 01
+[01:31:16] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:31:16] RX  81 11 F1 3E C1
+[01:31:16] RX  81 F1 11 7E 01
+[01:31:18] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:31:18] RX  81 11 F1 3E C1
+[01:31:18] RX  81 F1 11 7E 01
+[01:31:20] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:31:20] RX  81 11 F1 3E C1
+[01:31:20] RX  81 F1 11 7E 01
+[01:31:22] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:31:22] RX  81 11 F1 3E C1
+[01:31:22] RX  81 F1 11 7E 01
+[01:31:24] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:31:24] RX  81 11 F1 3E C1
+[01:31:24] RX  81 F1 11 7E 01
+[01:31:26] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:31:26] RX  81 11 F1 3E C1
+[01:31:26] RX  81 F1 11 7E 01
+[01:31:28] TX TESTER PRESENT automático MR-140  81 11 F1 3E C1
+[01:31:28] RX  81 11 F1 3E C1
+[01:31:28] RX  81 F1 11 7E 01
+[01:31:29] Puerto serie cerrado.
+[01:31:35] USB detectado: VID=1A86 PID=7523
+[01:31:35] Puerto abierto: Ch34xSerialDriver, 10400 baud, 8N1.
+[01:31:35] No se han enviado bytes a la ECU. Esperando datos del enlace.
+[01:31:37] INIT ZF 4HP16: comprobando soporte de inicialización K-Line; trama candidata, aún no validada.
+[01:31:37] AVISO INIT ZF 4HP16: el controlador no admite purgeHwBuffers(); se continúa.
+[01:31:38] RX  00
+[01:31:38] TX ZF 4HP16  81 18 F1 81 0B
+[01:31:38] RX  81 18 F1 81 0B
+[01:31:38] RX  83 F1 18 C1 EF 8F CB
+[01:31:39] ECO TX detectado: 81 18 F1 81 0B
+[01:31:39] RX CANDIDATA ZF 4HP16: 83 F1 18 C1 EF 8F CB
+[01:31:39] VALIDACIÓN DE TRAMA: formato=0x83, longitud=3, destino=0xF1, origen=0x18, checksum recibido=0xCB, esperado=0xCB (OK)
+[01:31:39] RESULTADO ZF 4HP16: trama con formato/dirección/checksum coherentes.
+[01:31:39] KWP StartCommunication: respuesta positiva 0xC1 al servicio 0x81; bytes de clave=EF 8F.
+[01:31:39] TESTER PRESENT automático activado para ZF 4HP16: intervalo de 2 s mientras la sesión esté abierta.
+[01:31:39] Estas claves no son una identificación de ECU; se puede probar el servicio de identificación 1A 80.
+[01:31:41] LECTURA DTC ZF 4HP16: solicitud de solo lectura reconstruida de main.pas.
+[01:31:41] TX DTC ZF 4HP16  84 18 F1 18 00 00 00 A5
+[01:31:41] RX  84 18 F1 18 00 00 00 A5
+[01:31:41] RX  85 F1 18 58 01 07 03 68 59
+[01:31:41] TESTER PRESENT automático ZF 4HP16 omitido: hay una consulta diagnóstica en curso.
+[01:31:43] ECO TX DTC detectado: 84 18 F1 18 00 00 00 A5
+[01:31:43] RX DTC CANDIDATA ZF 4HP16: 85 F1 18 58 01 07 03 68 59
+[01:31:43] VALIDACIÓN DTC: formato=0x85, longitud=5, destino=0xF1, origen=0x18, checksum recibido=0x59, esperado=0x59 (OK)
+[01:31:43] LECTURA DTC ZF 4HP16: respuesta positiva 0x58.
+[01:31:43] DTC: byte de control/estado recibido = 0x01.
+[01:31:43] DATOS DTC RAW ZF 4HP16 (incluye SID): 58 01 07 03 68
+[01:31:43] DTC ZF 4HP16: P0703 · estado=Intermitente (0x68) — Fallo en el circuito del sensor de freno
+[01:31:43] AVISO: confirma los DTC decodificados en la ECU; no se suprimen registros aunque el vehículo de prueba se considere sin averías.
+[01:31:43] REGISTROS DTC RAW: 07 03 68
+[01:31:43] TX TESTER PRESENT automático ZF 4HP16  81 18 F1 3E C8
+[01:31:43] RX  81 18 F1 3E C8
+[01:31:43] RX  81 F1 18 7E 08
+[01:31:45] TX TESTER PRESENT automático ZF 4HP16  81 18 F1 3E C8
+[01:31:45] RX  81 18 F1 3E C8
+[01:31:45] RX  81 F1 18 7E 08
+[01:31:46] INIT ZF 4HP16: comprobando soporte de inicialización K-Line; trama candidata, aún no validada.
+[01:31:46] AVISO INIT ZF 4HP16: el controlador no admite purgeHwBuffers(); se continúa.
+[01:31:46] RX  00
+[01:31:46] TX ZF 4HP16  81 18 F1 81 0B
+[01:31:46] RX  81 18 F1 81 0B
+[01:31:47] TESTER PRESENT automático ZF 4HP16 omitido: hay una consulta diagnóstica en curso.
+[01:31:48] IDENT ECU ZF 4HP16: solicitud de lectura 1A 80 reconstruida del programa original.
+[01:31:48] ECO TX detectado: 81 18 F1 81 0B
+[01:31:48] RESULTADO ZF 4HP16: SOLO ECO TX (RX = trama enviada).
+[01:31:48] Esto no demuestra respuesta de la ECU; no marcar como conectado.
+[01:31:48] TX IDENT ZF 4HP16  82 18 F1 1A 80 25
+[01:31:48] RX  82 18 F1 1A 80 25
+[01:31:48] RX  80 F1 18 76 5A 80 35 57 4B 33 33 36 30 30 4A 47 31 30 36 33 30 30 34 30 37 36 36 35 38 31 30 37
+[01:31:48] RX  35 31 32 31 2D 2D 36 35 38 31 30 37 35 35 41 39 2D 2D 36 35 38 31 30 37 35 36 44 36 37 36 35 34
+[01:31:48] RX  33 38 31 FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF
+[01:31:48] RX  FF FF 39 36 38 30 31 31 36 39 4A 47 FF FF FF FF FF FF FF FF FF FF FF FF FF FF AD
+[01:31:49] TESTER PRESENT automático ZF 4HP16 omitido: hay una consulta diagnóstica en curso.
+[01:31:49] ECO TX IDENT detectado: 82 18 F1 1A 80 25
+[01:31:49] RX IDENT CANDIDATA ZF 4HP16: 80 F1 18 76 5A 80 35 57 4B 33 33 36 30 30 4A 47 31 30 36 33 30 30 34 30 37 36 36 35 38 31 30 37 35 31 32 31 2D 2D 36 35 38 31 30 37 35 35 41 39 2D 2D 36 35 38 31 30 37 35 36 44 36 37 36 35 34 33 38 31 FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 39 36 38 30 31 31 36 39 4A 47 FF FF FF FF FF FF FF FF FF FF FF FF FF FF AD
+[01:31:49] VALIDACIÓN IDENT: formato=0x80, longitud=118 (extendida), destino=0xF1, origen=0x18, checksum recibido=0xAD, esperado=0xAD (OK)
+[01:31:49] IDENT ECU ZF 4HP16: respuesta positiva 0x5A al servicio 0x1A.
+[01:31:49] PAYLOAD IDENT RAW (incluye 5A 80): 5A 80 35 57 4B 33 33 36 30 30 4A 47 31 30 36 33 30 30 34 30 37 36 36 35 38 31 30 37 35 31 32 31 2D 2D 36 35 38 31 30 37 35 35 41 39 2D 2D 36 35 38 31 30 37 35 36 44 36 37 36 35 34 33 38 31 FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 39 36 38 30 31 31 36 39 4A 47 FF FF FF FF FF FF FF FF FF FF FF FF FF FF
+[01:31:49] IDENTIFICACIÓN ZF 4HP16 · Código de software: 5WK33600
+[01:31:49] IDENTIFICACIÓN ZF 4HP16 · Número de programa de arranque (boot): 6581075121--
+[01:31:49] IDENTIFICACIÓN ZF 4HP16 · Número de programa: 65810755A9--
+[01:31:49] IDENTIFICACIÓN ZF 4HP16 · Número de calibración: 65810756D6
+[01:31:49] IDENTIFICACIÓN ZF 4HP16 · Número de pieza: 96801169
+[01:31:49] AVISO: campos decodificados con ident_decodificacion.json; contrastar con el ejecutable original, especialmente VIN MR-140 (parser original lee 16 de 17 caracteres).
+[01:31:49] LECTURA DTC ZF 4HP16: solicitud de solo lectura reconstruida de main.pas.
+[01:31:49] TX DTC ZF 4HP16  84 18 F1 18 00 00 00 A5
+[01:31:49] RX  84 18 F1 18 00 00 00 A5
+[01:31:50] RX  85 F1 18 58 01 07 03 68 59
+[01:31:51] ECO TX DTC detectado: 84 18 F1 18 00 00 00 A5
+[01:31:51] RX DTC CANDIDATA ZF 4HP16: 85 F1 18 58 01 07 03 68 59
+[01:31:51] VALIDACIÓN DTC: formato=0x85, longitud=5, destino=0xF1, origen=0x18, checksum recibido=0x59, esperado=0x59 (OK)
+[01:31:51] LECTURA DTC ZF 4HP16: respuesta positiva 0x58.
+[01:31:51] DTC: byte de control/estado recibido = 0x01.
+[01:31:51] DATOS DTC RAW ZF 4HP16 (incluye SID): 58 01 07 03 68
+[01:31:51] DTC ZF 4HP16: P0703 · estado=Intermitente (0x68) — Fallo en el circuito del sensor de freno
+[01:31:51] AVISO: confirma los DTC decodificados en la ECU; no se suprimen registros aunque el vehículo de prueba se considere sin averías.
+[01:31:51] REGISTROS DTC RAW: 07 03 68
+[01:31:51] TX TESTER PRESENT automático ZF 4HP16  81 18 F1 3E C8
+[01:31:51] RX  81 18 F1 3E C8
+[01:31:51] RX  81 F1 18 7E 08
+[01:31:53] DATOS ECU ZF 4HP16: consulta de solo lectura para IDs con respuestas positivas previas: 0x01, 0x02, 0x03, 0x04, 0x11. Sin decodificación de campos.
+[01:31:53] TX ZF 4HP16 ID 01: 82 18 F1 21 01 AD
+[01:31:53] RX  82 18 F1 21 01 AD
+[01:31:53] RX  85 F1 18 61 01 05 05 00 FA
+[01:31:54] ECO TX ZF 4HP16 ID 01 detectado.
+[01:31:54] RX ZF 4HP16 ID 01: 85 F1 18 61 01 05 05 00 FA
+[01:31:54] VALIDACIÓN ZF 4HP16 ID 01: formato=0x85, longitud=5, destino=0xF1, origen=0x18, checksum recibido=0xFA, esperado=0xFA (OK)
+[01:31:54] DATOS RAW ZF 4HP16 ID 01 (3 bytes): 05 05 00
+[01:31:54] CATÁLOGO DELPHI ID 01: Положение рычага селектора передач; offset buffer original=11; modo=byte; valor no decodificado.
+[01:31:55] TX ZF 4HP16 ID 02: 82 18 F1 21 02 AE
+[01:31:55] RX  82 18 F1 21 02 AE
+[01:31:55] RX  86 F1 18 61 02 72 1E 00 47 C9
+[01:31:56] ECO TX ZF 4HP16 ID 02 detectado.
+[01:31:56] RX ZF 4HP16 ID 02: 86 F1 18 61 02 72 1E 00 47 C9
+[01:31:56] VALIDACIÓN ZF 4HP16 ID 02: formato=0x86, longitud=6, destino=0xF1, origen=0x18, checksum recibido=0xC9, esperado=0xC9 (OK)
+[01:31:56] DATOS RAW ZF 4HP16 ID 02 (4 bytes): 72 1E 00 47
+[01:31:56] CATÁLOGO DELPHI ID 02: Датчик тормоза; offset buffer original=12; modo=byte; valor no decodificado.
+[01:31:56] TX ZF 4HP16 ID 03: 82 18 F1 21 03 AF
+[01:31:56] RX  82 18 F1 21 03 AF
+[01:31:56] RX  91 F1 18 61 03 00 00 00 00 00 00 00 00 00 00 FC FF 00 00 00 F9
+[01:31:57] ECO TX ZF 4HP16 ID 03 detectado.
+[01:31:57] RX ZF 4HP16 ID 03: 91 F1 18 61 03 00 00 00 00 00 00 00 00 00 00 FC FF 00 00 00 F9
+[01:31:57] VALIDACIÓN ZF 4HP16 ID 03: formato=0x91, longitud=17, destino=0xF1, origen=0x18, checksum recibido=0xF9, esperado=0xF9 (OK)
+[01:31:57] DATOS RAW ZF 4HP16 ID 03 (15 bytes): 00 00 00 00 00 00 00 00 00 00 FC FF 00 00 00
+[01:31:57] CATÁLOGO DELPHI ID 03: Аварийный режим; offset buffer original=12; modo=byte; valor no decodificado.
+[01:31:57] TX ZF 4HP16 ID 04: 82 18 F1 21 04 B0
+[01:31:57] RX  82 18 F1 21 04 B0
+[01:31:57] RX  93 F1 18 61 04 00 DC 05 DC 05 DC 05 DC 05 D9 05 E0 05 E2 05 E2 05 16
+[01:31:58] TESTER PRESENT ZF 4HP16: envío manual de 0x3E (también hay mantenimiento automático si la sesión está validada).
+[01:31:58] ECO TX ZF 4HP16 ID 04 detectado.
+[01:31:58] RX ZF 4HP16 ID 04: 93 F1 18 61 04 00 DC 05 DC 05 DC 05 DC 05 D9 05 E0 05 E2 05 E2 05 16
+[01:31:58] VALIDACIÓN ZF 4HP16 ID 04: formato=0x93, longitud=19, destino=0xF1, origen=0x18, checksum recibido=0x16, esperado=0x16 (OK)
+[01:31:58] DATOS RAW ZF 4HP16 ID 04 (17 bytes): 00 DC 05 DC 05 DC 05 DC 05 D9 05 E0 05 E2 05 E2 05
+[01:31:58] CATÁLOGO DELPHI ID 04: Режим тяги; offset buffer original=12; modo=byte; valor no decodificado.
+[01:31:58] TX ZF 4HP16 ID 11: 82 18 F1 21 11 BD
+[01:31:58] RX  82 18 F1 21 11 BD
+[01:31:59] RX  97 F1 18 61 11 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF 11
+[01:31:59] SONDEO KWP ZF 4HP16: inicio de IDs 0x21 (exploratorio; coche detenido).
+[01:32:00] ECO TX ZF 4HP16 ID 11 detectado.
+[01:32:00] RX ZF 4HP16 ID 11: 97 F1 18 61 11 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF 11
+[01:32:00] VALIDACIÓN ZF 4HP16 ID 11: formato=0x97, longitud=23, destino=0xF1, origen=0x18, checksum recibido=0x11, esperado=0x11 (OK)
+[01:32:00] DATOS RAW ZF 4HP16 ID 11 (21 bytes): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF
+[01:32:00] CATÁLOGO DELPHI ID 11: Крутящий момент турбинного колеса (Нм); offset buffer original=31; modo=byte; valor no decodificado.
+[01:32:00] DATOS ECU ZF 4HP16 finalizados. Revisa RX/checksum; no se asignan unidades a bytes sin mapa validado.
+[01:32:00] TESTER PRESENT automático activado para ZF 4HP16: intervalo de 2 s mientras la sesión esté abierta.
+[01:32:00] TX TESTER PRESENT ZF 4HP16  81 18 F1 3E C8
+[01:32:00] RX  81 18 F1 3E C8
+[01:32:00] RX  81 F1 18 7E 08
+[01:32:00] ECO TX TESTER PRESENT detectado: 81 18 F1 3E C8
+[01:32:00] RX TESTER PRESENT CANDIDATA ZF 4HP16: 81 F1 18 7E 08
+[01:32:00] VALIDACIÓN TESTER PRESENT: formato=0x81, longitud=1, destino=0xF1, origen=0x18, checksum recibido=0x08, esperado=0x08 (OK)
+[01:32:00] KWP BUS ZF 4HP16: TX 82 18 F1 21 01 AD
+[01:32:01] KWP BUS ZF 4HP16: Eco TX confirmado
+[01:32:01] RX  82 18 F1 21 01 AD
+[01:32:01] RX  85 F1 18 61 01 05 05 00 FA
+[01:32:01] KWP BUS ZF 4HP16: RX 85 F1 18 61 01 05 05 00 FA checksum=OK
+[01:32:01] KWP BUS ZF 4HP16: TX 82 18 F1 21 02 AE
+[01:32:01] KWP BUS ZF 4HP16: Eco TX confirmado
+[01:32:01] RX  82 18 F1 21 02 AE
+[01:32:01] RX  86 F1 18 61 02 72 1E 00 47 C9
+[01:32:01] KWP BUS ZF 4HP16: RX 86 F1 18 61 02 72 1E 00 47 C9 checksum=OK
+[01:32:01] KWP BUS ZF 4HP16: TX 82 18 F1 21 03 AF
+[01:32:01] KWP BUS ZF 4HP16: Eco TX confirmado
+[01:32:01] RX  82 18 F1 21 03 AF
+[01:32:01] RX  91 F1 18 61 03 00 00 00 00 00 00 00 00 00 00 FC FF 00 00 00 F9
+[01:32:01] KWP BUS ZF 4HP16: RX 91 F1 18 61 03 00 00 00 00 00 00 00 00 00 00 FC FF 00 00 00 F9 checksum=OK
+[01:32:01] KWP BUS ZF 4HP16: TX 82 18 F1 21 04 B0
+[01:32:01] KWP BUS ZF 4HP16: Eco TX confirmado
+[01:32:01] RX  82 18 F1 21 04 B0
+[01:32:01] RX  93 F1 18 61 04 00 DC 05 DC 05 DC 05 DC 05 D9 05 E0 05 E2 05 E2 05 16
+[01:32:01] KWP BUS ZF 4HP16: RX 93 F1 18 61 04 00 DC 05 DC 05 DC 05 DC 05 D9 05 E0 05 E2 05 E2 05 16 checksum=OK
+[01:32:01] KWP BUS ZF 4HP16: TX 82 18 F1 21 11 BD
+[01:32:01] KWP BUS ZF 4HP16: Eco TX confirmado
+[01:32:01] RX  82 18 F1 21 11 BD
+[01:32:01] RX  97 F1 18 61 11 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF 11
+[01:32:01] KWP BUS ZF 4HP16: RX 97 F1 18 61 11 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF 11 checksum=OK
+[01:32:01] KWP BUS ZF 4HP16: TX 82 18 F1 21 20 CC
+[01:32:01] KWP BUS ZF 4HP16: Eco TX confirmado
+[01:32:01] RX  82 18 F1 21 20 CC
+[01:32:01] RX  83 F1 18 7F 21 12 3E
+[01:32:01] KWP BUS ZF 4HP16: RX 83 F1 18 7F 21 12 3E checksum=OK
+[01:32:02] KWP BUS ZF 4HP16: TX 82 18 F1 21 F0 9C
+[01:32:02] KWP BUS ZF 4HP16: Eco TX confirmado
+[01:32:02] RX  82 18 F1 21 F0 9C
+[01:32:02] RX  83 F1 18 7F 21 22 4E
+[01:32:02] KWP BUS ZF 4HP16: RX 83 F1 18 7F 21 22 4E checksum=OK
+[01:32:02] KWP BUS ZF 4HP16: TX 82 18 F1 21 F1 9D
+[01:32:02] KWP BUS ZF 4HP16: Eco TX confirmado
+[01:32:02] RX  82 18 F1 21 F1 9D
+[01:32:02] TESTER PRESENT automático ZF 4HP16 omitido: hay una consulta diagnóstica en curso.
+[01:32:02] RX  83 F1 18 7F 21 12 3E
+[01:32:02] KWP BUS ZF 4HP16: RX 83 F1 18 7F 21 12 3E checksum=OK
+[01:32:02] KWP BUS ZF 4HP16: TX 82 18 F1 21 FB A7
+[01:32:02] KWP BUS ZF 4HP16: Eco TX confirmado
+[01:32:02] RX  82 18 F1 21 FB A7
+[01:32:02] RX  83 F1 18 7F 21 12 3E
+[01:32:02] KWP BUS ZF 4HP16: RX 83 F1 18 7F 21 12 3E checksum=OK
+[01:32:02] ID 0x01: respuesta positiva; 3 bytes de datos · datos=05 05 00
+[01:32:02] ID 0x02: respuesta positiva; 4 bytes de datos · datos=72 1E 00 47
+[01:32:02] ID 0x03: respuesta positiva; 15 bytes de datos · datos=00 00 00 00 00 00 00 00 00 00 FC FF 00 00 00
+[01:32:02] ID 0x04: respuesta positiva; 17 bytes de datos · datos=00 DC 05 DC 05 DC 05 DC 05 D9 05 E0 05 E2 05 E2 05
+[01:32:02] ID 0x11: respuesta positiva; 21 bytes de datos · datos=00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF
+[01:32:02] ID 0x20: NRC 0x12
+[01:32:02] ID 0xF0: NRC 0x22
+[01:32:02] ID 0xF1: NRC 0x12
+[01:32:02] ID 0xFB: NRC 0x12
+[01:32:02] SONDEO KWP ZF 4HP16 finalizado. IDs sin respuesta no se consideran compatibles.
+[01:32:02] TESTER PRESENT automático activado para ZF 4HP16: intervalo de 2 s mientras la sesión esté abierta.
+[01:32:03] Puerto serie cerrado.
