@@ -531,14 +531,34 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             nav.addView(navButton, LinearLayout.LayoutParams(0, -2, 1f))
         }
         root.addView(nav, lp(-1, -2))
-        val profileSelectionListener = object : AdapterView.OnItemSelectedListener {
+        var previousProfilePosition = ecuProfile.selectedItemPosition
+        ecuProfile.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                if (position != previousProfilePosition) {
+                    previousProfilePosition = position
+                    validatedStartProfile = null
+                    testerPresentTask?.cancel(false)
+                    testerPresentTask = null
+                    appendLog("Perfil ECU cambiado: vuelve a inicializar la ECU seleccionada antes de diagnosticar o probar actuadores.")
+                }
                 updateActuatorControlsEnabled()
             }
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
-        ecuProfile.onItemSelectedListener = profileSelectionListener
-        baud.onItemSelectedListener = profileSelectionListener
+        var previousBaudPosition = baud.selectedItemPosition
+        baud.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                if (position != previousBaudPosition) {
+                    previousBaudPosition = position
+                    validatedStartProfile = null
+                    testerPresentTask?.cancel(false)
+                    testerPresentTask = null
+                    appendLog("Baud cambiado: vuelve a inicializar la ECU con la nueva velocidad.")
+                }
+                updateActuatorControlsEnabled()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+        }
         showScreen("Inicio")
         setContentView(root)
         updateActuatorControlsEnabled()
@@ -2005,7 +2025,10 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         runOnUiThread { appendLog("ERROR serie: ${e.message}"); setStatus("Error en comunicación USB") }
     }
 
-    private fun setStatus(value: String) { runOnUiThread { status.text = value } }
+    private fun setStatus(value: String) {
+        runOnUiThread { status.text = value }
+        updateActuatorControlsEnabled()
+    }
     private fun appendLog(value: String) {
         val line = "[${dateFormat.format(Date())}] $value\n"
         runOnUiThread { log.append(line) }
