@@ -101,16 +101,17 @@ def extract(path: Path) -> dict:
             "selector": buf[off],
             "id": u32(buf, off + 4),
             "name_ptr": u32(buf, off + 8),
-            "format_flag": u32(buf, off + 12),
+            "range_ptr": u32(buf, off + 12),
             "max_group": u32(buf, off + 16),
             "data_offset": u32(buf, off + 20),
             "read_mode": u32(buf, off + 24),
             "precision": u32(buf, off + 28),
-            "text_ptr": u32(buf, off + 32),
+            "display_ptr": u32(buf, off + 32),
             "raw_hex": buf[off:off + ENTRY_SIZE].hex(" ").upper(),
         }
         row["name"] = delphi_ansi_string(buf, row["name_ptr"], image_base, sections)
-        row["text"] = delphi_ansi_string(buf, row["text_ptr"], image_base, sections)
+        row["range"] = delphi_ansi_string(buf, row["range_ptr"], image_base, sections)
+        row["display_values"] = delphi_ansi_string(buf, row["display_ptr"], image_base, sections)
         rows.append(row)
 
     return {
@@ -150,7 +151,7 @@ def main() -> None:
         selected = [row for row in result["rows"] if row["selector"] == selector]
         print(f"## Selector 0x{selector:02X} ({len(selected)} entries)")
         print()
-        print("| Index | ID | Name | Format flag | Max group | Data offset | Read mode | Precision | Text | Raw descriptor |")
+        print("| Index | ID | Name | Range text | Max group | Data offset | Read mode | Precision | Display values | Raw descriptor |")
         print("|---:|---:|---|---:|---:|---:|---:|---:|---|---|")
         for row in selected:
             name = (row["name"] or "").replace("|", "\\|").replace("\n", " ")
