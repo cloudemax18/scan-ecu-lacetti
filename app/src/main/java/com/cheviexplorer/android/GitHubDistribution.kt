@@ -74,50 +74,6 @@ internal object GitHubDistribution {
         }
     }
 
-    /**
-     * Uploads the current capture as an unlisted (secret) Gist.
-     * The caller supplies the token only for this request; it is never persisted.
-     */
-    fun createSecretGist(token: String, capture: String): String {
-        require(token.isNotBlank()) { "Falta el token de GitHub." }
-        require(capture.isNotBlank()) { "La captura está vacía." }
-
-        val fileName = "cheviexplorer-captura-${System.currentTimeMillis()}.txt"
-        val requestJson = JSONObject()
-            .put("description", "Captura CheviExplorer KWP · MR-140 F0/F1")
-            .put("public", false)
-            .put("files", JSONObject().put(fileName, JSONObject().put("content", capture)))
-
-        val connection = (URL("https://api.github.com/gists").openConnection() as HttpURLConnection)
-        connection.requestMethod = "POST"
-        connection.doOutput = true
-        connection.connectTimeout = 10000
-        connection.readTimeout = 20000
-        connection.setRequestProperty("Accept", "application/vnd.github+json")
-        connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-        connection.setRequestProperty("X-GitHub-Api-Version", "2022-11-28")
-        connection.setRequestProperty("User-Agent", USER_AGENT)
-        connection.setRequestProperty("Authorization", "token $token")
-        try {
-            connection.outputStream.use { output ->
-                output.write(requestJson.toString().toByteArray(Charsets.UTF_8))
-            }
-            val code = connection.responseCode
-            val body = (if (code in 200..299) connection.inputStream else connection.errorStream)
-                ?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-            if (code !in 200..299) {
-                throw IllegalStateException("GitHub API HTTP $code: ${body.take(200)}")
-            }
-            val url = JSONObject(body).optString("html_url")
-            if (!url.startsWith("https://gist.github.com/")) {
-                throw IllegalStateException("GitHub no devolvió un enlace válido para la captura.")
-            }
-            return url
-        } finally {
-            connection.disconnect()
-        }
-    }
-
     fun downloadApk(downloadUrl: String, destination: File) {
         require(downloadUrl.startsWith("https://github.com/")) { "URL de descarga no confiable." }
         destination.parentFile?.mkdirs()
