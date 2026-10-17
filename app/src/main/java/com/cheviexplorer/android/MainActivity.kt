@@ -808,6 +808,13 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     testerPresentTask?.cancel(false)
                     return@scheduleAtFixedRate
                 }
+                // Do not interleave TesterPresent bytes with an in-flight diagnostic response.
+                // The KWP frame parser consumes a continuous RX stream; overlapping writes can
+                // corrupt checksums and make DTC replies look malformed.
+                if (synchronized(initRxLock) { captureInitRx }) {
+                    appendLog("TESTER PRESENT automático $profile omitido: hay una consulta diagnóstica en curso.")
+                    return@scheduleAtFixedRate
+                }
                 writeSerialFrame(serialPort, frame, 500)
                 appendLog("TX TESTER PRESENT automático $profile  ${frame.toHex()}")
             } catch (e: Exception) {
