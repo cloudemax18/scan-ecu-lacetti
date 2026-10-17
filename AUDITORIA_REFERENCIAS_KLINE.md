@@ -74,6 +74,8 @@ Esto valida la reconstrucción de las tramas desde el EXE, pero no sustituye una
 
 La adaptación de acelerador es otra rutina: `Button_ObuchenieClick` envía `30 2C 07 FF` y después sigue una secuencia de lectura/condiciones. No debe etiquetarse como prueba de actuador individual ni reducirse a una sola trama. Ver `PORTADO_DELPHI_ACTUADORES.md`.
 
+**Corrección concreta al archivo de arquitectura aportado:** sus ejemplos de control `FUEL_PUMP=0x01`, `AC=0x02`, ventiladores `0x05/0x06`, activación con estado `0x01` y desactivación mediante opción `0x00` no coinciden con los handlers MR-140 de `Graf.pas`. Para el menú del EXE se reconstruyeron bomba `0x12`, A/C `0x15`, ventilador bajo/alto `0x13/0x14`, MIL `0x10`, retroalimentación `0x37`, regulador de ralentí `0x18`, calentador lambda `0x40` e inyectores `0x32`. El EXE usa control `0x07 FF` para activar y `0x07 00` para apagar; `0x30 ID 01` es su consulta de estado. No usar el catálogo de IDs inventado en el documento anterior.
+
 ### D. Encuadre, eco y checksum deben comprobarse por separado
 
 El código de referencia K-Line muestra que los tiempos y el eco dependen del adaptador y que distintos protocolos usan distintos formatos. CheviExplorer ya comprueba checksum y dirección en el parser de respuestas; no debe adoptar reglas universales como “si el primer byte coincide, siempre hay eco” sin verificar el resto de la trama. La corrección del resumen del barrido y el portado de los handlers de actuadores no reemplazan el parser de transporte.
