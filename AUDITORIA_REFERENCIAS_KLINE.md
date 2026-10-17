@@ -60,9 +60,19 @@ El documento asume que el índice de buffer Delphi se convierte a índice de pay
 
 Las ecuaciones `raw * 0.47`, `raw - 40`, `raw * 0.25`, o las asignaciones de bytes a MAP/ECT/RPM del documento son hipótesis mientras no se relacionen con una respuesta real y se comparen con una fuente independiente. La tabla Delphi reconstruida aporta nombres, unidades, offsets y modos, pero por sí sola no prueba el layout de la respuesta KWP ni la fórmula de conversión.
 
-### C. `0x30` y actuadores: mantener fuera del alcance
+### C. Actuadores: se localizaron los handlers exactos en Graf.pas
 
-No se validaron los servicios, IDs ni opciones propuestos para bomba de combustible, ventiladores o embrague de A/C en el Lacetti. Una regla de apagar a los 30 segundos no constituye un mecanismo de seguridad suficiente: puede perderse la comunicación, reiniciarse el proceso o no aceptar la ECU la orden de devolver control. La app debe permanecer en modo de solo lectura hasta que exista documentación y un procedimiento de prueba controlado para cada ECU.
+La primera revisión de `main.pas` no contenía todos los handlers de la ventana de mecanismos. Al revisar también `archivos/dumps1.8/Graf.pas` se localizaron `TGrafForm.CaseIMSelect`, `test_ONClick`, `test_OFFClick` y `TForm1.Driver`. Por tanto, ya hay evidencia del EXE para el catálogo de control MR-140 y el formato de sus órdenes:
+
+- Leer estado: servicio `0x30`, ID local y opción `0x01`.
+- Activar: servicio `0x30`, ID local, opción `0x07` y estado `0xFF`.
+- Desactivar: servicio `0x30`, ID local, opción `0x07` y estado `0x00`.
+- Inyectores: local ID `0x32` con un byte adicional que selecciona el inyector.
+- El código revisado usa destino `0x11`; no se habilitó el mismo catálogo para la ZF 4HP16/destino `0x18`.
+
+Esto valida la reconstrucción de las tramas desde el EXE, pero no sustituye una captura RX de la app Android ni una comprobación física. La interfaz Android ahora tiene pruebas de estado/ON/OFF para el catálogo MR-140, confirmación previa, comprobación de checksum y un intento de OFF automático a los 3 segundos. Ese timeout es una salvaguarda de la app; no garantiza la liberación de la ECU si se pierde comunicación.
+
+La adaptación de acelerador es otra rutina: `Button_ObuchenieClick` envía `30 2C 07 FF` y después sigue una secuencia de lectura/condiciones. No debe etiquetarse como prueba de actuador individual ni reducirse a una sola trama. Ver `PORTADO_DELPHI_ACTUADORES.md`.
 
 ### D. Encuadre, eco y checksum deben comprobarse por separado
 
