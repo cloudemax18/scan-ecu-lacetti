@@ -69,6 +69,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     private lateinit var liveOutput: TextView
     private lateinit var liveCatalogOutput: TextView
     private lateinit var liveStartButton: Button
+    private lateinit var liveScanButton: Button
     private val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
 
     private val permissionReceiver = object : BroadcastReceiver() {
@@ -300,7 +301,8 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
         liveControls.addView(liveOutput, lp(-1, -2))
         liveStartButton = addAction(liveControls, "Iniciar lectura en vivo") { startLiveParameterPolling() }
-        addAction(liveControls, "Detener lectura") { stopLiveParameterPolling() }
+        liveScanButton = addAction(liveControls, "Validar mapa KWP (solo lectura)") { validateLiveParameterMap() }
+        addAction(liveControls, "Detener lectura / exploración") { stopLiveParameterPolling() }
         addCard(live, liveControls)
         addSection(live, "Catálogo del EXE", "Parámetros reconstruidos. Se marcan como pendientes hasta verificar consulta y fórmula.")
         liveCatalogOutput = TextView(this).apply {
@@ -1091,12 +1093,124 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
     }
 
+    private fun validateLiveParameterMap() {
+        val serialPort = port
+        if (serialPort == null || !serialPort.isOpen) {
+            Toast.makeText(this, "Primero conecta el adaptador USB", Toast.LENGTH_LONG).show()
+            return
+        }
+        val isEngine = ecuProfile.selectedItemPosition == 0
+        val profile = if (isEngine) "MR-140" else "ZF 4HP16"
+        val source = if (isEngine) 0x11 else 0x18
+        if (validatedStartProfile != profile) {
+            Toast.makeText(this, "Inicializa primero $profile", Toast.LENGTH_LONG).show()
+            return
+        }
+        if (liveDataRunning) {
+            Toast.makeText(this, "Detén primero la lectura en vivo", Toast.LENGTH_LONG).show()
+            return
+        }
+        // Lecturas 0x21 exclusivamente: identificadores bajos más los dos grupos usados por el EXE.
+        val ids = (0x01..0x40).toList() + listOf(0xF0, 0xF1)
+        liveDataRunning = true
+        liveStartButton.isEnabled = false
+        liveScanButton.isEnabled = false
+        testerPresentTask?.cancel(false)
+        testerPresentTask = null
+        liveOutput.text = "Validando mapa KWP de $profile…\nSe consultan solo identificadores de lectura (servicio 0x21). No se envían comandos de escritura."
+        appendLog("VALIDACIÓN KWP $profile: lectura de IDs 01-40, F0 y F1.")
+        liveDataTask = liveDataExecutor.submit {
+            val positives = mutableListOf<String>()
+            val negatives = mutableMapOf<Int, Int>()
+            var noResponse = 0
+            try {
+                for (localId in ids) {
+                    if (!liveDataRunning || Thread.currentThread().isInterrupted ||
+                        port !== serialPort || !serialPort.isOpen || validatedStartProfile != profile) break
+                    var result = "sin respuesta"
+                    try {
+                        val request = KwpProtocol.buildLocalIdentifierRequest(source, localId)
+                        synchronized(initRxLock) {
+                            initRxBuffer.reset()
+                            captureInitRx = true
+                        }
+                        writeSerialFrame(serialPort, request, 1000)
+                        Thread.sleep(450)
+                        val rx = synchronized(initRxLock) {
+                            captureInitRx = false
+                            initRxBuffer.toByteArray()
+                        }
+                        val echoAt = indexOfFrame(rx, request)
+                        val candidate = if (echoAt >= 0) rx.copyOfRange(echoAt + request.size, rx.size) else rx
+                        val response = KwpProtocol.findResponse(candidate, expectedSource = source,
+                            expectedPayloadPrefix = byteArrayOf(0x61, localId.toByte()))
+                            ?: KwpProtocol.findResponse(candidate, expectedSource = source,
+                                expectedPayloadPrefix = byteArrayOf(0x7F, 0x21))
+                        if (response == null) {
+                            noResponse++
+                        } else if (!response.valid) {
+                            result = "checksum inválido"
+                        } else {
+                            val payload = response.payload
+                            if (payload.size >= 2 && (payload[0].toInt() and 0xFF) == 0x61 &&
+                                (payload[1].toInt() and 0xFF) == localId) {
+                                val bytes = payload.copyOfRange(2, payload.size)
+                                result = "POSITIVO · " + if (bytes.isEmpty()) "(sin datos)" else bytes.toHex()
+                                positives.add("ID %02X: %s".format(localId, result))
+                            } else if (payload.size >= 3 && (payload[0].toInt() and 0xFF) == 0x7F) {
+                                val nrc = payload[2].toInt() and 0xFF
+                                negatives[nrc] = (negatives[nrc] ?: 0) + 1
+                                result = "NRC %02X".format(nrc)
+                            }
+                        }
+                        appendLog("MAPA KWP $profile ID %02X: %s".format(localId, result))
+                    } catch (e: InterruptedException) {
+                        Thread.currentThread().interrupt()
+                        break
+                    } catch (e: Exception) {
+                        appendLog("MAPA KWP $profile ID %02X error: %s".format(localId, e.message ?: e.javaClass.simpleName))
+                    } finally {
+                        synchronized(initRxLock) { captureInitRx = false }
+                    }
+                }
+            } catch (e: Exception) {
+                appendLog("VALIDACIÓN KWP $profile error: " + (e.message ?: e.javaClass.simpleName))
+            } finally {
+                synchronized(initRxLock) { captureInitRx = false }
+                liveDataRunning = false
+                runOnUiThread {
+                    liveStartButton.isEnabled = true
+                    liveScanButton.isEnabled = true
+                    liveOutput.text = buildString {
+                        append("Validación finalizada: ").append(profile).append("\n")
+                        append("Respuestas positivas: ").append(positives.size).append("\n")
+                        append("Sin respuesta: ").append(noResponse).append("\n")
+                        append("Rechazos NRC: ").append(negatives.values.sum()).append("\n")
+                        if (negatives.isNotEmpty()) {
+                            append("NRC por código: ").append(negatives.entries.sortedBy { it.key }
+                                .joinToString { "0x%02X=%d".format(it.key, it.value) }).append("\n")
+                        }
+                        append("\nBLOQUES POSITIVOS (checksum validado)\n")
+                        if (positives.isEmpty()) append("No se encontraron respuestas positivas en el rango consultado.\n")
+                        positives.forEach { append(it).append("\n") }
+                        append("\nLas lecturas positivas son bloques brutos; sus campos físicos todavía deben mapearse.")
+                    }
+                    if (validatedStartProfile == profile && port === serialPort && serialPort.isOpen) {
+                        startAutomaticTesterPresent(profile, source, serialPort)
+                    }
+                }
+                appendLog("VALIDACIÓN KWP $profile finalizada; positivos=" + positives.size + ", sin respuesta=" + noResponse + ".")
+            }
+        }
+    }
+
     private fun stopLiveParameterPolling() {
         liveDataRunning = false
         liveDataTask?.cancel(true)
         liveDataTask = null
         liveStartButton.isEnabled = true
-        appendLog("Solicitud de detener lectura en vivo.")
+        if (::liveScanButton.isInitialized) liveScanButton.isEnabled = true
+        appendLog("Solicitud de detener lectura en vivo/exploración.")
     }
 
     private fun showDelphiCatalog() {
