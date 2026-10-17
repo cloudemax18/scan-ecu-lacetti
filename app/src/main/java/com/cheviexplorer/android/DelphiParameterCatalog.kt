@@ -3,9 +3,12 @@ package com.cheviexplorer.android
 /**
  * Catálogo estático reconstruido de CheviExplorer1.8.exe.
  *
- * Los offsets son posiciones del buffer que usa el programa Delphi original; NO son
- * offsets relativos a cada respuesta KWP individual. La tabla describe metadatos,
- * no confirma por sí sola que una consulta concreta o una fórmula sea válida en el vehículo.
+ * Se conservan los 375 descriptores con campos plausibles. El registro final de selector
+ * 0xDC tiene campos que parecen punteros y no un descriptor de parámetro, por lo que se
+ * excluye de la lista utilizable. Los offsets son posiciones del buffer Delphi original,
+ * NO offsets relativos a cada respuesta KWP individual.
+ *
+ * La tabla describe metadatos; no confirma por sí sola una fórmula ni una consulta en vivo.
  */
 internal data class DelphiParameterDescriptor(
     val selector: Int,
@@ -395,8 +398,7 @@ internal object DelphiParameterCatalog {
         DelphiParameterDescriptor(selector = 68, id = 13, name = "Лампа неисправности ABS", unit = null, group = 1, dataOffset = 25, readMode = 1, precision = 0, displayValues = "Выкл.;Вкл.;-"),
         DelphiParameterDescriptor(selector = 68, id = 14, name = "Лампа неисправности EBD", unit = null, group = 1, dataOffset = 25, readMode = 1, precision = 0, displayValues = "Выкл.;Вкл.;-"),
         DelphiParameterDescriptor(selector = 68, id = 15, name = "Лампа неисправности TCS", unit = null, group = 1, dataOffset = 25, readMode = 1, precision = 0, displayValues = "Выкл.;Вкл.;-"),
-        DelphiParameterDescriptor(selector = 68, id = 16, name = "Лампа отключения TCS", unit = null, group = 1, dataOffset = 25, readMode = 1, precision = 0, displayValues = "Выкл.;Вкл.;-"),
-        DelphiParameterDescriptor(selector = 220, id = 4226884, name = "ID 4226884", unit = null, group = 4226732, dataOffset = 4226460, readMode = 4226964, precision = 4227028, displayValues = null)
+        DelphiParameterDescriptor(selector = 68, id = 16, name = "Лампа отключения TCS", unit = null, group = 1, dataOffset = 25, readMode = 1, precision = 0, displayValues = "Выкл.;Вкл.;-")
     )
 
     fun forSelector(selector: Int): List<DelphiParameterDescriptor> =
