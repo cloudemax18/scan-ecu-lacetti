@@ -1086,6 +1086,219 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
     }
 
+    private fun selectedMr140Actuator(): DelphiActuator? {
+        if (!::actuatorSpinner.isInitialized) return null
+        return DelphiActuatorCatalog.mr140.getOrNull(actuatorSpinner.selectedItemPosition)
+    }
+
+    private fun requireMr140ActuatorReady(): UsbSerialPort? {
+        val serialPort = port
+        if (serialPort == null || !serialPort.isOpen) {
+            Toast.makeText(this, "Conecta primero el adaptador USB KKL", Toast.LENGTH_LONG).show()
+            appendLog("ACTUADOR cancelado: puerto USB no abierto.")
+            return null
+        }
+        if (ecuProfile.selectedItemPosition != 0 || validatedStartProfile != "MR-140") {
+            Toast.makeText(this, "Inicializa la ECU de motor Delphi MR-140; el menú DriverIM del EXE no usa la ZF", Toast.LENGTH_LONG).show()
+            appendLog("ACTUADOR cancelado: DriverIM reconstruido solo para selector MR-140 (destino 0x11).")
+            return null
+        }
+        if (baud.selectedItemPosition != 0) {
+            Toast.makeText(this, "Selecciona 10400 baud", Toast.LENGTH_LONG).show()
+            appendLog("ACTUADOR cancelado: el perfil MR-140 requiere 10400 baud.")
+            return null
+        }
+        if (liveDataRunning || actuatorCommandRunning || synchronized(initRxLock) { captureInitRx }) {
+            Toast.makeText(this, "Espera a que termine la consulta KWP actual", Toast.LENGTH_LONG).show()
+            appendLog("ACTUADOR cancelado: bus ocupado por otra consulta.")
+            return null
+        }
+        return serialPort
+    }
+
+    private fun readMr140ActuatorState() {
+        val serialPort = requireMr140ActuatorReady() ?: return
+        val actuator = selectedMr140Actuator() ?: return
+        runMr140ActuatorTransaction(
+            serialPort = serialPort,
+            actuator = actuator,
+            actionLabel = "leer estado",
+            request = KwpProtocol.buildMr140ActuatorStatusRequest(actuator.localId),
+            expectedControlOption = 0x01,
+            autoOffRequest = null
+        )
+    }
+
+    private fun confirmMr140ActuatorControl(activate: Boolean) {
+        if (requireMr140ActuatorReady() == null) return
+        val actuator = selectedMr140Actuator() ?: return
+        val action = if (activate) "ACTIVAR durante 3 segundos" else "DESACTIVAR"
+        val warning = if (activate) {
+            "Se enviará el comando de control del ejecutable Delphi y se intentará enviar el estado OFF tras 3 segundos. El apagado automático no se puede garantizar si se desconecta el adaptador o se pierde la sesión."
+        } else {
+            "Se enviará el comando OFF reconstruido del ejecutable Delphi para este actuador."
+        }
+        AlertDialog.Builder(this)
+            .setTitle("$action · ${actuator.label}")
+            .setMessage(
+                "$warning\n\nAntes de continuar: vehículo inmóvil, motor apagado, contacto ON, selector en P/N y freno de estacionamiento aplicado. Mantén manos y herramientas alejadas de ventiladores, correas y partes móviles. No pruebes si hay olor o fuga de combustible."
+            )
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton(if (activate) "Activar 3 s" else "Enviar OFF") { _, _ ->
+                val currentPort = requireMr140ActuatorReady() ?: return@setPositiveButton
+                val request = KwpProtocol.buildMr140ActuatorControlRequest(
+                    actuator.localId, activate, actuator.injectorIndex
+                )
+                val offRequest = if (activate) {
+                    KwpProtocol.buildMr140ActuatorControlRequest(
+                        actuator.localId, false, actuator.injectorIndex
+                    )
+                } else null
+                runMr140ActuatorTransaction(
+                    serialPort = currentPort,
+                    actuator = actuator,
+                    actionLabel = if (activate) "activar 3 s" else "desactivar",
+                    request = request,
+                    expectedControlOption = 0x07,
+                    autoOffRequest = offRequest
+                )
+            }
+            .show()
+    }
+
+    private fun runMr140ActuatorTransaction(
+        serialPort: UsbSerialPort,
+        actuator: DelphiActuator,
+        actionLabel: String,
+        request: ByteArray,
+        expectedControlOption: Int,
+        autoOffRequest: ByteArray?
+    ) {
+        if (actuatorCommandRunning || liveDataRunning || port !== serialPort || !serialPort.isOpen) {
+            appendLog("ACTUADOR cancelado: cambió el estado del puerto o el bus está ocupado.")
+            return
+        }
+        actuatorCommandRunning = true
+        testerPresentTask?.cancel(false)
+        testerPresentTask = null
+        runOnUiThread {
+            actuatorStatusOutput.text = "En curso: $actionLabel · ${actuator.label}"
+            actuatorReadButton.isEnabled = false
+            actuatorOnButton.isEnabled = false
+            actuatorOffButton.isEnabled = false
+        }
+        appendLog("ACTUADOR MR-140: $actionLabel; ${actuator.label}; localId=0x%02X; control=0x%02X."
+            .format(actuator.localId, expectedControlOption))
+        executor.execute {
+            var offAttempted = false
+            var resultText = "Sin resultado"
+            try {
+                val accepted = exchangeMr140ActuatorFrame(
+                    serialPort, request, actuator.localId, expectedControlOption, actionLabel
+                )
+                resultText = if (accepted) "Respuesta positiva confirmada" else "Sin confirmación positiva; revisar Registro"
+                if (autoOffRequest != null) {
+                    appendLog("ACTUADOR MR-140: espera de seguridad de 3 s antes de enviar OFF.")
+                    Thread.sleep(3000)
+                    offAttempted = true
+                    val offAccepted = exchangeMr140ActuatorFrame(
+                        serialPort, autoOffRequest, actuator.localId, 0x07, "OFF automático"
+                    )
+                    resultText += if (offAccepted) " · OFF confirmado" else " · OFF enviado sin confirmación"
+                }
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                resultText = "Interrumpido; verifica el estado físico del actuador"
+                appendLog("ACTUADOR MR-140 interrumpido. No se debe asumir que la salida está desactivada.")
+            } catch (e: Exception) {
+                resultText = "Error: ${e.message ?: e.javaClass.simpleName}"
+                appendLog("ERROR ACTUADOR MR-140: $resultText")
+                if (autoOffRequest != null && !offAttempted && port === serialPort && serialPort.isOpen) {
+                    try {
+                        appendLog("ACTUADOR MR-140: intentando OFF de recuperación tras error.")
+                        exchangeMr140ActuatorFrame(serialPort, autoOffRequest, actuator.localId, 0x07, "OFF de recuperación")
+                    } catch (offError: Exception) {
+                        appendLog("ERROR OFF de recuperación: ${offError.message ?: offError.javaClass.simpleName}. Cicla el contacto y verifica.")
+                    }
+                }
+            } finally {
+                synchronized(initRxLock) { captureInitRx = false }
+                actuatorCommandRunning = false
+                runOnUiThread {
+                    actuatorStatusOutput.text = "$resultText\nActuador: ${actuator.label} · ID 0x%02X".format(actuator.localId)
+                    actuatorReadButton.isEnabled = true
+                    actuatorOnButton.isEnabled = true
+                    actuatorOffButton.isEnabled = true
+                }
+                if (validatedStartProfile == "MR-140" && port === serialPort && serialPort.isOpen) {
+                    startAutomaticTesterPresent("MR-140", 0x11, serialPort)
+                }
+            }
+        }
+    }
+
+    /**
+     * Sends one exact Delphi DriverIM transaction and validates the KWP checksum, response SID,
+     * local identifier and control option before reporting success.
+     */
+    private fun exchangeMr140ActuatorFrame(
+        serialPort: UsbSerialPort,
+        request: ByteArray,
+        localId: Int,
+        expectedControlOption: Int,
+        label: String
+    ): Boolean {
+        synchronized(initRxLock) {
+            initRxBuffer.reset()
+            captureInitRx = true
+        }
+        try {
+            appendLog("TX ACTUADOR $label: ${request.toHex()}")
+            writeSerialFrame(serialPort, request, 1000)
+            Thread.sleep(800)
+        } finally {
+            // Close capture only after collecting all bytes received during this transaction.
+        }
+        val raw = synchronized(initRxLock) {
+            captureInitRx = false
+            initRxBuffer.toByteArray()
+        }
+        val echoAt = indexOfFrame(raw, request)
+        val candidate = if (echoAt >= 0) raw.copyOfRange(echoAt + request.size, raw.size) else raw
+        if (candidate.isEmpty()) {
+            appendLog("ACTUADOR $label: sin respuesta RX; TX=${request.toHex()}.")
+            return false
+        }
+        appendLog("RX ACTUADOR $label raw: ${candidate.toHex()}")
+        val response = KwpProtocol.findResponse(candidate, expectedSource = 0x11)
+        if (response == null) {
+            appendLog("ACTUADOR $label: RX sin trama KWP reconocible.")
+            return false
+        }
+        appendLog("VALIDACIÓN ACTUADOR $label: ${response.description}")
+        if (!response.valid) {
+            appendLog("ACTUADOR $label: checksum inválido; respuesta descartada.")
+            return false
+        }
+        val payload = response.payload
+        if (payload.size >= 3 && (payload[0].toInt() and 0xFF) == 0x70 &&
+            (payload[1].toInt() and 0xFF) == localId &&
+            (payload[2].toInt() and 0xFF) == expectedControlOption
+        ) {
+            val state = payload.copyOfRange(3, payload.size)
+            appendLog("ACTUADOR $label: respuesta positiva 70 ID CONTROL confirmada; estado raw=${state.toHex().ifEmpty { "(sin bytes de estado)" }}.")
+            return true
+        }
+        if (payload.size >= 3 && (payload[0].toInt() and 0xFF) == 0x7F &&
+            (payload[1].toInt() and 0xFF) == 0x30
+        ) {
+            appendLog("ACTUADOR $label: NRC=0x%02X para servicio 0x30.".format(payload[2].toInt() and 0xFF))
+        } else {
+            appendLog("ACTUADOR $label: respuesta inesperada; payload=${payload.toHex()}.")
+        }
+        return false
+    }
+
     private fun setLabStatus(message: String) {
         if (!::labOutput.isInitialized) return
         runOnUiThread { labOutput.text = message }
