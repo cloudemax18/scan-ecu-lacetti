@@ -25,6 +25,13 @@ import android.widget.Toast
 import com.hoho.android.usbserial.driver.UsbSerialPort
 import com.hoho.android.usbserial.driver.UsbSerialProber
 import com.hoho.android.usbserial.util.SerialInputOutputManager
+import com.cheviexplorer.android.kwp.IdProbe
+import com.cheviexplorer.android.kwp.KwpBus
+import com.cheviexplorer.android.kwp.SerialIo
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -52,6 +59,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     private val initRxLock = Any()
     private val serialWriteLock = Any()
     private val initRxBuffer = ByteArrayOutputStream()
+    private val diagnosticRxQueue = java.util.concurrent.LinkedBlockingQueue<Byte>()
     @Volatile private var captureInitRx = false
     @Volatile private var validatedStartProfile: String? = null
     private var pendingUpdateFile: File? = null
@@ -122,6 +130,11 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             setOnClickListener { sendTesterPresentOnce() }
         }
         root.addView(testerPresentButton, lp(-1, -2))
+        val probeButton = Button(this).apply {
+            text = "Explorar IDs KWP 0x21 · solo lectura"
+            setOnClickListener { probeLocalIdentifiers() }
+        }
+        root.addView(probeButton, lp(-1, -2))
         val note = TextView(this).apply {
             text = "Inicializa primero la ECU. MR-140: registros DTC de 4 bytes; ZF 4HP16: registros de 3 bytes. El parser Delphi indica que 59 00 significa sin averías y que el estado 0x60 es intermitente. Los parámetros F0/F1 son preliminares y deben contrastarse con capturas reales. Borrado, seguridad y actuadores siguen deshabilitados."
             textSize = 13f; setTextColor(0xFFFFD180.toInt()); setPadding(0, 12, 0, 12)
@@ -824,6 +837,87 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }, 2, 2, TimeUnit.SECONDS)
     }
 
+    /** Sonda IDs locales mediante el mismo flujo RX asíncrono de la app; no abre una segunda lectura USB. */
+    private fun probeLocalIdentifiers() {
+        val serialPort = port
+        if (serialPort == null || !serialPort.isOpen) {
+            appendLog("SONDEO KWP cancelado: conecta primero el adaptador USB.")
+            return
+        }
+        val isEngine = ecuProfile.selectedItemPosition == 0
+        val profile = if (isEngine) "MR-140" else "ZF 4HP16"
+        val source = if (isEngine) 0x11 else 0x18
+        if (validatedStartProfile != profile) {
+            appendLog("SONDEO KWP cancelado: inicializa primero $profile.")
+            return
+        }
+        val selectedBaud = when (baud.selectedItemPosition) { 1 -> 9600; 2 -> 38400; 3 -> 4800; else -> 10400 }
+        if (selectedBaud != 10400) {
+            appendLog("SONDEO KWP cancelado: selecciona 10400 baudios.")
+            return
+        }
+
+        // Pausa el timer durante el sondeo para evitar que su TX contamine la respuesta.
+        testerPresentTask?.cancel(false)
+        testerPresentTask = null
+        appendLog("SONDEO KWP $profile: inicio de IDs 0x21 (exploratorio; coche detenido).")
+        executor.execute {
+            var finished = false
+            try {
+                synchronized(initRxLock) {
+                    initRxBuffer.reset()
+                    diagnosticRxQueue.clear()
+                    captureInitRx = true
+                }
+                val serialIo = object : SerialIo {
+                    override fun write(data: ByteArray) {
+                        writeSerialFrame(serialPort, data, 1000)
+                    }
+
+                    override fun read(max: Int, timeoutMs: Int): ByteArray {
+                        if (max <= 0 || timeoutMs < 0) return ByteArray(0)
+                        val first = try {
+                            diagnosticRxQueue.poll(timeoutMs.toLong(), TimeUnit.MILLISECONDS)
+                        } catch (e: InterruptedException) {
+                            Thread.currentThread().interrupt()
+                            return ByteArray(0)
+                        } ?: return ByteArray(0)
+                        val out = ByteArrayOutputStream()
+                        out.write(first.toInt())
+                        while (out.size() < max) {
+                            val next = diagnosticRxQueue.poll()
+                            if (next == null) break
+                            out.write(next.toInt())
+                        }
+                        return out.toByteArray()
+                    }
+                }
+                val bus = KwpBus(serialIo, CoroutineScope(SupervisorJob() + Dispatchers.IO), source)
+                bus.log = { message -> appendLog("KWP BUS $profile: $message") }
+                val results = runBlocking {
+                    try { IdProbe.sondear(bus) } finally { bus.close() }
+                }
+                results.forEach { result ->
+                    appendLog("ID 0x%02X: %s%s".format(
+                        result.id,
+                        result.estado,
+                        result.datos?.takeIf { it.isNotEmpty() }?.let { " · datos=" + it.joinToString(" ") { b -> "%02X".format(b.toInt() and 0xFF) } } ?: ""
+                    ))
+                }
+                appendLog("SONDEO KWP $profile finalizado. IDs sin respuesta no se consideran compatibles.")
+                finished = true
+            } catch (e: Exception) {
+                appendLog("ERROR SONDEO KWP $profile: ${e.javaClass.simpleName}: ${e.message ?: "(sin mensaje)"}")
+            } finally {
+                synchronized(initRxLock) { captureInitRx = false }
+                if (validatedStartProfile == profile && serialPort.isOpen) {
+                    startAutomaticTesterPresent(profile, source, serialPort)
+                }
+                if (!finished) appendLog("SONDEO KWP incompleto; revisa los TX/RX y checksums.")
+            }
+        }
+    }
+
     private fun sendTesterPresentOnce() {
         val serialPort = port
         if (serialPort == null || !serialPort.isOpen) {
@@ -923,6 +1017,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
 
     override fun onNewData(data: ByteArray) {
         synchronized(initRxLock) {
+            data.forEach { diagnosticRxQueue.offer(it) }
             if (captureInitRx) initRxBuffer.write(data)
         }
         val hex = data.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
