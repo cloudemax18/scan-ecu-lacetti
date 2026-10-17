@@ -48,8 +48,10 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     private var ioManager: SerialInputOutputManager? = null
     private val REQUEST_SAVE_LOG = 7104
     private val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+    private val testerPresentExecutor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     @Volatile private var testerPresentTask: ScheduledFuture<*>? = null
     private val initRxLock = Any()
+    private val serialWriteLock = Any()
     private val initRxBuffer = ByteArrayOutputStream()
     @Volatile private var captureInitRx = false
     @Volatile private var validatedStartProfile: String? = null
@@ -466,7 +468,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     captureInitRx = true
                 }
                 appendLog("TX $profile  " + frame.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) })
-                serialPort.write(frame, 1000)
+                writeSerialFrame(serialPort, frame, 1000)
                 stage = "espera de respuesta"
                 Thread.sleep(1500)
                 val rawRxBytes = synchronized(initRxLock) {
@@ -565,7 +567,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 }
                 stage = "envío de solicitud 1A 80"
                 appendLog("TX IDENT $profile  ${frame.toHex()}")
-                serialPort.write(frame, 1000)
+                writeSerialFrame(serialPort, frame, 1000)
                 stage = "espera de respuesta"
                 Thread.sleep(1500)
                 val rxBytes = synchronized(initRxLock) {
@@ -672,7 +674,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     }
                     stage = "envío del grupo %02X".format(localId)
                     appendLog("TX MR-140 grupo %02X: %s".format(localId, frame.toHex()))
-                    serialPort.write(frame, 1000)
+                    writeSerialFrame(serialPort, frame, 1000)
                     stage = "espera de respuesta"
                     Thread.sleep(1200)
                     val rxBytes = synchronized(initRxLock) {
@@ -692,9 +694,20 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                         appendLog("MR-140 grupo %02X: solo eco; no se interpreta como respuesta ECU.".format(localId))
                         continue
                     }
-                    val response = KwpProtocol.findResponse(candidate, expectedSource = 0x11)
+                    val response = KwpProtocol.findResponse(
+                        candidate,
+                        expectedSource = 0x11,
+                        expectedPayloadPrefix = byteArrayOf(0x61, localId.toByte())
+                    ) ?: KwpProtocol.findResponse(
+                        candidate,
+                        expectedSource = 0x11,
+                        expectedPayloadPrefix = byteArrayOf(0x7F, 0x21)
+                    )
                     if (response == null) {
-                        appendLog("MR-140 grupo %02X: trama KWP no reconocida: %s".format(localId, candidate.toHex()))
+                        appendLog(
+                            "MR-140 grupo %02X: no se encontró respuesta 61 %02X ni 7F 21; RX raw=%s"
+                                .format(localId, localId, candidate.toHex())
+                        )
                         continue
                     }
                     appendLog("RX MR-140 grupo %02X: %s".format(localId, response.bytes.toHex()))
@@ -767,7 +780,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 }
                 stage = "envío de solicitud DTC"
                 appendLog("TX DTC $profile  ${frame.toHex()}")
-                serialPort.write(frame, 1000)
+                writeSerialFrame(serialPort, frame, 1000)
                 stage = "espera de respuesta"
                 Thread.sleep(1800)
                 val rxBytes = synchronized(initRxLock) {
@@ -863,14 +876,14 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         if (serialPort == null || !serialPort.isOpen) return
         val frame = KwpProtocol.buildTesterPresentRequest(targetAddress)
         appendLog("TESTER PRESENT automático activado para $profile: intervalo de 2 s mientras la sesión esté abierta.")
-        testerPresentTask = executor.scheduleAtFixedRate({
+        testerPresentTask = testerPresentExecutor.scheduleAtFixedRate({
             try {
                 if (validatedStartProfile != profile || port !== serialPort || !serialPort.isOpen ||
                     ecuProfile.selectedItemPosition != (if (profile == "MR-140") 0 else 1)) {
                     testerPresentTask?.cancel(false)
                     return@scheduleAtFixedRate
                 }
-                serialPort.write(frame, 500)
+                writeSerialFrame(serialPort, frame, 500)
                 appendLog("TX TESTER PRESENT automático $profile  ${frame.toHex()}")
             } catch (e: Exception) {
                 appendLog("ERROR TESTER PRESENT automático $profile: ${e.message ?: e.javaClass.simpleName}")
@@ -912,7 +925,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 }
                 stage = "envío del servicio 0x3E"
                 appendLog("TX TESTER PRESENT $profile  ${frame.toHex()}")
-                serialPort.write(frame, 1000)
+                writeSerialFrame(serialPort, frame, 1000)
                 stage = "espera de respuesta"
                 Thread.sleep(700)
                 val rxBytes = synchronized(initRxLock) {
@@ -943,6 +956,12 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 synchronized(initRxLock) { captureInitRx = false }
                 appendLog("ERROR TESTER PRESENT $profile en $stage: ${e.javaClass.simpleName}: ${e.message ?: "(sin mensaje)"}")
             }
+        }
+    }
+
+    private fun writeSerialFrame(serialPort: UsbSerialPort, frame: ByteArray, timeoutMs: Int) {
+        synchronized(serialWriteLock) {
+            serialPort.write(frame, timeoutMs)
         }
     }
 
@@ -992,6 +1011,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         disconnect()
         try { unregisterReceiver(permissionReceiver) } catch (_: Exception) {}
         executor.shutdownNow()
+        testerPresentExecutor.shutdownNow()
         super.onDestroy()
     }
 }
