@@ -353,7 +353,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         labExtendedScanButton = addAction(labSteps, "5 · Barrido ampliado 41–EF y F2–FF") { confirmExtendedLocalIdentifierScan() }
         addAction(labSteps, "6 · Releer bloques positivos conocidos") { setLabStatus("Paso 6: repitiendo los bloques con respuesta positiva física conocida."); readConfirmedParameterIds() }
         addAction(labSteps, "7 · Leer DTC finales") { setLabStatus("Paso 7: comprobación final de DTC. No se borran códigos."); readDtcCodes() }
-        addAction(labSteps, "Detener prueba / exploración") { stopLiveParameterPolling(); setLabStatus("Solicitud de parada enviada. Comprueba Registro para confirmar el cierre del barrido.") }
+        addAction(labSteps, "Detener barrido 0x21 / lectura en vivo") { stopLiveParameterPolling(); setLabStatus("Solicitud de parada enviada al barrido 0x21 o lectura en vivo. Las consultas de diagnóstico individuales ya iniciadas pueden terminar su espera.") }
         addAction(labSteps, "Exportar todo el registro de pruebas") { exportLog() }
         addCard(lab, labSteps)
         val labSafety = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
