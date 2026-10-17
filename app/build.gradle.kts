@@ -67,6 +67,7 @@ configurations.configureEach {
 
 dependencies {
     implementation("androidx.core:core:1.15.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("com.github.mik3y:usb-serial-for-android:3.11.0")
     testImplementation("junit:junit:4.13.2")
 }
