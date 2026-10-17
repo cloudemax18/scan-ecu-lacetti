@@ -16,7 +16,7 @@ private class Mr140Parameter(
     val unidad: String?,
     val localId: Int,
     val dataIndex: Int,
-    val raw: Raw,
+    val raw: Mr140Raw,
     val decimales: Int,
     val estados: List<String>?,
     val fn: (Double) -> Double,
@@ -35,7 +35,7 @@ private class Mr140Parameter(
 internal object Mr140 {
     const val ECU = 0x11
     const val TESTER = 0xF1
-    val params: List<Mr140Parameter> = listOf(
+    private val params: List<Mr140Parameter> = listOf(
     Mr140Parameter(1, "Presión absoluta del colector de admisión", "kPa", 0xF0, 0, Mr140Raw.U8, 0, null) { x -> x },
     Mr140Parameter(2, "Velocidad del vehículo", "km/h", 0xF0, 1, Mr140Raw.U8, 0, null) { x -> x },
     Mr140Parameter(3, "Avance de encendido", "° cigüeñal", 0xF0, 2, Mr140Raw.U8, 1, null) { x -> ((x/2)-64) },
