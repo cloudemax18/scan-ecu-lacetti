@@ -1111,7 +1111,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             return
         }
         // Lecturas 0x21 exclusivamente: identificadores bajos más los dos grupos usados por el EXE.
-        val ids = (0x01..0x40).toList() + listOf(0xF0, 0xF1)
+        val ids = (0x01..0x40).toList() + listOf(0xF0, 0xF1, 0xFB)
         liveDataRunning = true
         liveStartButton.isEnabled = false
         liveScanButton.isEnabled = false
