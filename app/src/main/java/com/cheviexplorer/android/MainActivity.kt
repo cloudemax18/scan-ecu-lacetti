@@ -115,7 +115,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
         root.addView(testerPresentButton, lp(-1, -2))
         val note = TextView(this).apply {
-            text = "Las consultas de identificación y DTC reconstruyen solicitudes de lectura del programa Delphi original. Inicializa primero el perfil seleccionado. Los DTC se registran en hexadecimal hasta validar el formato de respuesta de cada ECU. Borrado de códigos, seguridad y actuadores no están habilitados."
+            text = "Las consultas de identificación y DTC reconstruyen solicitudes de lectura del programa Delphi original. Inicializa primero el perfil seleccionado. Los DTC se decodifican con el formato de registros reconstruido del Delphi; el resultado de ZF debe confirmarse en vehículo. Borrado de códigos, seguridad y actuadores no están habilitados."
             textSize = 13f; setTextColor(0xFFFFD180.toInt()); setPadding(0, 12, 0, 12)
         }
         root.addView(note, lp(-1, -2))
@@ -610,7 +610,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 }
                 appendLog("RX DTC CANDIDATA $profile: ${response.bytes.toHex()}")
                 appendLog("VALIDACIÓN DTC: ${response.description}")
-                when (val decoded = DtcResponseDecoder.decode(response, requestService)) {
+                when (val decoded = DtcResponseDecoder.decode(response, requestService, isMr140 = isEngine)) {
                     is DtcResponseDecoder.Result.Invalid ->
                         appendLog("LECTURA DTC $profile: respuesta no interpretable: ${decoded.reason}.")
                     is DtcResponseDecoder.Result.Negative ->
@@ -620,14 +620,31 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     is DtcResponseDecoder.Result.Positive -> {
                         appendLog("LECTURA DTC $profile: respuesta positiva 0x%02X.".format(decoded.responseService))
                         decoded.subfunctionOrStatus?.let {
-                            appendLog("DTC: subfunción/estado recibido = 0x%02X.".format(it))
+                            appendLog("DTC: byte de control/estado recibido = 0x%02X.".format(it))
                         }
                         appendLog("DATOS DTC RAW $profile (incluye SID): ${decoded.rawPayload.toHex()}")
-                        if (decoded.recordBytes.isEmpty()) {
-                            appendLog("DTC: la respuesta no contiene bytes de registro después del SID/estado.")
-                            appendLog("Esto NO se presenta como «sin averías»: falta confirmar el formato de registros Delphi para esta ECU.")
-                        } else {
-                            appendLog("DTC: ${decoded.recordBytes.size} byte(s) de registro disponibles; se conservan sin decodificar hasta verificar el formato de esta ECU.")
+                        when {
+                            decoded.noFaultsConfirmed -> {
+                                appendLog("DTC $profile: sin averías reportadas por la respuesta Delphi 59 00.")
+                            }
+                            decoded.records.isNotEmpty() -> {
+                                decoded.records.forEach { record ->
+                                    val description = DtcCatalog.description(this, record.code)
+                                    val suffix = description?.let { " — $it" } ?: ""
+                                    appendLog("DTC $profile: ${record.code} · estado=${record.state.labelEs} (0x%02X)%s".format(record.statusByte, suffix))
+                                }
+                                appendLog("AVISO: confirma los DTC decodificados en la ECU; no se suprimen registros aunque el vehículo de prueba se considere sin averías.")
+                            }
+                            decoded.recordBytes.isEmpty() -> {
+                                appendLog("DTC $profile: la respuesta no contiene registros DTC.")
+                                appendLog(if (isEngine) "MR-140: 59 00 coincide con el caso sin averías del parser Delphi para esta solicitud." else "ZF 4HP16: respuesta sin registros; no se declara ausencia de averías sin validar este caso en el parser Delphi.")
+                            }
+                            else -> appendLog("DTC $profile: bytes de registro incompletos: ${decoded.recordBytes.toHex()}")
+                        }
+                        if (decoded.malformedTail.isNotEmpty()) {
+                            appendLog("DTC: cola incompleta fuera de un registro de 3 bytes: ${decoded.malformedTail.toHex()}")
+                        }
+                        if (decoded.recordBytes.isNotEmpty()) {
                             appendLog("REGISTROS DTC RAW: ${decoded.recordBytes.toHex()}")
                         }
                     }
