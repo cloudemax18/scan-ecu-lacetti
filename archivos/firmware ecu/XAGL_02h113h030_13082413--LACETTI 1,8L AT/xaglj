@@ -1,0 +1,3 @@
+final byte[] data = {
+    0xE7, 
+};
