@@ -75,7 +75,7 @@ internal object DtcResponseDecoder {
         val count = second ?: 0
         if ((requestService == 0x18 || requestService == 0x19) && count > 0) {
             repeat(count) {
-                if (index + 2 >= recordBytes.size) return Result.Invalid(
+                if (index + recordSize > recordBytes.size) return Result.Invalid(
                     "contador DTC indica $count registro(s), pero los bytes están truncados"
                 )
                 val a = recordBytes[index].toInt() and 0xFF
