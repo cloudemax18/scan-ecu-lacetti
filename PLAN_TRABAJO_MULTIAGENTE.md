@@ -86,6 +86,8 @@ Copiar y pegar completo:
 > - `CLAUDE_GAPS_AND_TESTS.md` (pruebas físicas mínimas para cerrar dudas)
 >
 > Toda afirmación debe llevar referencia al archivo/captura y evidencia concreta. Si no se puede demostrar, escribe “no determinado” y explica qué evidencia falta. No marques nada validado solo porque compile.
+>
+> **Informe final obligatorio:** al terminar, genera también `CLAUDE_INFORME_COMPLETO.md` con todo el trabajo realizado: archivos analizados, métodos/procedimientos examinados, hallazgos, secuencias y tablas producidas, evidencia con rutas/líneas/capturas, decisiones, dudas abiertas, limitaciones y próximos pasos. Incluye enlaces o rutas exactas a todos los artefactos entregados. No omitas resultados negativos ni tareas que no pudiste completar.
 
 ## 5. Prompt para Grok — diseño visual y UX
 
@@ -118,6 +120,8 @@ Copiar y pegar completo:
 > - Matriz de componentes reutilizables y especificaciones responsive para teléfonos Android.
 >
 > Devuelve diseños implementables y anota qué texto/elemento depende de datos aún no validados. No hagas análisis del protocolo ni cambies el modelo de datos.
+>
+> **Informe final obligatorio:** genera `GROK_INFORME_COMPLETO.md` con todo el trabajo realizado: decisiones de UX, pantallas y flujos diseñados, componentes, tokens, estados, criterios de accesibilidad, archivos/mockups generados y sus rutas o enlaces, dependencias de datos pendientes y decisiones no tomadas. Incluye un índice de todos los entregables y explica qué está listo para implementar y qué requiere confirmación.
 
 ## 6. Prompt para Gemini — manuales y fuentes primarias
 
@@ -142,6 +146,8 @@ Copiar y pegar completo:
 > - `GEMINI_UNRESOLVED_QUESTIONS.md`: preguntas sin fuente primaria y qué buscar después.
 >
 > Cada conclusión debe indicar si aplica exactamente al Lacetti 1.8 2008/MR-140/ZF 4HP16 o solo es genérica. No declares confirmación sin una fuente consultable.
+>
+> **Informe final obligatorio:** genera `GEMINI_INFORME_COMPLETO.md` que reúna todo el trabajo realizado: búsquedas ejecutadas, fuentes consultadas y descartadas, enlaces directos, citas/páginas/secciones, conclusiones por nivel de aplicabilidad, documentos creados, preguntas sin resolver y próximos pasos. No presentes una fuente como consultada si no pudiste abrirla ni ocultes búsquedas infructuosas.
 
 ## 7. Prompt para DeepSeek — auditoría independiente y pruebas de falsación
 
@@ -166,6 +172,8 @@ Copiar y pegar completo:
 > - `DEEPSEEK_TECHNICAL_REVIEW.md`: matriz de afirmaciones, evidencia, contradicción, severidad y recomendación.
 > - `DEEPSEEK_TEST_MATRIX.csv`: ID de prueba, precondiciones, pasos, entrada TX, RX esperada, resultado observado, criterio pass/fail.
 > - `DEEPSEEK_BLOCKERS.md`: solo bloqueantes reales para integrar y probar con seguridad.
+>
+> **Informe final obligatorio:** genera `DEEPSEEK_INFORME_COMPLETO.md` con todo el trabajo realizado: afirmaciones auditadas, pruebas/cálculos ejecutados, fuentes y archivos revisados, discrepancias detectadas, severidad y justificación, pruebas propuestas, resultados negativos, limitaciones y preguntas pendientes. Incluye rutas o enlaces a todos los artefactos entregados; distingue claramente entre pruebas ejecutadas y pruebas solo propuestas.
 
 ## 8. Prompt para ChatGPT — integrador, constructor y verificador
 
@@ -187,6 +195,8 @@ Este es el rol de ChatGPT en este proyecto:
 > 9. Mantener documentación actualizada: protocolo, mapa de parámetros, actuadores/servicios, pruebas y limitaciones conocidas.
 >
 > **Criterio de aceptación:** la app se conecta al adaptador real, identifica las dos ECUs, ejecuta las funciones del EXE que hayan sido portadas, muestra DTC/datos de acuerdo con el mapa validado, conserva logs raw exportables, informa correctamente los barridos detenidos/completos, no muestra datos ficticios como reales, y compila con pruebas automatizadas aprobadas.
+>
+> **Informe final obligatorio:** al cerrar cada ciclo de integración, genera o actualiza `CHATGPT_INFORME_COMPLETO.md` con todos los cambios realizados, archivos modificados, decisiones técnicas, evidencia usada, comandos/tests/build ejecutados y sus resultados exactos, errores pendientes, enlaces a commits/PR/CI y siguientes pasos. Nunca declares un test o build exitoso sin resultado verificable; diferencia trabajo terminado de trabajo pendiente.
 
 ## 9. Formato de entrega común para todos los agentes
 
