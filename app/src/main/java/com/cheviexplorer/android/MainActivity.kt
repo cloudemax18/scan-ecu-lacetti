@@ -70,6 +70,8 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     private lateinit var liveCatalogOutput: TextView
     private lateinit var liveStartButton: Button
     private lateinit var liveScanButton: Button
+    private lateinit var labOutput: TextView
+    private lateinit var labExtendedScanButton: Button
     private val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
 
     private val permissionReceiver = object : BroadcastReceiver() {
@@ -323,6 +325,45 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
         }
 
+        // Laboratorio: secuencia guiada de validación y captura exclusivamente de lectura.
+        val lab = makeScreen("Laboratorio")
+        addSection(lab, "Laboratorio KWP", "Ejecuta los pasos en orden para cada módulo. Mantén el vehículo inmóvil, contacto en ON y no cambies de ECU durante una prueba.")
+        val labIntro = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        labIntro.addView(TextView(this).apply {
+            text = "Objetivo: recopilar tramas TX/RX, checksum, respuestas positivas, NRC, timeouts, DTC e identificación para completar el mapa de datos. No se envían servicios de escritura ni de actuadores."
+            textSize = 13f
+            setTextColor(secondaryText)
+        }, lp(-1, -2))
+        labOutput = TextView(this).apply {
+            text = "Estado: esperando inicio. Conecta el KKL, selecciona el módulo y pulsa los pasos en orden. Las capturas detalladas se guardan en Registro."
+            textSize = 12f
+            typeface = android.graphics.Typeface.MONOSPACE
+            setTextColor(primaryText)
+            setPadding(0, 10, 0, 6)
+        }
+        labIntro.addView(labOutput, lp(-1, -2))
+        addCard(lab, labIntro)
+        addSection(lab, "Secuencia recomendada", "Paso 1–3 establecen el enlace y una línea base; 4–6 reúnen el máximo de datos de lectura.")
+        val labSteps = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        addAction(labSteps, "1 · Inicializar ECU seleccionada") { setLabStatus("Paso 1: inicialización solicitada. Confirma en Registro que StartCommunication tuvo checksum válido."); initializeSelectedEcu() }
+        addAction(labSteps, "Comprobación opcional · Tester Present (3E)") { setLabStatus("Comprobación de mantenimiento de sesión: revisa la respuesta 7E y su checksum en Registro."); sendTesterPresentOnce() }
+        addAction(labSteps, "2 · Leer identificación ECU (1A 80)") { setLabStatus("Paso 2: consultando identificación. Los campos se aceptan solo si SID y checksum coinciden."); requestEcuIdentification() }
+        addAction(labSteps, "3 · Leer DTC actuales (solo lectura)") { setLabStatus("Paso 3: leyendo DTC. Repite al final para comprobar si la sesión cambió."); readDtcCodes() }
+        addAction(labSteps, "4 · Barrido base 01–40, F0, F1, FB") { setLabStatus("Paso 4: exploración base del servicio 0x21. Los positivos se conservan en bruto; NRC y timeouts se registran por ID."); validateLiveParameterMap() }
+        labExtendedScanButton = addAction(labSteps, "5 · Barrido ampliado 41–EF y F2–FF") { confirmExtendedLocalIdentifierScan() }
+        addAction(labSteps, "6 · Releer bloques positivos conocidos") { setLabStatus("Paso 6: repitiendo los bloques con respuesta positiva física conocida."); readConfirmedParameterIds() }
+        addAction(labSteps, "7 · Leer DTC finales") { setLabStatus("Paso 7: comprobación final de DTC. No se borran códigos."); readDtcCodes() }
+        addAction(labSteps, "Detener barrido 0x21 / lectura en vivo") { stopLiveParameterPolling(); setLabStatus("Solicitud de parada enviada al barrido 0x21 o lectura en vivo. Las consultas de diagnóstico individuales ya iniciadas pueden terminar su espera.") }
+        addAction(labSteps, "Exportar todo el registro de pruebas") { exportLog() }
+        addCard(lab, labSteps)
+        val labSafety = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        labSafety.addView(TextView(this).apply { text = "Antes de ejecutar"; textSize = 15f; setTextColor(accent); setTypeface(null, android.graphics.Typeface.BOLD) }, lp(-1, -2))
+        labSafety.addView(TextView(this).apply {
+            text = "• Vehículo inmóvil, freno de estacionamiento aplicado y selector en P.\n• Contacto ON; no arranques ni cambies el selector durante el barrido.\n• Inicializa una sola ECU cada vez.\n• El barrido ampliado puede tardar varios minutos; consulta únicamente IDs mediante 0x21.\n• No se exploran servicios de escritura, programación, borrado ni actuadores.\n• Exporta el registro antes de limpiar la pantalla Registro."
+            textSize = 13f; setTextColor(secondaryText); setPadding(0, 6, 0, 0)
+        }, lp(-1, -2))
+        addCard(lab, labSafety)
+
         // Registro: el log es independiente de las pantallas de diagnóstico.
         val logs = makeScreen("Registro")
         addSection(logs, "Registro de comunicación", "Tramas y respuestas recibidas durante esta sesión.")
@@ -378,7 +419,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             setPadding(0, 6, 0, 2)
             setBackgroundColor(pageBackground)
         }
-        val navNames = listOf("Inicio", "Diagnóstico", "Datos ECU", "En vivo", "Registro", "Ajustes")
+        val navNames = listOf("Inicio", "Diagnóstico", "Datos ECU", "En vivo", "Lab", "Registro", "Ajustes")
         fun showScreen(name: String) {
             screens.forEach { (screenName, view) ->
                 view.visibility = if (screenName == name) android.view.View.VISIBLE else android.view.View.GONE
@@ -397,7 +438,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 setTextColor(if (name == "Inicio") accent else secondaryText)
                 setPadding(2, 10, 2, 10)
                 setOnClickListener {
-                    showScreen(name)
+                    showScreen(if (name == "Lab") "Laboratorio" else name)
                     for (i in 0 until nav.childCount) {
                         val child = nav.getChildAt(i) as TextView
                         val selected = child.tag == name
@@ -966,6 +1007,11 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
     }
 
+    private fun setLabStatus(message: String) {
+        if (!::labOutput.isInitialized) return
+        runOnUiThread { labOutput.text = message }
+    }
+
     private fun refreshLiveCatalogText() {
         val selector = if (ecuProfile.selectedItemPosition == 0) 0x12 else 0x22
         val profile = if (selector == 0x12) "MR-140" else "ZF 4HP16"
@@ -1094,6 +1140,22 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     }
 
     private fun validateLiveParameterMap() {
+        runLocalIdentifierScan(KwpLaboratoryPlan.baseIds, "base")
+    }
+
+    private fun confirmExtendedLocalIdentifierScan() {
+        AlertDialog.Builder(this)
+            .setTitle("Barrido KWP ampliado")
+            .setMessage("Se enviarán ${KwpLaboratoryPlan.extendedIds.size} consultas de lectura 0x21 a IDs aún no validados (41–EF, F2–FA y FC–FF). La ECU puede rechazar la mayoría; el proceso puede tardar varios minutos. No se envían comandos de escritura ni actuadores. Hazlo con el vehículo inmóvil y solo si la comunicación base es estable. ¿Continuar?")
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton("Iniciar barrido") { _, _ ->
+                setLabStatus("Paso 5: barrido ampliado en curso. No desconectes el adaptador.")
+                runLocalIdentifierScan(KwpLaboratoryPlan.extendedIds, "ampliado")
+            }
+            .show()
+    }
+
+    private fun runLocalIdentifierScan(ids: List<Int>, scanLabel: String) {
         val serialPort = port
         if (serialPort == null || !serialPort.isOpen) {
             Toast.makeText(this, "Primero conecta el adaptador USB", Toast.LENGTH_LONG).show()
@@ -1110,15 +1172,16 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             Toast.makeText(this, "Detén primero la lectura en vivo", Toast.LENGTH_LONG).show()
             return
         }
-        // Lecturas 0x21 exclusivamente: identificadores bajos más los dos grupos usados por el EXE.
-        val ids = (0x01..0x40).toList() + listOf(0xF0, 0xF1, 0xFB)
+        // Rango definido por el llamador; todas las peticiones usan el servicio de lectura 0x21.
         liveDataRunning = true
         liveStartButton.isEnabled = false
         liveScanButton.isEnabled = false
+        if (::labExtendedScanButton.isInitialized) labExtendedScanButton.isEnabled = false
         testerPresentTask?.cancel(false)
         testerPresentTask = null
         liveOutput.text = "Validando mapa KWP de $profile…\nSe consultan solo identificadores de lectura (servicio 0x21). No se envían comandos de escritura."
-        appendLog("VALIDACIÓN KWP $profile: lectura de IDs 01-40, F0 y F1.")
+        appendLog("VALIDACIÓN KWP $profile ($scanLabel): lectura 0x21 de ${ids.size} identificadores.")
+        setLabStatus("Barrido $scanLabel iniciado para $profile: ${ids.size} IDs. Revisa Registro para ver cada TX/RX.")
         liveDataTask = liveDataExecutor.submit {
             val positives = mutableListOf<String>()
             val negatives = mutableMapOf<Int, Int>()
@@ -1181,6 +1244,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 runOnUiThread {
                     liveStartButton.isEnabled = true
                     liveScanButton.isEnabled = true
+                    if (::labExtendedScanButton.isInitialized) labExtendedScanButton.isEnabled = true
                     liveOutput.text = buildString {
                         append("Validación finalizada: ").append(profile).append("\n")
                         append("Respuestas positivas: ").append(positives.size).append("\n")
@@ -1198,8 +1262,9 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     if (validatedStartProfile == profile && port === serialPort && serialPort.isOpen) {
                         startAutomaticTesterPresent(profile, source, serialPort)
                     }
+                    labOutput.text = "Barrido $scanLabel finalizado: $profile\nIDs consultados: ${ids.size}\nRespuestas positivas: ${positives.size}\nSin respuesta: $noResponse\nRechazos NRC: ${negatives.values.sum()}\n\nLos datos positivos están en Registro y el resumen completo en En vivo. Exporta el registro para compartir la captura."
                 }
-                appendLog("VALIDACIÓN KWP $profile finalizada; positivos=" + positives.size + ", sin respuesta=" + noResponse + ".")
+                appendLog("VALIDACIÓN KWP $profile ($scanLabel) finalizada; IDs=" + ids.size + ", positivos=" + positives.size + ", sin respuesta=" + noResponse + ".")
             }
         }
     }
@@ -1210,6 +1275,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         liveDataTask = null
         liveStartButton.isEnabled = true
         if (::liveScanButton.isInitialized) liveScanButton.isEnabled = true
+        if (::labExtendedScanButton.isInitialized) labExtendedScanButton.isEnabled = true
         appendLog("Solicitud de detener lectura en vivo/exploración.")
     }
 
