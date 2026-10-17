@@ -1017,8 +1017,10 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
 
     override fun onNewData(data: ByteArray) {
         synchronized(initRxLock) {
-            data.forEach { diagnosticRxQueue.offer(it) }
-            if (captureInitRx) initRxBuffer.write(data)
+            if (captureInitRx) {
+                initRxBuffer.write(data)
+                data.forEach { diagnosticRxQueue.offer(it) }
+            }
         }
         val hex = data.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
         runOnUiThread { appendLog("RX  $hex") }
