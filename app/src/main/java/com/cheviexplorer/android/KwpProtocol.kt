@@ -98,6 +98,49 @@ internal object KwpProtocol {
         return frame
     }
 
+    /**
+     * Reconstructs the MR-140 actuator-control requests from the original Delphi Graf.pas
+     * test_ONClick/test_OFFClick handlers. These IDs/options are ECU-specific, not generic OBD PIDs.
+     */
+    fun buildMr140ActuatorStatusRequest(localId: Int): ByteArray {
+        require(localId in mr140ActuatorIds) { "Actuator ID is not in the reconstructed MR-140 test list" }
+        return buildMr140Service30(byteArrayOf(0x30, localId.toByte(), 0x01))
+    }
+
+    fun buildMr140ActuatorControlRequest(
+        localId: Int,
+        activate: Boolean,
+        injectorIndex: Int? = null
+    ): ByteArray {
+        require(localId in mr140ActuatorIds) { "Actuator ID is not in the reconstructed MR-140 test list" }
+        val state = if (activate) 0xFF else 0x00
+        val payload = if (localId == 0x32) {
+            require(injectorIndex in 0..3) { "Injector test requires an index from 0 to 3" }
+            val selectorByte = if (activate) injectorIndex!! - 1 else injectorIndex!!
+            byteArrayOf(0x30, 0x32, 0x07, state.toByte(), selectorByte.toByte())
+        } else {
+            require(injectorIndex == null) { "Injector index is only valid for local ID 0x32" }
+            byteArrayOf(0x30, localId.toByte(), 0x07, state.toByte())
+        }
+        return buildMr140Service30(payload)
+    }
+
+    /** Original Delphi Button_ObuchenieClick request: throttle adaptation, not a generic actuator test. */
+    fun buildMr140ThrottleAdaptationRequest(): ByteArray =
+        buildMr140Service30(byteArrayOf(0x30, 0x2C, 0x07, 0xFF.toByte()))
+
+    private val mr140ActuatorIds = setOf(0x32, 0x15, 0x13, 0x14, 0x10, 0x12, 0x37, 0x18, 0x40)
+
+    private fun buildMr140Service30(payload: ByteArray): ByteArray {
+        val frame = ByteArray(3 + payload.size + 1)
+        frame[0] = (0x80 or payload.size).toByte()
+        frame[1] = 0x11
+        frame[2] = 0xF1.toByte()
+        payload.copyInto(frame, destinationOffset = 3)
+        frame[frame.lastIndex] = checksum(frame.copyOfRange(0, frame.lastIndex)).toByte()
+        return frame
+    }
+
     /** Compatibility wrapper for the original Delphi MR-140 F0/F1 group requests. */
     fun buildMr140ParameterRequest(localId: Int): ByteArray {
         require(localId == 0xF0 || localId == 0xF1) { "Only extracted MR-140 groups F0/F1 are supported by this wrapper" }
