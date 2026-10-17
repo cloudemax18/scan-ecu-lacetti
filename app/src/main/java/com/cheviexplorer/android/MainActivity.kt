@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.net.Uri
 import android.os.Build
-import android.text.InputType
 import androidx.core.content.FileProvider
 import java.io.File
 import android.app.PendingIntent
@@ -134,11 +133,6 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         val save = Button(this).apply { text = "Exportar captura RX"; setOnClickListener { exportLog() } }
         root.addView(save, lp(-1, -2))
-        val shareCapture = Button(this).apply {
-            text = "Subir captura a GitHub"
-            setOnClickListener { shareCaptureToGitHub() }
-        }
-        root.addView(shareCapture, lp(-1, -2))
         val update = Button(this).apply {
             text = "Buscar actualización de CheviExplorer"
             setOnClickListener { checkForUpdates() }
@@ -286,75 +280,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     private fun shareCaptureToGitHub() {
         val capture = log.text?.toString().orEmpty()
         if (capture.isBlank()) {
-            Toast.makeText(this, "El registro está vacío; realiza primero la captura.", Toast.LENGTH_LONG).show()
-            return
-        }
-        AlertDialog.Builder(this)
-            .setTitle("Subir captura a GitHub")
-            .setMessage(
-                "Se subirá el registro actual como un Gist secreto/no listado. Cualquiera que tenga el enlace podrá leerlo. " +
-                    "La captura puede contener identificadores del vehículo. El token se introduce solo en la app y no se guarda."
-            )
-            .setNegativeButton("Cancelar", null)
-            .setPositiveButton("Continuar") { _, _ -> promptGitHubToken(capture) }
-            .show()
-    }
-
-    private fun promptGitHubToken(capture: String) {
-        val tokenInput = EditText(this).apply {
-            hint = "Token clásico de GitHub con alcance gist"
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            maxLines = 1
-        }
-        AlertDialog.Builder(this)
-            .setTitle("Token de GitHub")
-            .setMessage("Usa un token clásico con solo el alcance «gist». No lo compartas por el chat; se utilizará únicamente para esta subida.")
-            .setView(tokenInput)
-            .setNegativeButton("Cancelar", null)
-            .setPositiveButton("Subir captura") { _, _ ->
-                val token = tokenInput.text?.toString()?.trim().orEmpty()
-                tokenInput.setText("")
-                if (token.isBlank()) {
-                    Toast.makeText(this, "Introduce el token de GitHub.", Toast.LENGTH_LONG).show()
-                } else {
-                    appendLog("SUBIDA CAPTURA: enviando el registro actual a un Gist secreto de GitHub.")
-                    executor.execute {
-                        try {
-                            val gistUrl = GitHubDistribution.createSecretGist(token, capture)
-                            runOnUiThread {
-                                AlertDialog.Builder(this@MainActivity)
-                                    .setTitle("Captura subida")
-                                    .setMessage("Enlace de la captura:\n$gistUrl\n\nCualquiera que tenga este enlace podrá leer el registro.")
-                                    .setNegativeButton("Cerrar", null)
-                                    .setNeutralButton("Copiar enlace") { _, _ ->
-                                        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Captura CheviExplorer", gistUrl))
-                                        Toast.makeText(this@MainActivity, "Enlace copiado", Toast.LENGTH_SHORT).show()
-                                    }
-                                    .setPositiveButton("Abrir enlace") { _, _ ->
-                                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(gistUrl)))
-                                    }
-                                    .show()
-                            }
-                        } catch (e: Exception) {
-                            appendLog("ERROR SUBIENDO CAPTURA: ${e.message ?: e.javaClass.simpleName}")
-                            runOnUiThread {
-                                Toast.makeText(
-                                    this@MainActivity,
-                                    "No se pudo subir la captura a GitHub",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        }
-                    }
-                }
-            }
-            .show()
-    }
-
-    @Deprecated("Deprecated in Android API, retained for minSdk compatibility")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+            Toast.makeText(this, "El registro está vacío; realiza primero la cape, resultCode, data)
         if (requestCode == REQUEST_SAVE_LOG && resultCode == RESULT_OK && data?.data != null) {
             try {
                 contentResolver.openOutputStream(data.data!!)?.use { output ->
