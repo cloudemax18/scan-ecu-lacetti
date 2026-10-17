@@ -104,7 +104,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         buildUi()
         setStatus("Desconectado · Chevrolet Lacetti 1.8 LDA · 2008")
         appendLog("Aplicación iniciada. Conecta el KKL mediante USB OTG.")
-        appendLog("Esta versión prueba el enlace serie; el protocolo ECU específico aún debe validarse.")
+        appendLog("KWP físico MR-140/ZF confirmado en capturas previas. Esta compilación añade el panel DriverIM MR-140 reconstruido desde Graf.pas; validar cada respuesta en el vehículo.")
     }
 
     private fun buildUi() {
@@ -1179,8 +1179,8 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             return
         }
         actuatorCommandRunning = true
-        testerPresentTask?.cancel(false)
-        testerPresentTask = null
+        // Keep Tester Present scheduled between individual transactions to preserve the ECU session.
+        // It already skips while captureInitRx is true, so it cannot interleave with a request/response.
         runOnUiThread {
             actuatorStatusOutput.text = "En curso: $actionLabel · ${actuator.label}"
             actuatorReadButton.isEnabled = false
@@ -1252,16 +1252,16 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             initRxBuffer.reset()
             captureInitRx = true
         }
+        var raw = byteArrayOf()
         try {
             appendLog("TX ACTUADOR $label: ${request.toHex()}")
             writeSerialFrame(serialPort, request, 1000)
             Thread.sleep(800)
         } finally {
-            // Close capture only after collecting all bytes received during this transaction.
-        }
-        val raw = synchronized(initRxLock) {
-            captureInitRx = false
-            initRxBuffer.toByteArray()
+            raw = synchronized(initRxLock) {
+                captureInitRx = false
+                initRxBuffer.toByteArray()
+            }
         }
         val echoAt = indexOfFrame(raw, request)
         val candidate = if (echoAt >= 0) raw.copyOfRange(echoAt + request.size, raw.size) else raw
