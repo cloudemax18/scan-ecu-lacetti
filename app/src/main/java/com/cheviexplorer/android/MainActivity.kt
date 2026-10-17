@@ -1,6 +1,8 @@
 package com.cheviexplorer.android
 
 import android.app.Activity
+import android.content.res.ColorStateList
+import android.graphics.drawable.GradientDrawable
 import android.app.AlertDialog
 import android.net.Uri
 import android.os.Build
@@ -72,6 +74,12 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     private lateinit var liveScanButton: Button
     private lateinit var labOutput: TextView
     private lateinit var labExtendedScanButton: Button
+    private lateinit var actuatorSpinner: Spinner
+    private lateinit var actuatorStatusOutput: TextView
+    private lateinit var actuatorReadButton: Button
+    private lateinit var actuatorOnButton: Button
+    private lateinit var actuatorOffButton: Button
+    @Volatile private var actuatorCommandRunning = false
     private val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
 
     private val permissionReceiver = object : BroadcastReceiver() {
@@ -100,11 +108,19 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     }
 
     private fun buildUi() {
-        val pageBackground = 0xFF101820.toInt()
-        val cardBackground = 0xFF1B2A35.toInt()
-        val accent = 0xFF56C7B5.toInt()
-        val primaryText = 0xFFF3F7FA.toInt()
-        val secondaryText = 0xFFB0BEC5.toInt()
+        // Native dark dashboard inspired by OBD2-Diagnostic-UI.
+        val pageBackground = 0xFF0C0C0E.toInt()
+        val cardBackground = 0xFF17171B.toInt()
+        val accent = 0xFF007AFF.toInt()
+        val primaryText = 0xFFFFFFFF.toInt()
+        val secondaryText = 0xFFA0A0AB.toInt()
+        val borderColor = 0xFF2B2B32.toInt()
+        fun roundedSurface(color: Int, strokeColor: Int = borderColor, radiusDp: Float = 18f): GradientDrawable =
+            GradientDrawable().apply {
+                setColor(color)
+                cornerRadius = radiusDp * resources.displayMetrics.density
+                setStroke((resources.displayMetrics.density).toInt().coerceAtLeast(1), strokeColor)
+            }
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -131,11 +147,11 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             setPadding(0, 2, 0, 8)
         }, lp(-1, -2))
         status = TextView(this).apply {
-            text = "Desconectado"
+            text = "●  Desconectado"
             textSize = 13f
-            setTextColor(primaryText)
-            setPadding(12, 10, 12, 10)
-            setBackgroundColor(cardBackground)
+            setTextColor(secondaryText)
+            setPadding(14, 11, 14, 11)
+            background = roundedSurface(cardBackground)
         }
         header.addView(status, lp(-1, -2))
         root.addView(header, lp(-1, -2))
@@ -176,9 +192,10 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             }, lp(-1, -2))
         }
         fun addCard(parent: LinearLayout, content: LinearLayout) {
-            content.setPadding(14, 12, 14, 12)
-            content.setBackgroundColor(cardBackground)
-            val params = lp(-1, -2).apply { bottomMargin = 10 }
+            content.setPadding(14, 13, 14, 13)
+            content.background = roundedSurface(cardBackground)
+            content.elevation = 2f * resources.displayMetrics.density
+            val params = lp(-1, -2).apply { bottomMargin = 12 }
             parent.addView(content, params)
         }
         fun addLabel(parent: LinearLayout, label: String) {
@@ -194,15 +211,45 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 text = label
                 isAllCaps = false
                 textSize = 14f
+                setTextColor(primaryText)
+                backgroundTintList = ColorStateList.valueOf(accent)
+                minHeight = (48 * resources.displayMetrics.density).toInt()
                 setOnClickListener { onClick() }
             }
             parent.addView(button, lp(-1, -2).apply { bottomMargin = 4 })
             return button
         }
 
-        // Inicio: conexión y selección del módulo.
+        // Inicio: panel de vehículo inspirado en el dashboard de referencia.
         val home = makeScreen("Inicio")
-        addSection(home, "Conexión", "Conecta el adaptador al teléfono mediante USB OTG.")
+        val vehicleHero = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        vehicleHero.addView(TextView(this).apply {
+            text = "CHEVROLET LACETTI"
+            textSize = 12f
+            letterSpacing = 0.12f
+            setTextColor(accent)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        }, lp(-1, -2))
+        vehicleHero.addView(TextView(this).apply {
+            text = "1.8 LDA"
+            textSize = 29f
+            setTextColor(primaryText)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 2, 0, 0)
+        }, lp(-1, -2))
+        vehicleHero.addView(TextView(this).apply {
+            text = "2008  ·  Automático ZF 4HP16"
+            textSize = 13f
+            setTextColor(secondaryText)
+            setPadding(0, 3, 0, 10)
+        }, lp(-1, -2))
+        vehicleHero.addView(TextView(this).apply {
+            text = "Scanner específico · Delphi MR-140 · K-Line 10400 baud"
+            textSize = 12f
+            setTextColor(primaryText)
+        }, lp(-1, -2))
+        addCard(home, vehicleHero)
+        addSection(home, "Conexión", "Conecta el adaptador KKL por USB OTG y selecciona el módulo que vas a diagnosticar.")
         val connectionCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         addLabel(connectionCard, "Módulo seleccionado")
         ecuProfile = Spinner(this).apply {
@@ -330,7 +377,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         addSection(lab, "Laboratorio KWP", "Ejecuta los pasos en orden para cada módulo. Mantén el vehículo inmóvil, contacto en ON y no cambies de ECU durante una prueba.")
         val labIntro = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         labIntro.addView(TextView(this).apply {
-            text = "Objetivo: recopilar tramas TX/RX, checksum, respuestas positivas, NRC, timeouts, DTC e identificación para completar el mapa de datos. No se envían servicios de escritura ni de actuadores."
+            text = "Objetivo: recopilar tramas TX/RX, checksum, respuestas positivas, NRC, timeouts, DTC e identificación para completar el mapa de datos. El barrido KWP es solo lectura; las pruebas de actuadores están separadas y requieren confirmación explícita."
             textSize = 13f
             setTextColor(secondaryText)
         }, lp(-1, -2))
@@ -356,10 +403,41 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         addAction(labSteps, "Detener barrido 0x21 / lectura en vivo") { stopLiveParameterPolling(); setLabStatus("Solicitud de parada enviada al barrido 0x21 o lectura en vivo. Las consultas de diagnóstico individuales ya iniciadas pueden terminar su espera.") }
         addAction(labSteps, "Exportar todo el registro de pruebas") { exportLog() }
         addCard(lab, labSteps)
+
+        addSection(lab, "Pruebas de actuadores · Delphi MR-140",
+            "Portado del menú DriverIM de Graf.pas: servicio KWP 0x30, control 0x07 y estados FF/00. Solo para la ECU de motor.")
+        val actuatorCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        actuatorCard.addView(TextView(this).apply {
+            text = "Estos identificadores y el formato de las tramas se reconstruyeron de test_ONClick/test_OFFClick y CaseIMSelect del ejecutable Delphi. La selección ZF 4HP16 no está habilitada: en el código fuente revisado esta rutina usa destino 0x11."
+            textSize = 12f
+            setTextColor(secondaryText)
+            setPadding(0, 0, 0, 8)
+        }, lp(-1, -2))
+        addLabel(actuatorCard, "Actuador del catálogo original")
+        actuatorSpinner = Spinner(this).apply {
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                DelphiActuatorCatalog.mr140.map { "${it.label} · ID 0x%02X".format(it.localId) })
+        }
+        actuatorCard.addView(actuatorSpinner, lp(-1, -2))
+        actuatorStatusOutput = TextView(this).apply {
+            text = "Estado: no se ha consultado ningún actuador."
+            textSize = 12f
+            typeface = android.graphics.Typeface.MONOSPACE
+            setTextColor(primaryText)
+            setPadding(0, 8, 0, 8)
+        }
+        actuatorCard.addView(actuatorStatusOutput, lp(-1, -2))
+        actuatorReadButton = addAction(actuatorCard, "Leer estado · 0x30 01") { readMr140ActuatorState() }
+        actuatorOnButton = addAction(actuatorCard, "Activar 3 s · 0x30 07 FF") { confirmMr140ActuatorControl(true) }
+        actuatorOffButton = addAction(actuatorCard, "Desactivar · 0x30 07 00") { confirmMr140ActuatorControl(false) }
+        actuatorOnButton.backgroundTintList = ColorStateList.valueOf(0xFF1E9E66.toInt())
+        actuatorOffButton.backgroundTintList = ColorStateList.valueOf(0xFFFF9500.toInt())
+        addCard(lab, actuatorCard)
+
         val labSafety = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         labSafety.addView(TextView(this).apply { text = "Antes de ejecutar"; textSize = 15f; setTextColor(accent); setTypeface(null, android.graphics.Typeface.BOLD) }, lp(-1, -2))
         labSafety.addView(TextView(this).apply {
-            text = "• Vehículo inmóvil, freno de estacionamiento aplicado y selector en P.\n• Contacto ON; no arranques ni cambies el selector durante el barrido.\n• Inicializa una sola ECU cada vez.\n• El barrido ampliado puede tardar varios minutos; consulta únicamente IDs mediante 0x21.\n• No se exploran servicios de escritura, programación, borrado ni actuadores.\n• Exporta el registro antes de limpiar la pantalla Registro."
+            text = "• Barridos de descubrimiento: vehículo inmóvil, freno aplicado, selector en P y contacto ON.\n• Inicializa una sola ECU cada vez; no cambies el perfil durante una prueba.\n• Para actuadores MR-140: motor apagado, contacto ON, selector P/N, freno aplicado y manos alejadas de ventiladores/correas.\n• La activación intenta enviar OFF automáticamente tras 3 segundos; si se pierde la comunicación, no se puede garantizar que la ECU haya liberado la salida. Cicla el contacto y verifica antes de continuar.\n• No se habilitan actuadores ZF sin reconstruir su rutina original.\n• Exporta el registro antes de limpiar la pantalla Registro."
             textSize = 13f; setTextColor(secondaryText); setPadding(0, 6, 0, 0)
         }, lp(-1, -2))
         addCard(lab, labSafety)
@@ -377,7 +455,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         val logCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         logCard.setPadding(0, 0, 0, 0)
         logCard.addView(log, lp(-1, -2))
-        logCard.setBackgroundColor(cardBackground)
+        logCard.background = roundedSurface(cardBackground)
         logs.addView(logCard, lp(-1, -2).apply { bottomMargin = 10 })
         val logActions = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -419,7 +497,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             setPadding(0, 6, 0, 2)
             setBackgroundColor(pageBackground)
         }
-        val navNames = listOf("Inicio", "Diagnóstico", "Datos ECU", "En vivo", "Lab", "Registro", "Ajustes")
+        val navNames = listOf("Inicio", "Diagnóstico", "Datos ECU", "En vivo", "Pruebas", "Registro", "Ajustes")
         fun showScreen(name: String) {
             screens.forEach { (screenName, view) ->
                 view.visibility = if (screenName == name) android.view.View.VISIBLE else android.view.View.GONE
@@ -431,6 +509,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     "Diagnóstico" -> "DTC"
                     "Datos ECU" -> "Datos"
                     "En vivo" -> "En vivo"
+                    "Pruebas" -> "Pruebas"
                     else -> name
                 }
                 textSize = 11f
@@ -438,7 +517,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 setTextColor(if (name == "Inicio") accent else secondaryText)
                 setPadding(2, 10, 2, 10)
                 setOnClickListener {
-                    showScreen(if (name == "Lab") "Laboratorio" else name)
+                    showScreen(if (name == "Pruebas") "Laboratorio" else name)
                     for (i in 0 until nav.childCount) {
                         val child = nav.getChildAt(i) as TextView
                         val selected = child.tag == name
