@@ -1,54 +1,63 @@
 # Prompt para investigar los datos faltantes de CheviExplorer
 
-Actúa como ingeniero inverso senior especializado en Delphi Win32, KWP2000/K-Line, ECUs GM/Daewoo y aplicaciones Android/Kotlin. Investiga con evidencia verificable los datos y algoritmos que faltan para completar esta app:
+Actúa como ingeniero inverso senior especializado en Delphi Win32, KWP2000/K-Line, ECUs GM/Daewoo y Android/Kotlin. Investiga con evidencia verificable y devuelve resultados reproducibles, no conjeturas.
 
+## Repositorio y archivos de partida
 Repositorio: https://github.com/cloudemax18/scan-ecu-lacetti
-Ejecutable original: `archivos/CheviExplorer.exe` y `archivos/CheviExplorer1.8.exe`.
-Fuentes/datos existentes: `archivos/dump/main.pas`, `archivos/dumps1.8/`, `archivos/cloude/parametros.json`, `dtc_tablas.json`, `ident_campos.json`, `tests_actuadores.json`, `ecus_soportadas.json`, `mr140_parametros.json`, `Mr140Params.kt`, `ident_decodificacion.json`, `ANALISIS_CheviExplorer2.md`.
+Ejecutables originales: `archivos/CheviExplorer.exe`, `archivos/CheviExplorer1.8.exe`.
+Fuentes/tablas: `archivos/dump/main.pas`, `archivos/dumps1.8/`, `archivos/cloude/parametros.json`, `dtc_tablas.json`, `ident_campos.json`, `tests_actuadores.json`, `ecus_soportadas.json`, `mr140_parametros.json`, `Mr140Params.kt`, `ident_decodificacion.json`, `DtcDecoder.kt`, `ANALISIS_CheviExplorer2.md`.
+App Android: `app/src/main/java/com/cheviexplorer/android/`; revisa también tests y GitHub Actions.
 
-## Vehículo y hardware
+## Vehículo objetivo
 - Chevrolet Lacetti 1.8, año 2008, transmisión automática ZF 4HP16.
-- ECU motor Delphi MR-140, dirección KWP 0x11; transmisión ZF 4HP16, dirección 0x18.
-- Adaptador KKL 409.1 USB CH340/CH341 mediante OTG; K-Line, 10400 baud, 8N1.
-- No hay interruptor físico para seleccionar protocolos.
-- El coche de prueba no muestra DTC conocidos. No inventes averías.
+- Motor Delphi MR-140, dirección ECU KWP 0x11; transmisión ZF 4HP16, dirección 0x18.
+- KKL 409.1 USB CH340/CH341 por OTG, K-Line 10400 baud, 8N1.
+- Sin interruptor físico para seleccionar protocolos.
+- El vehículo de prueba no presenta averías conocidas.
 
-## Capturas físicas verificadas
+## Capturas verificadas
 StartCommunication MR-140: TX `81 11 F1 81 04`, RX `83 F1 11 C1 EF 8F C4`.
 StartCommunication ZF: TX `81 18 F1 81 0B`, RX `83 F1 18 C1 EF 8F CB`.
 TesterPresent MR-140: TX `81 11 F1 3E C1`, RX `81 F1 11 7E 01`.
 TesterPresent ZF: TX `81 18 F1 3E C8`, RX `81 F1 18 7E 08`.
-Identificación `1A 80`: MR payload inicia `5A 80`, contiene ASCII `8Z1JJ51388V322946` y `03h014h005`; ZF contiene `5WK33600JG10630040766581075121--65810755A9--65810756D67654381` y `96801169JG`. Verifica índices de los campos contra el parser Delphi y no asignes etiquetas por intuición. El eco de TX puede aparecer en RX y debe eliminarse antes de analizar.
+TesterPresent cada 2 segundos mantuvo la sesión MR-140 abierta unos 25 segundos; una lectura DTC respondió a mitad de esa sesión. Antes de enviar tráfico la ECU parecía cerrar la sesión a los 5 segundos.
+Identificación `1A 80`: MR-140 payload comienza `5A 80`, contiene ASCII `8Z1JJ51388V322946` y `03h014h005`; ZF payload contiene `5WK33600JG10630040766581075121--65810755A9--65810756D67654381` y `96801169JG`. Decodifica posiciones solo tras confirmar qué buffer usa Delphi (trama completa, payload, SID incluido o excluido).
+Los logs USB pueden contener eco exacto de TX; retíralo antes de interpretar RX.
 
-DTC requests reconstruidas:
-- MR-140: `84 11 F1 19 DA FF 00 78`; respuesta observada `82 F1 11 59 00 DD`.
-- ZF 4HP16: `84 18 F1 18 00 00 00 A5`; respuesta observada `85 F1 18 58 01 07 03 68 59`.
-No etiquetes la respuesta ZF como P0703 sin verificar el parser Delphi y los límites de registros. Distingue encabezado, estado y DTC.
+## Solicitudes DTC observadas
+MR-140 TX `84 11 F1 19 DA FF 00 78`; RX `82 F1 11 59 00 DD`.
+ZF TX `84 18 F1 18 00 00 00 A5`; RX `85 F1 18 58 01 07 03 68 59`.
+Reglas reconstruidas del Delphi:
+- MR-140: respuesta `59 00`, contador cero, significa “Ошибок нет” / “Sin averías”.
+- ZF: `58 01 07 03 68`, contador 1 y registro `07 03 68`; el código sale de los dos primeros bytes con los dos bits altos del primero para P/C/B/U, por lo que es P0703 según tabla. El byte 0x68 tiene máscara `& 0x60 = 0x60`, estado “intermitente” en el Delphi.
+- Los registros DTC MR-140 miden 4 bytes para la petición `19 DA FF 00`; ZF y otras ECUs usan 3 bytes. El cuarto byte del registro MR-140 no debe recibir un significado inventado.
+No cambies estas reglas salvo que el código Delphi pruebe una interpretación distinta.
 
-## Investigación priorizada
-1. Inspecciona `Button_DTCClick`, `Button_ECUIdentClick`, `RaschetParam`, `TimerParamTimer`, `VspomRaschetParam`, las tablas y constantes referenciadas. Traza cada byte de entrada hasta el valor mostrado por el programa original.
-2. Valida las 61 entradas anunciadas en `mr140_parametros.json` frente a `Mr140Params.kt`: local ID, índice de datos, tipo, endianess, máscara de bits, fórmula, unidad, precisión, valores enumerados y longitud mínima. Identifica faltantes y discrepancias; no completes huecos por intuición.
-3. Investiga parámetros de ZF 4HP16: IDs/servicios, tamaños, endianess, fórmulas, unidades, estados y límites. Busca en el ejecutable, fuentes, documentación técnica pública y proyectos relacionados. Marca como desconocido lo que no tenga evidencia.
-4. Decodifica `1A 80` para MR-140 y ZF. Determina si los índices incluyen SID, longitud extendida, cabecera o solo datos y prueba el resultado con las capturas anteriores.
-5. Reconstruye el formato DTC de ambas ECUs desde Delphi: solicitud, SID positivo, byte de control, registros, máscaras/estados y conversión a códigos. Añade pruebas de regresión con capturas reales. No asumas registros de 3 bytes sin evidencia.
-6. Para los 26 tests de actuadores, busca payloads exactos, secuencia de seguridad, condiciones y respuestas. No envíes comandos de escritura, borrado o activación; documenta solo evidencia y no recomiendes experimentar en el coche.
-7. Verifica gestión de sesión KWP, tiempos P2/P3, TesterPresent, checksum, NRC, eco serial, respuestas extendidas y fragmentación/concatenación.
-8. Busca fuentes públicas fiables (manuales OEM GM/Daewoo, documentación KWP, proyectos abiertos, discusiones técnicas). Cita URL directa, versión/página/fragmento y fecha; separa fuentes primarias de hipótesis.
+## Investigación requerida, por prioridad
+1. **Parámetros MR-140:** compara cada entrada de `mr140_parametros.json` y `Mr140Params.kt` con `RaschetParam`, `TimerParamTimer`, `VspomRaschetParam`, tablas y eventos Delphi. Traza ID local, offset de datos, tamaño, endianess, máscaras, fórmula, unidad, precisión, enumeraciones y longitud mínima. Señala parámetros con fórmulas dudosas.
+2. **Parámetros ZF 4HP16:** busca servicios/IDs locales, longitudes, fórmulas, endianess, unidades, estados y condiciones. No reutilices tablas del motor por analogía.
+3. **Identificación ECU:** valida cada campo de `1A 80` para MR-140 y ZF usando offsets exactos y capturas; explica si el offset es respecto a la trama, payload, SID o buffer Delphi.
+4. **DTC:** confirma estructura, contador, longitudes de registros (MR-140 4 bytes; ZF/resto 3), codificación P/C/B/U, estados, casos sin fallos y respuestas negativas desde `Button_DTCClick`. Crea tests de regresión para las dos respuestas físicas y casos truncados.
+5. **Sesión KWP:** determina intervalos P2/P3, TesterPresent, checksum, eco, respuesta extendida, concatenación/fragmentación y gestión de timeout. La sesión se mantuvo unos 25 s con TesterPresent cada 2 s.
+6. **Actuadores y escritura:** para las 26 pruebas listadas, identifica qué comandos/condiciones existen en el original, pero NO los envíes ni implementes. No habilites borrado DTC, acceso de seguridad, escritura ni activación de actuadores en esta fase.
+7. **Ejecutable:** si el entorno permite analizar los EXE del repositorio, documenta método, arquitectura, hashes, cadenas y referencias; no afirmes descompilación si solo se consultó pseudocódigo.
+8. **Fuentes públicas:** busca documentación OEM, manuales de servicio, referencias KWP y repositorios técnicos. Cita enlaces directos y página/versión/fragmento. Separa evidencia primaria, secundaria e hipótesis.
 
-## Restricciones
-- No inventes IDs, bytes, fórmulas, offsets, DTC ni comandos.
-- `offset_exe` es posición dentro del ejecutable, no offset de datos ECU.
-- No afirmes que compila o funciona en coche sin ejecutar pruebas o contar con captura real.
-- No expongas secretos ni datos personales.
-- Mantén lectura separada de escritura. No implementes borrado DTC, seguridad ni actuadores.
-- El paquete Android es `com.cheviexplorer.android`; `Mr140Params.kt` bajo `archivos/cloude/` no se integra automáticamente.
+## Restricciones estrictas
+- No inventes bytes, servicios, IDs, fórmulas, offsets, DTC ni nombres de parámetros.
+- `offset_exe` de `parametros.json` es offset en el ejecutable, no índice de respuesta ECU.
+- No infieras que una solicitud funciona en el coche sin una captura real.
+- No marques build/test como exitoso sin ejecutarlos y reportar salida real.
+- No pidas al usuario que suba el EXE: ya está en el repositorio.
+- No compartas secretos ni datos personales.
+- Conserva el package Android `com.cheviexplorer.android`; mantén lectura separada de escritura.
 
 ## Entregables
-A. Informe en español con tablas por ECU: hallazgo, evidencia, confianza (confirmado/probable/desconocido), archivo/línea/offset.
-B. JSON normalizados para identificación, parámetros MR-140, parámetros ZF y DTC, con esquema y fuente por campo.
-C. Kotlin propuesto y tests unitarios sin conexión al vehículo.
-D. Tests con capturas reales: checksum, eco, longitud extendida, NRC, payload truncado.
-E. Lista priorizada de datos que requieren captura física, con tramas exactas y precauciones.
-F. Pasos reproducibles y limitaciones.
+A. Informe en español con tabla por ECU: dato, hallazgo, evidencia exacta (archivo + línea/offset), confianza (confirmado/probable/desconocido).
+B. JSON normalizados para parámetros MR-140, parámetros ZF, identificación y DTC, con esquema y procedencia de cada campo.
+C. Cambios Kotlin pequeños y revisables, con tests unitarios sin vehículo.
+D. Pruebas de regresión para StartCommunication, TesterPresent, `1A 80`, `59 00`, `58 01 07 03 68`, checksum incorrecto, eco, respuesta negativa y bytes truncados.
+E. Lista de datos que aún requieren captura física, con petición exacta, respuesta esperada/interpretación y precauciones.
+F. Resultados reales de tests/build, limitaciones y pasos para reproducir.
 
-Empieza inspeccionando el repositorio y el código Delphi original; no reescribas desde cero. Primero presenta el mapa de evidencia y las incertidumbres críticas. Implementa solo lo respaldado. Ejecuta tests y build Android si tienes entorno y reporta resultados reales, sin afirmar éxitos no verificados.
+Empieza trazando el código Delphi, no reescribas desde cero. Primero presenta un mapa de evidencia y las incertidumbres críticas; luego implementa solo lo respaldado. No realices operaciones que cambien el estado de ninguna ECU.
