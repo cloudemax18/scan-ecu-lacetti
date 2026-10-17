@@ -109,6 +109,11 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             setOnClickListener { readDtcCodes() }
         }
         root.addView(dtcButton, lp(-1, -2))
+        val liveParamsButton = Button(this).apply {
+            text = "Leer parámetros en vivo MR-140 · F0/F1"
+            setOnClickListener { readMr140Parameters() }
+        }
+        root.addView(liveParamsButton, lp(-1, -2))
         val testerPresentButton = Button(this).apply {
             text = "Enviar TesterPresent · mantener sesión"
             setOnClickListener { sendTesterPresentOnce() }
@@ -540,6 +545,104 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             } catch (e: Exception) {
                 synchronized(initRxLock) { captureInitRx = false }
                 appendLog("ERROR IDENT ECU $profile en $stage: ${e.javaClass.simpleName}: ${e.message ?: "(sin mensaje)"}")
+            }
+        }
+    }
+
+
+    /**
+     * Read-only live-data query using the extracted MR-140 local identifier table.
+     * The ZF profile is intentionally not supported until its own parameter map is verified.
+     */
+    private fun readMr140Parameters() {
+        val serialPort = port
+        if (serialPort == null || !serialPort.isOpen) {
+            appendLog("PARÁMETROS MR-140 cancelados: conecta primero el adaptador USB.")
+            Toast.makeText(this, "Primero conecta el adaptador USB", Toast.LENGTH_LONG).show()
+            return
+        }
+        if (ecuProfile.selectedItemPosition != 0) {
+            appendLog("PARÁMETROS EN VIVO: solo hay tabla preliminar para MR-140; no se envía ninguna solicitud a ZF 4HP16.")
+            Toast.makeText(this, "Selecciona Motor Delphi MR-140", Toast.LENGTH_LONG).show()
+            return
+        }
+        if (validatedStartProfile != "MR-140") {
+            appendLog("PARÁMETROS MR-140 cancelados: inicializa primero la ECU.")
+            Toast.makeText(this, "Inicializa primero MR-140", Toast.LENGTH_LONG).show()
+            return
+        }
+        val selectedBaud = when (baud.selectedItemPosition) { 1 -> 9600; 2 -> 38400; 3 -> 4800; else -> 10400 }
+        if (selectedBaud != 10400) {
+            appendLog("PARÁMETROS MR-140 cancelados: se requiere 10400 baudios.")
+            Toast.makeText(this, "Selecciona 10400 baudios", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        appendLog("PARÁMETROS MR-140: lectura de solo lectura de grupos F0/F1. Fórmulas extraídas; validación en vehículo pendiente.")
+        executor.execute {
+            for (localId in listOf(0xF0, 0xF1)) {
+                var stage = "captura"
+                try {
+                    val frame = KwpProtocol.buildMr140ParameterRequest(localId)
+                    synchronized(initRxLock) {
+                        initRxBuffer.reset()
+                        captureInitRx = true
+                    }
+                    stage = "envío del grupo %02X".format(localId)
+                    appendLog("TX MR-140 grupo %02X: %s".format(localId, frame.toHex()))
+                    serialPort.write(frame, 1000)
+                    stage = "espera de respuesta"
+                    Thread.sleep(1200)
+                    val rxBytes = synchronized(initRxLock) {
+                        captureInitRx = false
+                        initRxBuffer.toByteArray()
+                    }
+                    if (rxBytes.isEmpty()) {
+                        appendLog("MR-140 grupo %02X: sin respuesta RX en 1200 ms.".format(localId))
+                        continue
+                    }
+                    val echoAt = indexOfFrame(rxBytes, frame)
+                    val candidate = if (echoAt >= 0) {
+                        appendLog("ECO TX grupo %02X detectado.".format(localId))
+                        rxBytes.copyOfRange(echoAt + frame.size, rxBytes.size)
+                    } else rxBytes
+                    if (candidate.isEmpty()) {
+                        appendLog("MR-140 grupo %02X: solo eco; no se interpreta como respuesta ECU.".format(localId))
+                        continue
+                    }
+                    val response = KwpProtocol.findResponse(candidate, expectedSource = 0x11)
+                    if (response == null) {
+                        appendLog("MR-140 grupo %02X: trama KWP no reconocida: %s".format(localId, candidate.toHex()))
+                        continue
+                    }
+                    appendLog("RX MR-140 grupo %02X: %s".format(localId, response.bytes.toHex()))
+                    appendLog("VALIDACIÓN grupo %02X: %s".format(localId, response.description))
+                    if (!response.valid) {
+                        appendLog("MR-140 grupo %02X: checksum incorrecto; se descarta.".format(localId))
+                        continue
+                    }
+                    val payload = response.payload
+                    if (payload.size >= 3 && (payload[0].toInt() and 0xFF) == 0x61 &&
+                        (payload[1].toInt() and 0xFF) == localId) {
+                        val data = payload.copyOfRange(2, payload.size)
+                        appendLog("DATOS GRUPO %02X (%d bytes): %s".format(localId, data.size, data.toHex()))
+                        val readings = Mr140.decodeGroup(localId, data)
+                        if (readings.isEmpty()) {
+                            appendLog("MR-140 grupo %02X: no hay parámetros decodificables con esta longitud.".format(localId))
+                        } else {
+                            readings.forEach { appendLog("DATO MR-140: ${it.display()}") }
+                            appendLog("AVISO: valores preliminares; comparar con datos conocidos del vehículo antes de considerarlos calibrados.")
+                        }
+                    } else if (payload.size >= 3 && (payload[0].toInt() and 0xFF) == 0x7F &&
+                        (payload[1].toInt() and 0xFF) == 0x21) {
+                        appendLog("MR-140 grupo %02X: respuesta negativa KWP NRC=0x%02X.".format(localId, payload[2].toInt() and 0xFF))
+                    } else {
+                        appendLog("MR-140 grupo %02X: SID/identificador inesperado; payload raw=%s".format(localId, payload.toHex()))
+                    }
+                } catch (e: Exception) {
+                    synchronized(initRxLock) { captureInitRx = false }
+                    appendLog("ERROR MR-140 grupo %02X en %s: %s: %s".format(localId, stage, e.javaClass.simpleName, e.message ?: "(sin mensaje)"))
+                }
             }
         }
     }
