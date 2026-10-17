@@ -86,6 +86,15 @@ internal object KwpProtocol {
         return frame
     }
 
+
+    /** ReadDataByLocalIdentifier request used by the extracted MR-140 parameter table. */
+    fun buildMr140ParameterRequest(localId: Int): ByteArray {
+        require(localId == 0xF0 || localId == 0xF1) { "Only extracted MR-140 read-only groups F0/F1 are supported" }
+        val frame = byteArrayOf(0x82.toByte(), 0x11, 0xF1.toByte(), 0x21, localId.toByte(), 0)
+        frame[5] = checksum(frame.copyOfRange(0, 5)).toByte()
+        return frame
+    }
+
     fun isPositiveResponseTo(frame: FrameCheck, requestService: Int): Boolean {
         if (!frame.valid || frame.payload.isEmpty() || requestService !in 0..0xBF) return false
         return (frame.payload[0].toInt() and 0xFF) == ((requestService + 0x40) and 0xFF)
