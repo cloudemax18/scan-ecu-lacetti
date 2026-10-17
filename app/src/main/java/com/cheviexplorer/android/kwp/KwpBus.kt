@@ -101,21 +101,34 @@ class KwpBus(
         io.write(req)
         var fin = System.currentTimeMillis() + timeoutMs
 
-        // Esta implementación espera eco exacto, como el flujo KKL observado en capturas.
-        // Si no coincide, no interpreta bytes ambiguos como una respuesta válida.
-        val eco = leerExacto(req.size, fin) ?: run {
-            log("Timeout esperando eco TX")
+        // El eco depende del adaptador. Si el primer byte ya es distinto al formato TX,
+        // se trata como inicio de respuesta; si coincide, exigimos el eco completo exacto.
+        var primerByteRespuesta: ByteArray? = null
+        val primerByte = leerExacto(1, fin) ?: run {
+            log("Timeout esperando eco/respuesta")
             return null
         }
-        if (!eco.contentEquals(req)) {
-            log("Eco TX distinto; RX descartado: ${eco.hex()}")
-            drenar()
-            return null
+        if (primerByte[0] == req[0]) {
+            val restoEco = leerExacto(req.size - 1, fin) ?: run {
+                log("Eco TX parcial")
+                return null
+            }
+            val eco = primerByte + restoEco
+            if (!eco.contentEquals(req)) {
+                log("Eco TX ambiguo/no coincidente: ${eco.hex()}; transacción abortada")
+                drenar()
+                return null
+            }
+            log("Eco TX confirmado")
+        } else {
+            primerByteRespuesta = primerByte
+            log("Adaptador sin eco TX detectable; leyendo respuesta directamente")
         }
 
         var pendientes = 0
         while (true) {
-            val fmt = leerExacto(1, fin) ?: return null
+            val fmt = primerByteRespuesta ?: leerExacto(1, fin) ?: return null
+            primerByteRespuesta = null
             val shortLength = fmt[0].toInt() and 0x3F
             val header = if (shortLength == 0) 4 else 3
             val restHeader = leerExacto(header - 1, fin) ?: return null
