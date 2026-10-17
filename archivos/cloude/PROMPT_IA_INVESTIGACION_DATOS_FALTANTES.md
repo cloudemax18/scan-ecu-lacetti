@@ -61,3 +61,11 @@ E. Lista de datos que aún requieren captura física, con petición exacta, resp
 F. Resultados reales de tests/build, limitaciones y pasos para reproducir.
 
 Empieza trazando el código Delphi, no reescribas desde cero. Primero presenta un mapa de evidencia y las incertidumbres críticas; luego implementa solo lo respaldado. No realices operaciones que cambien el estado de ninguna ECU.
+
+## Novedad: catálogo de DTC traducido al español
+- `archivos/dtc_tablas_es.json` contiene 316 entradas y 300 descripciones únicas traducidas del ruso al español; cada entrada conserva `codigo`, `grupo`, `descripcion_ru` y `descripcion_es`. La traducción fue elaborada manualmente y requiere revisión técnica de términos dudosos.
+- Equivalencias usadas: ЭСУД = ECU del motor; РХХ = actuador de ralentí; УОЗ = avance de encendido; адсорбер = canister; ПЗУ = ROM; ОЗУ = RAM. Mantener TCC, SS1, SS2, ST y PCS junto al término español.
+- Hay 16 códigos sin descripción en la fuente original: `59`, `B1400`, `B1403`, `B2500`, `P0141`, `P042E`, `C0041`, `C0046`, `C0051`, `C0065`, `C0075`, `C0085`, `C0095`, `C0146`, `C0151` y `C0156`. La app debe mostrar el código y “Sin descripción disponible” para esos registros; no completar con definiciones SAE externas sin distinguir explícitamente la fuente.
+- Los códigos numéricos sin prefijo (grupo `num`, 1–87) pertenecen al módulo SRS/airbag antiguo y deben buscarse por separado, no como P/B/C/U.
+- La app Android debe cargar `app/src/main/assets/dtc_tablas_es.json` y mostrar `descripcion_es`; el archivo conserva `descripcion_ru` para auditoría. No borrar la descripción rusa.
+- La última sesión de prueba confirma que TesterPresent cada 2 segundos mantuvo abierta la sesión MR-140 durante unos 25 segundos y permitió leer DTC a mitad de sesión. Incluir este hallazgo en el análisis de temporización, sin extrapolarlo a todas las ECUs.
