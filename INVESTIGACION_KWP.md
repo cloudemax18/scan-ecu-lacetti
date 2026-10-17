@@ -207,3 +207,39 @@ El flujo ejecuta pruebas unitarias y assembleDebug y publica un APK de depuraci�
 - archivos/cloude/Mr140Params.kt y app/src/main/java/com/cheviexplorer/android/Mr140Params.kt — implementaciones/catálogos que deben validarse.
 - dtc_tablas_es.json — descripciones españolas de códigos de avería.
 - app/src/main/java/com/cheviexplorer/android/MainActivity.kt, KwpBus.kt e IdProbe.kt — implementación Android.
+
+
+## 11. Hallazgo adicional: selector global y tipos de unidad
+
+Al rastrear las escrituras a la variable global [$004F6DA7], se localizaron varios manejadores de selección del menú Delphi que asignan valores constantes. Esto refuerza que esa variable es un selector de familia/unidad o modo, no un ID de parámetro individual.
+
+| Manejador Delphi | Valor asignado a [$004F6DA7] |
+|---|---:|
+| N_SiriusClick | 0x11 |
+| N_MR140Click | 0x12 |
+| N_SiriusD32Click | 0x13 |
+| N_BoschClick | 0x14 |
+| N_AisinClick | 0x21 |
+| N_ZFClick | 0x22 |
+| N_Airbag_SRS0Click | 0x31 |
+| N_Airbag_SRS1Click | 0x32 |
+| N_ABS_BoshClick | 0x41 |
+| N_ABS_TevesClick | 0x42 |
+| N_ABS_AVEO1Click | 0x43 |
+| N_ABS_AVEO3Click | 0x44 |
+
+Direcciones de código relevantes del desensamblado:
+- N_MR140Click asigna 0x12 en torno a 004E39CC.
+- N_SiriusClick asigna 0x11 en torno a 004E3924.
+- N_AisinClick asigna 0x21 en torno a 004E3B0C.
+- N_ZFClick asigna 0x22 en torno a 004E3BA4.
+- N_BoschClick asigna 0x14 en torno a 004E3A74.
+- N_ABS_TevesClick asigna 0x42 en torno a 004E3CD0.
+
+**Implicación:** en VspomRaschetParam, el caso especial 0x42 corresponde al selector del ABS Teves; el caso 0x14 corresponde al selector Bosch; el MR-140 seleccionado por N_MR140Click usa 0x12 y cae en la rama general de petición 0x82 <dst> <src> 0x21 <BL> <checksum>. Esto es una deducción directa del flujo de control desensamblado, pero todavía no revela por sí solo el significado de cada parámetro ni garantiza que el comportamiento sea idéntico para todas las versiones del software o ECUs.
+
+### Siguiente paso derivado
+
+- [ ] Seguir las asignaciones de las variables de dirección [$004F6DA8] y [$004F6DA9] dentro de cada manejador de selección y determinar cuál es destino y cuál origen a partir de las tramas emitidas.
+- [ ] Seguir [$004F6DA6], que se añade como byte final de las peticiones, y verificar cómo se calcula el checksum en cada formato.
+- [ ] Decodificar las tablas de metadatos usando el selector global como clave; separar las entradas de MR-140 (0x12) de las de ZF (0x22) antes de correlacionar IDs y fórmulas.
