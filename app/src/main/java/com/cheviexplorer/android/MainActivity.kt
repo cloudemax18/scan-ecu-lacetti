@@ -1,6 +1,8 @@
 package com.cheviexplorer.android
 
 import android.app.Activity
+import android.content.res.ColorStateList
+import android.graphics.drawable.GradientDrawable
 import android.app.AlertDialog
 import android.net.Uri
 import android.os.Build
@@ -14,6 +16,7 @@ import android.content.IntentFilter
 import android.hardware.usb.UsbManager
 import android.os.Bundle
 import android.view.Gravity
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -72,6 +75,12 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     private lateinit var liveScanButton: Button
     private lateinit var labOutput: TextView
     private lateinit var labExtendedScanButton: Button
+    private lateinit var actuatorSpinner: Spinner
+    private lateinit var actuatorStatusOutput: TextView
+    private lateinit var actuatorReadButton: Button
+    private lateinit var actuatorOnButton: Button
+    private lateinit var actuatorOffButton: Button
+    @Volatile private var actuatorCommandRunning = false
     private val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
 
     private val permissionReceiver = object : BroadcastReceiver() {
@@ -96,15 +105,23 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         buildUi()
         setStatus("Desconectado · Chevrolet Lacetti 1.8 LDA · 2008")
         appendLog("Aplicación iniciada. Conecta el KKL mediante USB OTG.")
-        appendLog("Esta versión prueba el enlace serie; el protocolo ECU específico aún debe validarse.")
+        appendLog("KWP físico MR-140/ZF confirmado en capturas previas. Esta compilación añade el panel DriverIM MR-140 reconstruido desde Graf.pas; validar cada respuesta en el vehículo.")
     }
 
     private fun buildUi() {
-        val pageBackground = 0xFF101820.toInt()
-        val cardBackground = 0xFF1B2A35.toInt()
-        val accent = 0xFF56C7B5.toInt()
-        val primaryText = 0xFFF3F7FA.toInt()
-        val secondaryText = 0xFFB0BEC5.toInt()
+        // Native dark dashboard inspired by OBD2-Diagnostic-UI.
+        val pageBackground = 0xFF0C0C0E.toInt()
+        val cardBackground = 0xFF17171B.toInt()
+        val accent = 0xFF007AFF.toInt()
+        val primaryText = 0xFFFFFFFF.toInt()
+        val secondaryText = 0xFFA0A0AB.toInt()
+        val borderColor = 0xFF2B2B32.toInt()
+        fun roundedSurface(color: Int, strokeColor: Int = borderColor, radiusDp: Float = 18f): GradientDrawable =
+            GradientDrawable().apply {
+                setColor(color)
+                cornerRadius = radiusDp * resources.displayMetrics.density
+                setStroke((resources.displayMetrics.density).toInt().coerceAtLeast(1), strokeColor)
+            }
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -131,11 +148,11 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             setPadding(0, 2, 0, 8)
         }, lp(-1, -2))
         status = TextView(this).apply {
-            text = "Desconectado"
+            text = "●  Desconectado"
             textSize = 13f
-            setTextColor(primaryText)
-            setPadding(12, 10, 12, 10)
-            setBackgroundColor(cardBackground)
+            setTextColor(secondaryText)
+            setPadding(14, 11, 14, 11)
+            background = roundedSurface(cardBackground)
         }
         header.addView(status, lp(-1, -2))
         root.addView(header, lp(-1, -2))
@@ -176,9 +193,10 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             }, lp(-1, -2))
         }
         fun addCard(parent: LinearLayout, content: LinearLayout) {
-            content.setPadding(14, 12, 14, 12)
-            content.setBackgroundColor(cardBackground)
-            val params = lp(-1, -2).apply { bottomMargin = 10 }
+            content.setPadding(14, 13, 14, 13)
+            content.background = roundedSurface(cardBackground)
+            content.elevation = 2f * resources.displayMetrics.density
+            val params = lp(-1, -2).apply { bottomMargin = 12 }
             parent.addView(content, params)
         }
         fun addLabel(parent: LinearLayout, label: String) {
@@ -194,15 +212,45 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 text = label
                 isAllCaps = false
                 textSize = 14f
+                setTextColor(primaryText)
+                backgroundTintList = ColorStateList.valueOf(accent)
+                minHeight = (48 * resources.displayMetrics.density).toInt()
                 setOnClickListener { onClick() }
             }
             parent.addView(button, lp(-1, -2).apply { bottomMargin = 4 })
             return button
         }
 
-        // Inicio: conexión y selección del módulo.
+        // Inicio: panel de vehículo inspirado en el dashboard de referencia.
         val home = makeScreen("Inicio")
-        addSection(home, "Conexión", "Conecta el adaptador al teléfono mediante USB OTG.")
+        val vehicleHero = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        vehicleHero.addView(TextView(this).apply {
+            text = "CHEVROLET LACETTI"
+            textSize = 12f
+            letterSpacing = 0.12f
+            setTextColor(accent)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        }, lp(-1, -2))
+        vehicleHero.addView(TextView(this).apply {
+            text = "1.8 LDA"
+            textSize = 29f
+            setTextColor(primaryText)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 2, 0, 0)
+        }, lp(-1, -2))
+        vehicleHero.addView(TextView(this).apply {
+            text = "2008  ·  Automático ZF 4HP16"
+            textSize = 13f
+            setTextColor(secondaryText)
+            setPadding(0, 3, 0, 10)
+        }, lp(-1, -2))
+        vehicleHero.addView(TextView(this).apply {
+            text = "Scanner específico · Delphi MR-140 · K-Line 10400 baud"
+            textSize = 12f
+            setTextColor(primaryText)
+        }, lp(-1, -2))
+        addCard(home, vehicleHero)
+        addSection(home, "Conexión", "Conecta el adaptador KKL por USB OTG y selecciona el módulo que vas a diagnosticar.")
         val connectionCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         addLabel(connectionCard, "Módulo seleccionado")
         ecuProfile = Spinner(this).apply {
@@ -330,7 +378,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         addSection(lab, "Laboratorio KWP", "Ejecuta los pasos en orden para cada módulo. Mantén el vehículo inmóvil, contacto en ON y no cambies de ECU durante una prueba.")
         val labIntro = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         labIntro.addView(TextView(this).apply {
-            text = "Objetivo: recopilar tramas TX/RX, checksum, respuestas positivas, NRC, timeouts, DTC e identificación para completar el mapa de datos. No se envían servicios de escritura ni de actuadores."
+            text = "Objetivo: recopilar tramas TX/RX, checksum, respuestas positivas, NRC, timeouts, DTC e identificación para completar el mapa de datos. El barrido KWP es solo lectura; las pruebas de actuadores están separadas y requieren confirmación explícita."
             textSize = 13f
             setTextColor(secondaryText)
         }, lp(-1, -2))
@@ -356,10 +404,41 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         addAction(labSteps, "Detener barrido 0x21 / lectura en vivo") { stopLiveParameterPolling(); setLabStatus("Solicitud de parada enviada al barrido 0x21 o lectura en vivo. Las consultas de diagnóstico individuales ya iniciadas pueden terminar su espera.") }
         addAction(labSteps, "Exportar todo el registro de pruebas") { exportLog() }
         addCard(lab, labSteps)
+
+        addSection(lab, "Pruebas de actuadores · Delphi MR-140",
+            "Portado del menú DriverIM de Graf.pas: servicio KWP 0x30, control 0x07 y estados FF/00. Solo para la ECU de motor.")
+        val actuatorCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        actuatorCard.addView(TextView(this).apply {
+            text = "Estos identificadores y el formato de las tramas se reconstruyeron de test_ONClick/test_OFFClick y CaseIMSelect del ejecutable Delphi. La selección ZF 4HP16 no está habilitada: en el código fuente revisado esta rutina usa destino 0x11."
+            textSize = 12f
+            setTextColor(secondaryText)
+            setPadding(0, 0, 0, 8)
+        }, lp(-1, -2))
+        addLabel(actuatorCard, "Actuador del catálogo original")
+        actuatorSpinner = Spinner(this).apply {
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                DelphiActuatorCatalog.mr140.map { "${it.label} · ID 0x%02X".format(it.localId) })
+        }
+        actuatorCard.addView(actuatorSpinner, lp(-1, -2))
+        actuatorStatusOutput = TextView(this).apply {
+            text = "Estado: no se ha consultado ningún actuador."
+            textSize = 12f
+            typeface = android.graphics.Typeface.MONOSPACE
+            setTextColor(primaryText)
+            setPadding(0, 8, 0, 8)
+        }
+        actuatorCard.addView(actuatorStatusOutput, lp(-1, -2))
+        actuatorReadButton = addAction(actuatorCard, "Leer estado · 0x30 01") { readMr140ActuatorState() }
+        actuatorOnButton = addAction(actuatorCard, "Activar 3 s · 0x30 07 FF") { confirmMr140ActuatorControl(true) }
+        actuatorOffButton = addAction(actuatorCard, "Desactivar · 0x30 07 00") { confirmMr140ActuatorControl(false) }
+        actuatorOnButton.backgroundTintList = ColorStateList.valueOf(0xFF1E9E66.toInt())
+        actuatorOffButton.backgroundTintList = ColorStateList.valueOf(0xFFFF9500.toInt())
+        addCard(lab, actuatorCard)
+
         val labSafety = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         labSafety.addView(TextView(this).apply { text = "Antes de ejecutar"; textSize = 15f; setTextColor(accent); setTypeface(null, android.graphics.Typeface.BOLD) }, lp(-1, -2))
         labSafety.addView(TextView(this).apply {
-            text = "• Vehículo inmóvil, freno de estacionamiento aplicado y selector en P.\n• Contacto ON; no arranques ni cambies el selector durante el barrido.\n• Inicializa una sola ECU cada vez.\n• El barrido ampliado puede tardar varios minutos; consulta únicamente IDs mediante 0x21.\n• No se exploran servicios de escritura, programación, borrado ni actuadores.\n• Exporta el registro antes de limpiar la pantalla Registro."
+            text = "• Barridos de descubrimiento: vehículo inmóvil, freno aplicado, selector en P y contacto ON.\n• Inicializa una sola ECU cada vez; no cambies el perfil durante una prueba.\n• Para actuadores MR-140: motor apagado, contacto ON, selector P/N, freno aplicado y manos alejadas de ventiladores/correas.\n• La activación intenta enviar OFF automáticamente tras 3 segundos; si se pierde la comunicación, no se puede garantizar que la ECU haya liberado la salida. Cicla el contacto y verifica antes de continuar.\n• No se habilitan actuadores ZF sin reconstruir su rutina original.\n• Exporta el registro antes de limpiar la pantalla Registro."
             textSize = 13f; setTextColor(secondaryText); setPadding(0, 6, 0, 0)
         }, lp(-1, -2))
         addCard(lab, labSafety)
@@ -377,7 +456,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         val logCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         logCard.setPadding(0, 0, 0, 0)
         logCard.addView(log, lp(-1, -2))
-        logCard.setBackgroundColor(cardBackground)
+        logCard.background = roundedSurface(cardBackground)
         logs.addView(logCard, lp(-1, -2).apply { bottomMargin = 10 })
         val logActions = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -419,7 +498,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             setPadding(0, 6, 0, 2)
             setBackgroundColor(pageBackground)
         }
-        val navNames = listOf("Inicio", "Diagnóstico", "Datos ECU", "En vivo", "Lab", "Registro", "Ajustes")
+        val navNames = listOf("Inicio", "Diagnóstico", "Datos ECU", "En vivo", "Pruebas", "Registro", "Ajustes")
         fun showScreen(name: String) {
             screens.forEach { (screenName, view) ->
                 view.visibility = if (screenName == name) android.view.View.VISIBLE else android.view.View.GONE
@@ -431,6 +510,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     "Diagnóstico" -> "DTC"
                     "Datos ECU" -> "Datos"
                     "En vivo" -> "En vivo"
+                    "Pruebas" -> "Pruebas"
                     else -> name
                 }
                 textSize = 11f
@@ -438,7 +518,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 setTextColor(if (name == "Inicio") accent else secondaryText)
                 setPadding(2, 10, 2, 10)
                 setOnClickListener {
-                    showScreen(if (name == "Lab") "Laboratorio" else name)
+                    showScreen(if (name == "Pruebas") "Laboratorio" else name)
                     for (i in 0 until nav.childCount) {
                         val child = nav.getChildAt(i) as TextView
                         val selected = child.tag == name
@@ -451,8 +531,37 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             nav.addView(navButton, LinearLayout.LayoutParams(0, -2, 1f))
         }
         root.addView(nav, lp(-1, -2))
+        var previousProfilePosition = ecuProfile.selectedItemPosition
+        ecuProfile.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                if (position != previousProfilePosition) {
+                    previousProfilePosition = position
+                    validatedStartProfile = null
+                    testerPresentTask?.cancel(false)
+                    testerPresentTask = null
+                    appendLog("Perfil ECU cambiado: vuelve a inicializar la ECU seleccionada antes de diagnosticar o probar actuadores.")
+                }
+                updateActuatorControlsEnabled()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+        }
+        var previousBaudPosition = baud.selectedItemPosition
+        baud.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                if (position != previousBaudPosition) {
+                    previousBaudPosition = position
+                    validatedStartProfile = null
+                    testerPresentTask?.cancel(false)
+                    testerPresentTask = null
+                    appendLog("Baud cambiado: vuelve a inicializar la ECU con la nueva velocidad.")
+                }
+                updateActuatorControlsEnabled()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+        }
         showScreen("Inicio")
         setContentView(root)
+        updateActuatorControlsEnabled()
     }
 
     private fun checkForUpdates() {
@@ -755,6 +864,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     val keyHex = keys.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
                     appendLog("KWP StartCommunication: respuesta positiva 0xC1 al servicio 0x81; bytes de clave=$keyHex.")
                     validatedStartProfile = profile
+                    updateActuatorControlsEnabled()
                     startAutomaticTesterPresent(profile, if (profile == "MR-140") 0x11 else 0x18, serialPort = port)
                     appendLog("Estas claves no son una identificación de ECU; se puede probar el servicio de identificación 1A 80.")
                 } else {
@@ -1007,6 +1117,233 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
     }
 
+    private fun updateActuatorControlsEnabled() {
+        runOnUiThread {
+            if (!::actuatorReadButton.isInitialized || !::actuatorOnButton.isInitialized ||
+                !::actuatorOffButton.isInitialized || !::ecuProfile.isInitialized || !::baud.isInitialized
+            ) return@runOnUiThread
+            val enabled = port?.isOpen == true && ecuProfile.selectedItemPosition == 0 &&
+                validatedStartProfile == "MR-140" && baud.selectedItemPosition == 0 &&
+                !liveDataRunning && !actuatorCommandRunning
+            actuatorReadButton.isEnabled = enabled
+            actuatorOnButton.isEnabled = enabled
+            actuatorOffButton.isEnabled = enabled
+        }
+    }
+
+    private fun selectedMr140Actuator(): DelphiActuator? {
+        if (!::actuatorSpinner.isInitialized) return null
+        return DelphiActuatorCatalog.mr140.getOrNull(actuatorSpinner.selectedItemPosition)
+    }
+
+    private fun requireMr140ActuatorReady(): UsbSerialPort? {
+        val serialPort = port
+        if (serialPort == null || !serialPort.isOpen) {
+            Toast.makeText(this, "Conecta primero el adaptador USB KKL", Toast.LENGTH_LONG).show()
+            appendLog("ACTUADOR cancelado: puerto USB no abierto.")
+            return null
+        }
+        if (ecuProfile.selectedItemPosition != 0 || validatedStartProfile != "MR-140") {
+            Toast.makeText(this, "Inicializa la ECU de motor Delphi MR-140; el menú DriverIM del EXE no usa la ZF", Toast.LENGTH_LONG).show()
+            appendLog("ACTUADOR cancelado: DriverIM reconstruido solo para selector MR-140 (destino 0x11).")
+            return null
+        }
+        if (baud.selectedItemPosition != 0) {
+            Toast.makeText(this, "Selecciona 10400 baud", Toast.LENGTH_LONG).show()
+            appendLog("ACTUADOR cancelado: el perfil MR-140 requiere 10400 baud.")
+            return null
+        }
+        if (liveDataRunning || actuatorCommandRunning || synchronized(initRxLock) { captureInitRx }) {
+            Toast.makeText(this, "Espera a que termine la consulta KWP actual", Toast.LENGTH_LONG).show()
+            appendLog("ACTUADOR cancelado: bus ocupado por otra consulta.")
+            return null
+        }
+        return serialPort
+    }
+
+    private fun readMr140ActuatorState() {
+        val serialPort = requireMr140ActuatorReady() ?: return
+        val actuator = selectedMr140Actuator() ?: return
+        runMr140ActuatorTransaction(
+            serialPort = serialPort,
+            actuator = actuator,
+            actionLabel = "leer estado",
+            request = KwpProtocol.buildMr140ActuatorStatusRequest(actuator.localId),
+            expectedControlOption = 0x01,
+            autoOffRequest = null
+        )
+    }
+
+    private fun confirmMr140ActuatorControl(activate: Boolean) {
+        if (requireMr140ActuatorReady() == null) return
+        val actuator = selectedMr140Actuator() ?: return
+        val action = if (activate) "ACTIVAR durante 3 segundos" else "DESACTIVAR"
+        val warning = if (activate) {
+            "Se enviará el comando de control del ejecutable Delphi y se intentará enviar el estado OFF tras 3 segundos. El apagado automático no se puede garantizar si se desconecta el adaptador o se pierde la sesión."
+        } else {
+            "Se enviará el comando OFF reconstruido del ejecutable Delphi para este actuador."
+        }
+        AlertDialog.Builder(this)
+            .setTitle("$action · ${actuator.label}")
+            .setMessage(
+                "$warning\n\nAntes de continuar: vehículo inmóvil, motor apagado, contacto ON, selector en P/N y freno de estacionamiento aplicado. Mantén manos y herramientas alejadas de ventiladores, correas y partes móviles. No pruebes si hay olor o fuga de combustible."
+            )
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton(if (activate) "Activar 3 s" else "Enviar OFF") { _, _ ->
+                val currentPort = requireMr140ActuatorReady() ?: return@setPositiveButton
+                val request = KwpProtocol.buildMr140ActuatorControlRequest(
+                    actuator.localId, activate, actuator.injectorIndex
+                )
+                val offRequest = if (activate) {
+                    KwpProtocol.buildMr140ActuatorControlRequest(
+                        actuator.localId, false, actuator.injectorIndex
+                    )
+                } else null
+                runMr140ActuatorTransaction(
+                    serialPort = currentPort,
+                    actuator = actuator,
+                    actionLabel = if (activate) "activar 3 s" else "desactivar",
+                    request = request,
+                    expectedControlOption = 0x07,
+                    autoOffRequest = offRequest
+                )
+            }
+            .show()
+    }
+
+    private fun runMr140ActuatorTransaction(
+        serialPort: UsbSerialPort,
+        actuator: DelphiActuator,
+        actionLabel: String,
+        request: ByteArray,
+        expectedControlOption: Int,
+        autoOffRequest: ByteArray?
+    ) {
+        if (actuatorCommandRunning || liveDataRunning || port !== serialPort || !serialPort.isOpen) {
+            appendLog("ACTUADOR cancelado: cambió el estado del puerto o el bus está ocupado.")
+            return
+        }
+        actuatorCommandRunning = true
+        // Keep Tester Present scheduled between individual transactions to preserve the ECU session.
+        // It already skips while captureInitRx is true, so it cannot interleave with a request/response.
+        runOnUiThread {
+            actuatorStatusOutput.text = "En curso: $actionLabel · ${actuator.label}"
+            actuatorReadButton.isEnabled = false
+            actuatorOnButton.isEnabled = false
+            actuatorOffButton.isEnabled = false
+        }
+        appendLog("ACTUADOR MR-140: $actionLabel; ${actuator.label}; localId=0x%02X; control=0x%02X."
+            .format(actuator.localId, expectedControlOption))
+        executor.execute {
+            var offAttempted = false
+            var resultText = "Sin resultado"
+            try {
+                val accepted = exchangeMr140ActuatorFrame(
+                    serialPort, request, actuator.localId, expectedControlOption, actionLabel
+                )
+                resultText = if (accepted) "Respuesta positiva confirmada" else "Sin confirmación positiva; revisar Registro"
+                if (autoOffRequest != null) {
+                    appendLog("ACTUADOR MR-140: espera de seguridad de 3 s antes de enviar OFF.")
+                    Thread.sleep(3000)
+                    offAttempted = true
+                    val offAccepted = exchangeMr140ActuatorFrame(
+                        serialPort, autoOffRequest, actuator.localId, 0x07, "OFF automático"
+                    )
+                    resultText += if (offAccepted) " · OFF confirmado" else " · OFF enviado sin confirmación"
+                }
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                resultText = "Interrumpido; verifica el estado físico del actuador"
+                appendLog("ACTUADOR MR-140 interrumpido. No se debe asumir que la salida está desactivada.")
+            } catch (e: Exception) {
+                resultText = "Error: ${e.message ?: e.javaClass.simpleName}"
+                appendLog("ERROR ACTUADOR MR-140: $resultText")
+                if (autoOffRequest != null && !offAttempted && port === serialPort && serialPort.isOpen) {
+                    try {
+                        appendLog("ACTUADOR MR-140: intentando OFF de recuperación tras error.")
+                        exchangeMr140ActuatorFrame(serialPort, autoOffRequest, actuator.localId, 0x07, "OFF de recuperación")
+                    } catch (offError: Exception) {
+                        appendLog("ERROR OFF de recuperación: ${offError.message ?: offError.javaClass.simpleName}. Cicla el contacto y verifica.")
+                    }
+                }
+            } finally {
+                synchronized(initRxLock) { captureInitRx = false }
+                actuatorCommandRunning = false
+                runOnUiThread {
+                    actuatorStatusOutput.text = "$resultText\nActuador: ${actuator.label} · ID 0x%02X".format(actuator.localId)
+                    updateActuatorControlsEnabled()
+                }
+                if (validatedStartProfile == "MR-140" && port === serialPort && serialPort.isOpen) {
+                    startAutomaticTesterPresent("MR-140", 0x11, serialPort)
+                }
+            }
+        }
+    }
+
+    /**
+     * Sends one exact Delphi DriverIM transaction and validates the KWP checksum, response SID,
+     * local identifier before reporting success; response data is preserved as raw status.
+     */
+    private fun exchangeMr140ActuatorFrame(
+        serialPort: UsbSerialPort,
+        request: ByteArray,
+        localId: Int,
+        expectedControlOption: Int,
+        label: String
+    ): Boolean {
+        synchronized(initRxLock) {
+            initRxBuffer.reset()
+            captureInitRx = true
+        }
+        var raw = byteArrayOf()
+        try {
+            appendLog("TX ACTUADOR $label: ${request.toHex()}")
+            writeSerialFrame(serialPort, request, 1000)
+            Thread.sleep(800)
+        } finally {
+            raw = synchronized(initRxLock) {
+                captureInitRx = false
+                initRxBuffer.toByteArray()
+            }
+        }
+        val echoAt = indexOfFrame(raw, request)
+        val candidate = if (echoAt >= 0) raw.copyOfRange(echoAt + request.size, raw.size) else raw
+        if (candidate.isEmpty()) {
+            appendLog("ACTUADOR $label: sin respuesta RX; TX=${request.toHex()}.")
+            return false
+        }
+        appendLog("RX ACTUADOR $label raw: ${candidate.toHex()}")
+        val response = KwpProtocol.findResponse(candidate, expectedSource = 0x11)
+        if (response == null) {
+            appendLog("ACTUADOR $label: RX sin trama KWP reconocible.")
+            return false
+        }
+        appendLog("VALIDACIÓN ACTUADOR $label: ${response.description}")
+        if (!response.valid) {
+            appendLog("ACTUADOR $label: checksum inválido; respuesta descartada.")
+            return false
+        }
+        val payload = response.payload
+        if (payload.size >= 2 && (payload[0].toInt() and 0xFF) == 0x70 &&
+            (payload[1].toInt() and 0xFF) == localId
+        ) {
+            // KWP positive response echoes SID + local ID; the remaining bytes are status data,
+            // not an echo of the requested control option.
+            val state = payload.copyOfRange(2, payload.size)
+            appendLog("ACTUADOR $label: respuesta positiva 0x70 e ID 0x%02X confirmados; estado raw=${state.toHex().ifEmpty { "(sin bytes de estado)" }}."
+                .format(localId))
+            return true
+        }
+        if (payload.size >= 3 && (payload[0].toInt() and 0xFF) == 0x7F &&
+            (payload[1].toInt() and 0xFF) == 0x30
+        ) {
+            appendLog("ACTUADOR $label: NRC=0x%02X para servicio 0x30.".format(payload[2].toInt() and 0xFF))
+        } else {
+            appendLog("ACTUADOR $label: respuesta inesperada; payload=${payload.toHex()}.")
+        }
+        return false
+    }
+
     private fun setLabStatus(message: String) {
         if (!::labOutput.isInitialized) return
         runOnUiThread { labOutput.text = message }
@@ -1185,11 +1522,17 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         liveDataTask = liveDataExecutor.submit {
             val positives = mutableListOf<String>()
             val negatives = mutableMapOf<Int, Int>()
+            var attempted = 0
             var noResponse = 0
+            var unrecognizedRx = 0
+            var checksumInvalid = 0
+            var ioErrors = 0
+            var completedNormally = false
             try {
                 for (localId in ids) {
                     if (!liveDataRunning || Thread.currentThread().isInterrupted ||
                         port !== serialPort || !serialPort.isOpen || validatedStartProfile != profile) break
+                    attempted++
                     var result = "sin respuesta"
                     try {
                         val request = KwpProtocol.buildLocalIdentifierRequest(source, localId)
@@ -1210,9 +1553,16 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                             ?: KwpProtocol.findResponse(candidate, expectedSource = source,
                                 expectedPayloadPrefix = byteArrayOf(0x7F, 0x21))
                         if (response == null) {
-                            noResponse++
+                            if (candidate.isEmpty()) {
+                                noResponse++
+                                result = "sin respuesta RX"
+                            } else {
+                                unrecognizedRx++
+                                result = "RX no reconocible · ${candidate.toHex()}"
+                            }
                         } else if (!response.valid) {
-                            result = "checksum inválido"
+                            checksumInvalid++
+                            result = "checksum inválido · ${response.bytes.toHex()}"
                         } else {
                             val payload = response.payload
                             if (payload.size >= 2 && (payload[0].toInt() and 0xFF) == 0x61 &&
@@ -1224,6 +1574,9 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                                 val nrc = payload[2].toInt() and 0xFF
                                 negatives[nrc] = (negatives[nrc] ?: 0) + 1
                                 result = "NRC %02X".format(nrc)
+                            } else {
+                                unrecognizedRx++
+                                result = "payload no reconocido · ${payload.toHex()}"
                             }
                         }
                         appendLog("MAPA KWP $profile ID %02X: %s".format(localId, result))
@@ -1231,14 +1584,20 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                         Thread.currentThread().interrupt()
                         break
                     } catch (e: Exception) {
+                        ioErrors++
                         appendLog("MAPA KWP $profile ID %02X error: %s".format(localId, e.message ?: e.javaClass.simpleName))
                     } finally {
                         synchronized(initRxLock) { captureInitRx = false }
                     }
                 }
+                completedNormally = attempted == ids.size && liveDataRunning &&
+                    !Thread.currentThread().isInterrupted && port === serialPort && serialPort.isOpen &&
+                    validatedStartProfile == profile
             } catch (e: Exception) {
+                ioErrors++
                 appendLog("VALIDACIÓN KWP $profile error: " + (e.message ?: e.javaClass.simpleName))
             } finally {
+                val finalStatus = if (completedNormally) "COMPLETADO" else "DETENIDO/INTERRUMPIDO"
                 synchronized(initRxLock) { captureInitRx = false }
                 liveDataRunning = false
                 runOnUiThread {
@@ -1246,25 +1605,30 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     liveScanButton.isEnabled = true
                     if (::labExtendedScanButton.isInitialized) labExtendedScanButton.isEnabled = true
                     liveOutput.text = buildString {
-                        append("Validación finalizada: ").append(profile).append("\n")
-                        append("Respuestas positivas: ").append(positives.size).append("\n")
-                        append("Sin respuesta: ").append(noResponse).append("\n")
+                        append("Validación ").append(finalStatus.lowercase(Locale.ROOT)).append(": ").append(profile).append("\n")
+                        append("IDs planificados: ").append(ids.size).append("\n")
+                        append("Solicitudes intentadas: ").append(attempted).append("\n")
+                        append("Respuestas positivas (checksum OK): ").append(positives.size).append("\n")
+                        append("Sin respuesta RX: ").append(noResponse).append("\n")
+                        append("RX no reconocible: ").append(unrecognizedRx).append("\n")
+                        append("Checksum inválido: ").append(checksumInvalid).append("\n")
+                        append("Errores de ejecución/I/O: ").append(ioErrors).append("\n")
                         append("Rechazos NRC: ").append(negatives.values.sum()).append("\n")
                         if (negatives.isNotEmpty()) {
                             append("NRC por código: ").append(negatives.entries.sortedBy { it.key }
                                 .joinToString { "0x%02X=%d".format(it.key, it.value) }).append("\n")
                         }
                         append("\nBLOQUES POSITIVOS (checksum validado)\n")
-                        if (positives.isEmpty()) append("No se encontraron respuestas positivas en el rango consultado.\n")
+                        if (positives.isEmpty()) append("No se encontraron respuestas positivas en las solicitudes procesadas.\n")
                         positives.forEach { append(it).append("\n") }
                         append("\nLas lecturas positivas son bloques brutos; sus campos físicos todavía deben mapearse.")
                     }
                     if (validatedStartProfile == profile && port === serialPort && serialPort.isOpen) {
                         startAutomaticTesterPresent(profile, source, serialPort)
                     }
-                    labOutput.text = "Barrido $scanLabel finalizado: $profile\nIDs consultados: ${ids.size}\nRespuestas positivas: ${positives.size}\nSin respuesta: $noResponse\nRechazos NRC: ${negatives.values.sum()}\n\nLos datos positivos están en Registro y el resumen completo en En vivo. Exporta el registro para compartir la captura."
+                    labOutput.text = "Barrido $scanLabel $finalStatus: $profile\nIDs planificados: ${ids.size}\nSolicitudes intentadas: $attempted\nPositivas: ${positives.size}\nSin respuesta: $noResponse\nRX no reconocible: $unrecognizedRx\nChecksum inválido: $checksumInvalid\nErrores: $ioErrors\nNRC: ${negatives.values.sum()}\n\nLos datos positivos están en Registro y el resumen completo en En vivo. Exporta el registro para compartir la captura."
                 }
-                appendLog("VALIDACIÓN KWP $profile ($scanLabel) finalizada; IDs=" + ids.size + ", positivos=" + positives.size + ", sin respuesta=" + noResponse + ".")
+                appendLog("VALIDACIÓN KWP $profile ($scanLabel) $finalStatus; planificados=${ids.size}, intentados=$attempted, positivos=${positives.size}, sin respuesta=$noResponse, RX no reconocible=$unrecognizedRx, checksum inválido=$checksumInvalid, errores=$ioErrors, NRC=${negatives.values.sum()}.")
             }
         }
     }
@@ -1661,7 +2025,10 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         runOnUiThread { appendLog("ERROR serie: ${e.message}"); setStatus("Error en comunicación USB") }
     }
 
-    private fun setStatus(value: String) { runOnUiThread { status.text = value } }
+    private fun setStatus(value: String) {
+        runOnUiThread { status.text = value }
+        updateActuatorControlsEnabled()
+    }
     private fun appendLog(value: String) {
         val line = "[${dateFormat.format(Date())}] $value\n"
         runOnUiThread { log.append(line) }
