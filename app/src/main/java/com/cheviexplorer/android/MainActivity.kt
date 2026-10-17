@@ -261,7 +261,8 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         val ecuData = makeScreen("Datos ECU")
         addSection(ecuData, "Datos de la ECU", "Se muestran respuestas confirmadas; los bytes sin mapa validado permanecen en hexadecimal.")
         val dataCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        addAction(dataCard, "Leer datos MR-140 · IDs 02 / 03 / 04") { readMr140Parameters() }
+        addAction(dataCard, "Consultar datos brutos confirmados") { readConfirmedParameterIds() }
+        addAction(dataCard, "Ver catálogo Delphi reconstruido") { showDelphiCatalog() }
         addAction(dataCard, "Enviar Tester Present") { sendTesterPresentOnce() }
         addAction(dataCard, "Explorar IDs KWP 0x21 · solo lectura") { probeLocalIdentifiers() }
         addCard(ecuData, dataCard)
@@ -787,105 +788,162 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
 
 
     /**
-     * Read-only raw-data query for MR-140 identifiers confirmed by physical captures.
-     * The ZF profile is intentionally not supported until its own parameter map is verified.
+     * Consulta identificadores con respuesta positiva observada en capturas físicas.
+     * Los bytes se conservan en bruto: los offsets de la tabla Delphi son del buffer original,
+     * no de cada respuesta individual, y no se usan aquí para inventar decodificaciones.
      */
-    private fun readMr140Parameters() {
+    private fun readConfirmedParameterIds() {
         val serialPort = port
         if (serialPort == null || !serialPort.isOpen) {
-            appendLog("PARÁMETROS MR-140 cancelados: conecta primero el adaptador USB.")
+            appendLog("DATOS ECU cancelados: conecta primero el adaptador USB.")
             Toast.makeText(this, "Primero conecta el adaptador USB", Toast.LENGTH_LONG).show()
             return
         }
-        if (ecuProfile.selectedItemPosition != 0) {
-            appendLog("PARÁMETROS EN VIVO: solo hay tabla preliminar para MR-140; no se envía ninguna solicitud a ZF 4HP16.")
-            Toast.makeText(this, "Selecciona Motor Delphi MR-140", Toast.LENGTH_LONG).show()
-            return
-        }
-        if (validatedStartProfile != "MR-140") {
-            appendLog("PARÁMETROS MR-140 cancelados: inicializa primero la ECU.")
-            Toast.makeText(this, "Inicializa primero MR-140", Toast.LENGTH_LONG).show()
+        val isEngine = ecuProfile.selectedItemPosition == 0
+        val profile = if (isEngine) "MR-140" else "ZF 4HP16"
+        val source = if (isEngine) 0x11 else 0x18
+        val ids = if (isEngine) listOf(0x02, 0x03, 0x04) else listOf(0x01, 0x02, 0x03, 0x04, 0x11)
+        if (validatedStartProfile != profile) {
+            appendLog("DATOS ECU cancelados: inicializa primero $profile.")
+            Toast.makeText(this, "Inicializa primero $profile", Toast.LENGTH_LONG).show()
             return
         }
         val selectedBaud = when (baud.selectedItemPosition) { 1 -> 9600; 2 -> 38400; 3 -> 4800; else -> 10400 }
         if (selectedBaud != 10400) {
-            appendLog("PARÁMETROS MR-140 cancelados: se requiere 10400 baudios.")
+            appendLog("DATOS ECU cancelados: se requiere 10400 baudios.")
             Toast.makeText(this, "Selecciona 10400 baudios", Toast.LENGTH_LONG).show()
             return
         }
 
-        appendLog("MR-140: lectura de solo lectura de IDs 02/03/04 confirmados por capturas físicas; datos sin decodificar.")
+        testerPresentTask?.cancel(false)
+        testerPresentTask = null
+        appendLog("DATOS ECU $profile: consulta de solo lectura para IDs con respuestas positivas previas: " +
+            ids.joinToString(", ") { "0x%02X".format(it) } + ". Sin decodificación de campos.")
         executor.execute {
-            for (localId in listOf(0x02, 0x03, 0x04)) {
-                var stage = "captura"
-                try {
-                    val frame = KwpProtocol.buildMr140ParameterRequest(localId)
-                    synchronized(initRxLock) {
-                        initRxBuffer.reset()
-                        captureInitRx = true
-                    }
-                    stage = "envío del grupo %02X".format(localId)
-                    appendLog("TX MR-140 grupo %02X: %s".format(localId, frame.toHex()))
-                    writeSerialFrame(serialPort, frame, 1000)
-                    stage = "espera de respuesta"
-                    Thread.sleep(1200)
-                    val rxBytes = synchronized(initRxLock) {
-                        captureInitRx = false
-                        initRxBuffer.toByteArray()
-                    }
-                    if (rxBytes.isEmpty()) {
-                        appendLog("MR-140 grupo %02X: sin respuesta RX en 1200 ms.".format(localId))
-                        continue
-                    }
-                    val echoAt = indexOfFrame(rxBytes, frame)
-                    val candidate = if (echoAt >= 0) {
-                        appendLog("ECO TX grupo %02X detectado.".format(localId))
-                        rxBytes.copyOfRange(echoAt + frame.size, rxBytes.size)
-                    } else rxBytes
-                    if (candidate.isEmpty()) {
-                        appendLog("MR-140 grupo %02X: solo eco; no se interpreta como respuesta ECU.".format(localId))
-                        continue
-                    }
-                    val response = KwpProtocol.findResponse(
-                        candidate,
-                        expectedSource = 0x11,
-                        expectedPayloadPrefix = byteArrayOf(0x61, localId.toByte())
-                    ) ?: KwpProtocol.findResponse(
-                        candidate,
-                        expectedSource = 0x11,
-                        expectedPayloadPrefix = byteArrayOf(0x7F, 0x21)
-                    )
-                    if (response == null) {
-                        appendLog(
-                            "MR-140 grupo %02X: no se encontró respuesta 61 %02X ni 7F 21; RX raw=%s"
-                                .format(localId, localId, candidate.toHex())
+            var completed = false
+            try {
+                for (localId in ids) {
+                    var stage = "preparación de captura"
+                    try {
+                        val frame = KwpProtocol.buildLocalIdentifierRequest(source, localId)
+                        synchronized(initRxLock) {
+                            initRxBuffer.reset()
+                            captureInitRx = true
+                        }
+                        stage = "envío de ID %02X".format(localId)
+                        appendLog("TX $profile ID %02X: %s".format(localId, frame.toHex()))
+                        writeSerialFrame(serialPort, frame, 1000)
+                        stage = "espera de respuesta"
+                        Thread.sleep(1200)
+                        val rxBytes = synchronized(initRxLock) {
+                            captureInitRx = false
+                            initRxBuffer.toByteArray()
+                        }
+                        if (rxBytes.isEmpty()) {
+                            appendLog("$profile ID %02X: sin respuesta RX en 1200 ms.".format(localId))
+                            continue
+                        }
+                        val echoAt = indexOfFrame(rxBytes, frame)
+                        val candidate = if (echoAt >= 0) {
+                            appendLog("ECO TX $profile ID %02X detectado.".format(localId))
+                            rxBytes.copyOfRange(echoAt + frame.size, rxBytes.size)
+                        } else rxBytes
+                        if (candidate.isEmpty()) {
+                            appendLog("$profile ID %02X: solo eco TX; no se interpreta como respuesta ECU.".format(localId))
+                            continue
+                        }
+                        val response = KwpProtocol.findResponse(
+                            candidate,
+                            expectedSource = source,
+                            expectedPayloadPrefix = byteArrayOf(0x61, localId.toByte())
+                        ) ?: KwpProtocol.findResponse(
+                            candidate,
+                            expectedSource = source,
+                            expectedPayloadPrefix = byteArrayOf(0x7F, 0x21)
                         )
-                        continue
+                        if (response == null) {
+                            appendLog("$profile ID %02X: no se encontró respuesta 61 %02X ni 7F 21; RX raw=%s"
+                                .format(localId, localId, candidate.toHex()))
+                            continue
+                        }
+                        appendLog("RX $profile ID %02X: %s".format(localId, response.bytes.toHex()))
+                        appendLog("VALIDACIÓN $profile ID %02X: %s".format(localId, response.description))
+                        if (!response.valid) {
+                            appendLog("$profile ID %02X: checksum incorrecto; respuesta descartada.".format(localId))
+                            continue
+                        }
+                        val payload = response.payload
+                        when {
+                            payload.size >= 3 && (payload[0].toInt() and 0xFF) == 0x61 &&
+                                (payload[1].toInt() and 0xFF) == localId -> {
+                                val data = payload.copyOfRange(2, payload.size)
+                                appendLog("DATOS RAW $profile ID %02X (%d bytes): %s".format(localId, data.size, data.toHex()))
+                                if (!isEngine) {
+                                    val descriptor = DelphiParameterCatalog.find(0x22, localId)
+                                    if (descriptor != null) {
+                                        appendLog("CATÁLOGO DELPHI ID %02X: %s%s; offset buffer original=%d; modo=%s; valor no decodificado."
+                                            .format(
+                                                localId,
+                                                descriptor.name,
+                                                descriptor.unit?.let { " ($it)" } ?: "",
+                                                descriptor.dataOffset,
+                                                DelphiParameterCatalog.readModeLabel(descriptor.readMode)
+                                            ))
+                                    }
+                                }
+                            }
+                            payload.size >= 3 && (payload[0].toInt() and 0xFF) == 0x7F &&
+                                (payload[1].toInt() and 0xFF) == 0x21 ->
+                                appendLog("$profile ID %02X: respuesta negativa KWP NRC=0x%02X."
+                                    .format(localId, payload[2].toInt() and 0xFF))
+                            else ->
+                                appendLog("$profile ID %02X: SID/identificador inesperado; payload raw=%s"
+                                    .format(localId, payload.toHex()))
+                        }
+                        val remaining = candidate.drop(response.bytes.size).toByteArray()
+                        if (remaining.isNotEmpty()) appendLog("RX $profile ID %02X restante/no clasificada: %s".format(localId, remaining.toHex()))
+                    } catch (e: Exception) {
+                        synchronized(initRxLock) { captureInitRx = false }
+                        appendLog("ERROR $profile ID %02X en %s: %s: %s".format(
+                            localId, stage, e.javaClass.simpleName, e.message ?: "(sin mensaje)"))
                     }
-                    appendLog("RX MR-140 grupo %02X: %s".format(localId, response.bytes.toHex()))
-                    appendLog("VALIDACIÓN grupo %02X: %s".format(localId, response.description))
-                    if (!response.valid) {
-                        appendLog("MR-140 grupo %02X: checksum incorrecto; se descarta.".format(localId))
-                        continue
-                    }
-                    val payload = response.payload
-                    if (payload.size >= 3 && (payload[0].toInt() and 0xFF) == 0x61 &&
-                        (payload[1].toInt() and 0xFF) == localId) {
-                        val data = payload.copyOfRange(2, payload.size)
-                        appendLog("DATOS GRUPO %02X (%d bytes): %s".format(localId, data.size, data.toHex()))
-                        appendLog("MR-140 ID %02X: datos brutos solamente; aún no hay un mapa de campos validado.".format(localId))
-                    } else if (payload.size >= 3 && (payload[0].toInt() and 0xFF) == 0x7F &&
-                        (payload[1].toInt() and 0xFF) == 0x21) {
-                        appendLog("MR-140 grupo %02X: respuesta negativa KWP NRC=0x%02X.".format(localId, payload[2].toInt() and 0xFF))
-                    } else {
-                        appendLog("MR-140 grupo %02X: SID/identificador inesperado; payload raw=%s".format(localId, payload.toHex()))
-                    }
-                } catch (e: Exception) {
-                    synchronized(initRxLock) { captureInitRx = false }
-                    appendLog("ERROR MR-140 grupo %02X en %s: %s: %s".format(localId, stage, e.javaClass.simpleName, e.message ?: "(sin mensaje)"))
+                    Thread.sleep(100)
                 }
+                completed = true
+                appendLog("DATOS ECU $profile finalizados. Revisa RX/checksum; no se asignan unidades a bytes sin mapa validado.")
+            } catch (e: Exception) {
+                appendLog("ERROR DATOS ECU $profile: ${e.javaClass.simpleName}: ${e.message ?: "(sin mensaje)"}")
+            } finally {
+                synchronized(initRxLock) { captureInitRx = false }
+                if (validatedStartProfile == profile && serialPort.isOpen) {
+                    startAutomaticTesterPresent(profile, source, serialPort)
+                }
+                if (!completed) appendLog("DATOS ECU $profile incompletos; revisa el registro RX.")
             }
         }
+    }
+
+    private fun showDelphiCatalog() {
+        val isEngine = ecuProfile.selectedItemPosition == 0
+        val selector = if (isEngine) 0x12 else 0x22
+        val profile = if (isEngine) "MR-140" else "ZF 4HP16"
+        val entries = DelphiParameterCatalog.forSelector(selector)
+        val lines = entries.map { p ->
+            val unit = p.unit?.takeIf { it.isNotBlank() }?.let { " ($it)" } ?: ""
+            "ID %02X · %s%s\nOffset buffer: %d · Grupo: %d · Modo: %s · Precisión: %d".format(
+                p.id, p.name, unit, p.dataOffset, p.group,
+                DelphiParameterCatalog.readModeLabel(p.readMode), p.precision
+            )
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Catálogo Delphi · $profile (${entries.size})")
+            .setItems(lines.toTypedArray()) { _, which ->
+                val p = entries[which]
+                appendLog("CATÁLOGO DELPHI $profile ID %02X: %s; offset=%d, grupo=%d, modo=%s, precisión=%d. El offset pertenece al buffer Delphi original."
+                    .format(p.id, p.name, p.dataOffset, p.group, DelphiParameterCatalog.readModeLabel(p.readMode), p.precision))
+            }
+            .setPositiveButton("Cerrar", null)
+            .show()
     }
 
     /**
