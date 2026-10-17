@@ -352,6 +352,20 @@ Estos son metadatos estáticos del programa, no una validación de escala o endi
 
 La correlación del catálogo aclara la relación entre las dos vías: los parámetros MR-140 de grupo 1 se asocian al bloque local `0xF0`; los de grupo 2, al bloque `0xF1`. El campo `data_offset` apunta dentro del búfer que maneja el Delphi, y los índices de catálogo comienzan 11 bytes antes de ese desplazamiento. Esto demuestra una relación estructural entre el catálogo y la tabla, pero no resuelve todavía los límites/checksums de las secuencias candidatas del archivo `.cedat` descritas en §12.2 ni contradice los NRC observados en las pruebas físicas.
 
+### 12.6 Validación desde Android
+
+La pantalla **En vivo** incluye ahora **Validar mapa KWP (solo lectura)**. La exploración consulta el servicio 0x21 para IDs 0x01–0x40 y los IDs 0xF0, 0xF1 y 0xFB. No envía servicios de escritura, borrado, programación ni actuadores.
+
+Para recopilar evidencia del vehículo:
+
+1. Vehículo estacionado y seguro; conecta KKL, abre la app y selecciona MR-140.
+2. Inicializa la sesión y abre **En vivo → Validar mapa KWP (solo lectura)**. Espera a que finalice.
+3. Guarda/exporta el registro local de RX/log de la aplicación y comparte ese archivo junto con el resumen de la pantalla.
+4. Repite el mismo proceso con ZF 4HP16.
+5. Comparar solo respuestas positivas con dirección correcta y checksum válido. Los NRC y los timeouts se registran como evidencia negativa, no como valores de parámetro.
+
+**Límite actual:** el catálogo reconstruido aporta offsets, modos y metadatos, pero las respuestas físicas confirmadas de MR-140 a 0x21 F0/F1 fueron NRC 0x31. Por ello, todavía no se pueden mostrar todos los parámetros del .exe como valores físicos fiables. La exploración sirve para detectar qué IDs responde esta variante; para completar el mapa quizá haga falta identificar la secuencia de consulta/variante exacta del ejecutable y comparar capturas del propio .exe con la app.
+
 ### 12.5 Próximos pasos concretos
 
 1. Usar la tabla reconstruida para crear un mapa de datos por parámetro, manteniendo separados selector, ID local, bloque `0xF0/0xF1`, offset, modo, unidad, precisión y fórmula.
