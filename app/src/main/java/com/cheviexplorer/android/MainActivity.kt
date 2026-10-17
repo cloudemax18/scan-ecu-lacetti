@@ -277,10 +277,9 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         startActivityForResult(intent, REQUEST_SAVE_LOG)
     }
 
-    private fun shareCaptureToGitHub() {
-        val capture = log.text?.toString().orEmpty()
-        if (capture.isBlank()) {
-            Toast.makeText(this, "El registro está vacío; realiza primero la cape, resultCode, data)
+    @Deprecated("Deprecated in Android API, retained for minSdk compatibility")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_SAVE_LOG && resultCode == RESULT_OK && data?.data != null) {
             try {
                 contentResolver.openOutputStream(data.data!!)?.use { output ->
