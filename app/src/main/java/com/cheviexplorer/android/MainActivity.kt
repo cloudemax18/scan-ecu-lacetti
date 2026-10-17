@@ -531,8 +531,14 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     KwpProtocol.isPositiveResponseTo(response, 0x1A) -> {
                         val rawPayload = response.payload.toHex()
                         appendLog("IDENT ECU $profile: respuesta positiva 0x5A al servicio 0x1A.")
-                        appendLog("Datos de identificación sin decodificar (incluye SID): $rawPayload")
-                        appendLog("No se asigna nombre/modelo de ECU hasta contrastar estos bytes con el parser Delphi.")
+                        appendLog("PAYLOAD IDENT RAW (incluye 5A 80): $rawPayload")
+                        val fields = EcuIdentificationDecoder.decode(profile, response.payload)
+                        if (fields.isEmpty()) {
+                            appendLog("IDENT ECU $profile: el payload no coincide con el prefijo/longitud esperados; no se asignan campos.")
+                        } else {
+                            fields.forEach { appendLog("IDENTIFICACIÓN $profile · ${it.name}: ${it.value}") }
+                            appendLog("AVISO: campos decodificados con ident_decodificacion.json; contrastar con el ejecutable original, especialmente VIN MR-140 (parser original lee 16 de 17 caracteres).")
+                        }
                     }
                     KwpProtocol.isNegativeResponseTo(response, 0x1A) -> {
                         val nrc = response.payload[2].toInt() and 0xFF
