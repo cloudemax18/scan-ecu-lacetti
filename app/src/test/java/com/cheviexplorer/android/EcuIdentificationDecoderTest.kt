@@ -32,7 +32,7 @@ class EcuIdentificationDecoderTest {
         "PROGRAM00001".toByteArray(Charsets.US_ASCII).copyInto(data, 32)
         "CALIBR1234".toByteArray(Charsets.US_ASCII).copyInto(data, 44)
         "96801169".toByteArray(Charsets.US_ASCII).copyInto(data, 92)
-        val values = EcuIdentificationDecoder.decode("ZF 4HP16", byteArrayOf(0x5A, 0x80.toByte()) + data)
+        val values = EcuIdentificationDecoder.decode("ZF 4HP16", byteArrayOf(0x5A.toByte(), 0x80.toByte()) + data)
         assertEquals("5WK33600", values.first { it.name == "Código de software" }.value)
         assertEquals("96801169", values.first { it.name == "Número de pieza" }.value)
     }
