@@ -87,12 +87,21 @@ internal object KwpProtocol {
     }
 
 
-    /** ReadDataByLocalIdentifier request used by the extracted MR-140 parameter table. */
-    fun buildMr140ParameterRequest(localId: Int): ByteArray {
-        require(localId == 0xF0 || localId == 0xF1) { "Only extracted MR-140 read-only groups F0/F1 are supported" }
-        val frame = byteArrayOf(0x82.toByte(), 0x11, 0xF1.toByte(), 0x21, localId.toByte(), 0)
+    /** ReadDataByLocalIdentifier frame shape confirmed by the captured 0x21 requests. */
+    fun buildLocalIdentifierRequest(targetAddress: Int, localId: Int): ByteArray {
+        require(targetAddress == 0x11 || targetAddress == 0x18) {
+            "Only the confirmed MR-140 and ZF 4HP16 target addresses are supported"
+        }
+        require(localId in 0..0xFF) { "Local identifier must be one byte" }
+        val frame = byteArrayOf(0x82.toByte(), targetAddress.toByte(), 0xF1.toByte(), 0x21, localId.toByte(), 0)
         frame[5] = checksum(frame.copyOfRange(0, 5)).toByte()
         return frame
+    }
+
+    /** Compatibility wrapper for the original Delphi MR-140 F0/F1 group requests. */
+    fun buildMr140ParameterRequest(localId: Int): ByteArray {
+        require(localId == 0xF0 || localId == 0xF1) { "Only extracted MR-140 groups F0/F1 are supported by this wrapper" }
+        return buildLocalIdentifierRequest(0x11, localId)
     }
 
     fun isPositiveResponseTo(frame: FrameCheck, requestService: Int): Boolean {
