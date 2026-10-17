@@ -15,8 +15,9 @@ class DtcResponseDecoderTest {
         assertEquals(1, result.records.size)
         assertEquals("P0703", result.records.single().code)
         assertEquals(0x68, result.records.single().statusByte)
-        assertEquals(DtcResponseDecoder.RecordState.NON_PERMANENT, result.records.single().state)
+        assertEquals(DtcResponseDecoder.RecordState.INTERMITTENT, result.records.single().state)
         assertEquals("07 03 68", result.recordBytes.toHex())
+        assertEquals("Intermitente", result.records.single().state.labelEs)
     }
 
     @Test
@@ -27,6 +28,27 @@ class DtcResponseDecoderTest {
         result as DtcResponseDecoder.Result.Positive
         assertTrue(result.recordBytes.isEmpty())
         assertTrue(result.noFaultsConfirmed)
+    }
+
+    @Test
+    fun respectsFourByteRecordStrideForMr140() {
+        val result = DtcResponseDecoder.decode(
+            frame("59 01 07 03 40 AA"),
+            requestService = 0x19,
+            isMr140 = true
+        )
+        assertTrue(result is DtcResponseDecoder.Result.Positive)
+        result as DtcResponseDecoder.Result.Positive
+        assertEquals(1, result.records.size)
+        assertEquals("P0703", result.records.single().code)
+        assertEquals(DtcResponseDecoder.RecordState.CURRENT, result.records.single().state)
+        assertTrue(result.malformedTail.isEmpty())
+    }
+
+    @Test
+    fun rejectsTruncatedDtcRecordsWhenCountIsNonZero() {
+        val result = DtcResponseDecoder.decode(frame("58 01 07"), requestService = 0x18)
+        assertTrue(result is DtcResponseDecoder.Result.Invalid)
     }
 
     @Test
