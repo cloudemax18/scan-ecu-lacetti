@@ -70,7 +70,7 @@ La primera revisión de `main.pas` no contenía todos los handlers de la ventana
 - Inyectores: local ID `0x32` con un byte adicional que selecciona el inyector.
 - El código revisado usa destino `0x11`; no se habilitó el mismo catálogo para la ZF 4HP16/destino `0x18`.
 
-Esto valida la reconstrucción de las tramas desde el EXE, pero no sustituye una captura RX de la app Android ni una comprobación física. La interfaz Android ahora tiene pruebas de estado/ON/OFF para el catálogo MR-140, confirmación previa, comprobación de checksum y un intento de OFF automático a los 3 segundos. Ese timeout es una salvaguarda de la app; no garantiza la liberación de la ECU si se pierde comunicación.
+Esto valida la reconstrucción de las tramas desde el EXE, pero no sustituye una captura RX de la app Android ni una comprobación física. La interfaz Android ahora tiene pruebas de estado/ON/OFF para el catálogo MR-140, confirmación previa, comprobación de checksum, validación de respuesta positiva `0x70` + local ID y un intento de OFF automático a los 3 segundos. El control-option solicitado no se asume como byte de eco de la respuesta. Ese timeout es una salvaguarda de la app; no garantiza la liberación de la ECU si se pierde comunicación.
 
 La adaptación de acelerador es otra rutina: `Button_ObuchenieClick` envía `30 2C 07 FF` y después sigue una secuencia de lectura/condiciones. No debe etiquetarse como prueba de actuador individual ni reducirse a una sola trama. Ver `PORTADO_DELPHI_ACTUADORES.md`.
 
