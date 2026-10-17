@@ -14,7 +14,8 @@ internal object DtcCatalog {
         val entries = cached ?: synchronized(this) {
             cached ?: load(context).also { cached = it }
         }
-        val description = entries[code] ?: return null
+        if (!entries.containsKey(code)) return null
+        val description = entries[code].orEmpty()
         return description.ifBlank { "Sin descripción disponible" }
     }
 
