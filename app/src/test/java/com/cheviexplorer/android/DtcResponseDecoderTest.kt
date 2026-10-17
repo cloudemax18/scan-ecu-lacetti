@@ -53,7 +53,7 @@ class DtcResponseDecoderTest {
 
     @Test
     fun doesNotAssumeEmptyZfResponseMeansNoFaults() {
-        val result = DtcResponseDecoder.decode(frame("58 01"), requestService = 0x18)
+        val result = DtcResponseDecoder.decode(frame("58 00"), requestService = 0x18)
 
         assertTrue(result is DtcResponseDecoder.Result.Positive)
         result as DtcResponseDecoder.Result.Positive
