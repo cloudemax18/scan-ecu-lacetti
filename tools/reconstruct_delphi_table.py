@@ -155,8 +155,9 @@ def main() -> None:
         print("|---:|---:|---|---:|---:|---:|---:|---:|---|---|")
         for row in selected:
             name = (row["name"] or "").replace("|", "\\|").replace("\n", " ")
-            label = (row["text"] or "").replace("|", "\\|").replace("\n", " ")
-            print(f"| {row['index']} | {row['id']} (0x{row['id']:X}) | {name} | {row['format_flag']} | {row['max_group']} | {row['data_offset']} | {row['read_mode']} | {row['precision']} | {label} | `{row['raw_hex']}` |")
+            range_text = (row["range"] or "").replace("|", "\\|").replace("\n", " ")
+            display = (row["display_values"] or "").replace("|", "\\|").replace("\n", " ")
+            print(f"| {row['index']} | {row['id']} (0x{row['id']:X}) | {name} | {range_text} | {row['max_group']} | {row['data_offset']} | {row['read_mode']} | {row['precision']} | {display} | `{row['raw_hex']}` |")
         print()
 
 
