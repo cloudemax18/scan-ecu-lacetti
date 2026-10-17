@@ -111,7 +111,7 @@ internal object KwpProtocol {
      * and long frames whose format byte is 0x80 and whose next byte after the addresses
      * contains the payload length (as seen in ECU identification responses).
      */
-    fun findResponse(bytes: ByteArray, expectedSource: Int): FrameCheck? {
+    fun findResponse(bytes: ByteArray, expectedSource: Int, expectedPayloadPrefix: ByteArray? = null): FrameCheck? {
         for (start in bytes.indices) {
             val format = bytes[start].toInt() and 0xFF
             if ((format and 0x80) == 0) continue
@@ -137,18 +137,24 @@ internal object KwpProtocol {
             val source = frame[2].toInt() and 0xFF
             if (target != 0xF1 || source != expectedSource) continue
 
+            val payloadStart = if (hasExtendedLength) 4 else 3
+            val payload = frame.copyOfRange(payloadStart, frame.lastIndex)
+            if (expectedPayloadPrefix != null &&
+                (payload.size < expectedPayloadPrefix.size ||
+                    !payload.copyOfRange(0, expectedPayloadPrefix.size).contentEquals(expectedPayloadPrefix))
+            ) continue
+
             val expectedChecksum = checksum(frame.copyOfRange(0, frame.lastIndex))
             val actualChecksum = frame.last().toInt() and 0xFF
             val description = "formato=0x%02X, longitud=%d%s, destino=0x%02X, origen=0x%02X, checksum recibido=0x%02X, esperado=0x%02X (%s)".format(
                 format, payloadLength, if (hasExtendedLength) " (extendida)" else "", target, source, actualChecksum, expectedChecksum,
                 if (expectedChecksum == actualChecksum) "OK" else "ERROR"
             )
-            val payloadStart = if (hasExtendedLength) 4 else 3
             return FrameCheck(
                 valid = expectedChecksum == actualChecksum,
                 description = description,
                 bytes = frame,
-                payload = frame.copyOfRange(payloadStart, frame.lastIndex)
+                payload = payload
             )
         }
         return null
