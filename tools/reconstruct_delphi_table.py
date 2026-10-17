@@ -101,7 +101,7 @@ def extract(path: Path) -> dict:
             "selector": buf[off],
             "id": u32(buf, off + 4),
             "name_ptr": u32(buf, off + 8),
-            "range_ptr": u32(buf, off + 12),
+            "unit_ptr": u32(buf, off + 12),
             "max_group": u32(buf, off + 16),
             "data_offset": u32(buf, off + 20),
             "read_mode": u32(buf, off + 24),
@@ -110,7 +110,7 @@ def extract(path: Path) -> dict:
             "raw_hex": buf[off:off + ENTRY_SIZE].hex(" ").upper(),
         }
         row["name"] = delphi_ansi_string(buf, row["name_ptr"], image_base, sections)
-        row["range"] = delphi_ansi_string(buf, row["range_ptr"], image_base, sections)
+        row["unit"] = delphi_ansi_string(buf, row["unit_ptr"], image_base, sections)
         row["display_values"] = delphi_ansi_string(buf, row["display_ptr"], image_base, sections)
         rows.append(row)
 
@@ -151,13 +151,13 @@ def main() -> None:
         selected = [row for row in result["rows"] if row["selector"] == selector]
         print(f"## Selector 0x{selector:02X} ({len(selected)} entries)")
         print()
-        print("| Index | ID | Name | Range text | Max group | Data offset | Read mode | Precision | Display values | Raw descriptor |")
+        print("| Index | ID | Name | Unit | Max group | Data offset | Read mode | Precision | Display values | Raw descriptor |")
         print("|---:|---:|---|---:|---:|---:|---:|---:|---|---|")
         for row in selected:
             name = (row["name"] or "").replace("|", "\\|").replace("\n", " ")
-            range_text = (row["range"] or "").replace("|", "\\|").replace("\n", " ")
+            unit = (row["unit"] or "").replace("|", "\\|").replace("\n", " ")
             display = (row["display_values"] or "").replace("|", "\\|").replace("\n", " ")
-            print(f"| {row['index']} | {row['id']} (0x{row['id']:X}) | {name} | {range_text} | {row['max_group']} | {row['data_offset']} | {row['read_mode']} | {row['precision']} | {display} | `{row['raw_hex']}` |")
+            print(f"| {row['index']} | {row['id']} (0x{row['id']:X}) | {name} | {unit} | {row['max_group']} | {row['data_offset']} | {row['read_mode']} | {row['precision']} | {display} | `{row['raw_hex']}` |")
         print()
 
 
