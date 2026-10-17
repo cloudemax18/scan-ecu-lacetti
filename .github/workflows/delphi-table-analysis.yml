@@ -1,0 +1,35 @@
+name: Reconstruct Delphi parameter table
+
+on:
+  push:
+    paths:
+      - "archivos/CheviExplorer1.8.exe"
+      - "tools/reconstruct_delphi_table.py"
+      - ".github/workflows/delphi-table-analysis.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  extract-static-table:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Parse PE table and publish descriptors
+        run: |
+          python tools/reconstruct_delphi_table.py >> "$GITHUB_STEP_SUMMARY"
+          python tools/reconstruct_delphi_table.py --json > /tmp/delphi_parameter_table.json
+          python - <<'PY'
+          import json
+          p = json.load(open("/tmp/delphi_parameter_table.json", encoding="utf-8"))
+          assert p["entry_count"] == 376
+          assert p["entry_size"] == 36
+          assert len(p["rows"]) == 376
+          assert any(r["selector"] == 0x12 for r in p["rows"])
+          print("Validated table dimensions and MR-140 selector.")
+          PY
