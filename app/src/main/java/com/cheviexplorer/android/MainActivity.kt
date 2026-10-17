@@ -63,6 +63,12 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
     @Volatile private var captureInitRx = false
     @Volatile private var validatedStartProfile: String? = null
     private var pendingUpdateFile: File? = null
+    @Volatile private var liveDataRunning = false
+    @Volatile private var liveDataTask: java.util.concurrent.Future<*>? = null
+    private val liveDataExecutor = Executors.newSingleThreadExecutor()
+    private lateinit var liveOutput: TextView
+    private lateinit var liveCatalogOutput: TextView
+    private lateinit var liveStartButton: Button
     private val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
 
     private val permissionReceiver = object : BroadcastReceiver() {
@@ -281,6 +287,40 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }, lp(-1, -2))
         addCard(ecuData, rawCard)
 
+        // En vivo: catálogo del ejecutable original y bloques KWP con respuesta física confirmada.
+        val live = makeScreen("En vivo")
+        addSection(live, "Datos en vivo", "Lectura periódica de bloques KWP confirmados. Los bytes no se convierten en magnitudes sin fórmula validada.")
+        val liveControls = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        liveOutput = TextView(this).apply {
+            text = "Sin lectura. Inicializa la ECU seleccionada y pulsa Iniciar lectura."
+            textSize = 13f
+            typeface = android.graphics.Typeface.MONOSPACE
+            setTextColor(primaryText)
+            setPadding(10, 10, 10, 10)
+        }
+        liveControls.addView(liveOutput, lp(-1, -2))
+        liveStartButton = addAction(liveControls, "Iniciar lectura en vivo") { startLiveParameterPolling() }
+        addAction(liveControls, "Detener lectura") { stopLiveParameterPolling() }
+        addCard(live, liveControls)
+        addSection(live, "Catálogo del EXE", "Parámetros reconstruidos. Se marcan como pendientes hasta verificar consulta y fórmula.")
+        liveCatalogOutput = TextView(this).apply {
+            textSize = 12f
+            typeface = android.graphics.Typeface.MONOSPACE
+            setTextColor(secondaryText)
+            setPadding(10, 10, 10, 10)
+        }
+        val liveCatalogCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        liveCatalogCard.addView(liveCatalogOutput, lp(-1, -2))
+        addCard(live, liveCatalogCard)
+        refreshLiveCatalogText()
+        ecuProfile.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                stopLiveParameterPolling()
+                refreshLiveCatalogText()
+            }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
+        }
+
         // Registro: el log es independiente de las pantallas de diagnóstico.
         val logs = makeScreen("Registro")
         addSection(logs, "Registro de comunicación", "Tramas y respuestas recibidas durante esta sesión.")
@@ -336,7 +376,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             setPadding(0, 6, 0, 2)
             setBackgroundColor(pageBackground)
         }
-        val navNames = listOf("Inicio", "Diagnóstico", "Datos ECU", "Registro", "Ajustes")
+        val navNames = listOf("Inicio", "Diagnóstico", "Datos ECU", "En vivo", "Registro", "Ajustes")
         fun showScreen(name: String) {
             screens.forEach { (screenName, view) ->
                 view.visibility = if (screenName == name) android.view.View.VISIBLE else android.view.View.GONE
@@ -347,6 +387,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 text = when (name) {
                     "Diagnóstico" -> "DTC"
                     "Datos ECU" -> "Datos"
+                    "En vivo" -> "En vivo"
                     else -> name
                 }
                 textSize = 11f
@@ -921,6 +962,141 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 if (!completed) appendLog("DATOS ECU $profile incompletos; revisa el registro RX.")
             }
         }
+    }
+
+    private fun refreshLiveCatalogText() {
+        val selector = if (ecuProfile.selectedItemPosition == 0) 0x12 else 0x22
+        val profile = if (selector == 0x12) "MR-140" else "ZF 4HP16"
+        val entries = DelphiParameterCatalog.forSelector(selector)
+        liveCatalogOutput.text = buildString {
+            append("Módulo: ").append(profile).append(" · ").append(entries.size).append(" parámetros\n\n")
+            entries.forEach { p ->
+                append("ID ").append("%02X".format(p.id)).append(" · ").append(p.name)
+                p.unit?.takeIf { it.isNotBlank() }?.let { append(" (").append(it).append(")") }
+                append("\nEstado: pendiente de mapear respuesta KWP")
+                append(" · grupo ").append(p.group)
+                append(" · modo ").append(DelphiParameterCatalog.readModeLabel(p.readMode))
+                append("\n\n")
+            }
+        }
+    }
+
+    private fun startLiveParameterPolling() {
+        val serialPort = port
+        if (serialPort == null || !serialPort.isOpen) {
+            Toast.makeText(this, "Primero conecta el adaptador USB", Toast.LENGTH_LONG).show()
+            return
+        }
+        val isEngine = ecuProfile.selectedItemPosition == 0
+        val profile = if (isEngine) "MR-140" else "ZF 4HP16"
+        val source = if (isEngine) 0x11 else 0x18
+        if (validatedStartProfile != profile) {
+            Toast.makeText(this, "Inicializa primero $profile", Toast.LENGTH_LONG).show()
+            return
+        }
+        val selectedBaud = when (baud.selectedItemPosition) { 1 -> 9600; 2 -> 38400; 3 -> 4800; else -> 10400 }
+        if (selectedBaud != 10400) {
+            Toast.makeText(this, "Selecciona 10400 baudios", Toast.LENGTH_LONG).show()
+            return
+        }
+        if (liveDataRunning) return
+        val ids = if (isEngine) listOf(0x02, 0x03, 0x04) else listOf(0x01, 0x02, 0x03, 0x04, 0x11)
+        liveDataRunning = true
+        liveStartButton.isEnabled = false
+        testerPresentTask?.cancel(false)
+        testerPresentTask = null
+        liveOutput.text = "Conectando con $profile…\nLos bloques se mostrarán en hexadecimal hasta validar sus fórmulas."
+        appendLog("EN VIVO $profile: sondeo periódico de IDs confirmados " + ids.joinToString { "0x%02X".format(it) } + ".")
+        liveDataTask = liveDataExecutor.submit {
+            try {
+                while (liveDataRunning && port === serialPort && serialPort.isOpen &&
+                    validatedStartProfile == profile && ecuProfile.selectedItemPosition == (if (isEngine) 0 else 1)) {
+                    val cycle = StringBuilder()
+                    cycle.append("Módulo: ").append(profile).append("\n")
+                    cycle.append("Actualización: ").append(dateFormat.format(Date())).append("\n")
+                    cycle.append("Respuestas positivas con checksum válido\n\n")
+                    for (localId in ids) {
+                        if (!liveDataRunning || Thread.currentThread().isInterrupted) break
+                        var dataText = "Sin respuesta"
+                        try {
+                            val request = KwpProtocol.buildLocalIdentifierRequest(source, localId)
+                            synchronized(initRxLock) {
+                                initRxBuffer.reset()
+                                captureInitRx = true
+                            }
+                            writeSerialFrame(serialPort, request, 1000)
+                            Thread.sleep(850)
+                            val rx = synchronized(initRxLock) {
+                                captureInitRx = false
+                                initRxBuffer.toByteArray()
+                            }
+                            if (rx.isNotEmpty()) {
+                                val echoAt = indexOfFrame(rx, request)
+                                val candidate = if (echoAt >= 0) rx.copyOfRange(echoAt + request.size, rx.size) else rx
+                                val response = KwpProtocol.findResponse(
+                                    candidate, expectedSource = source,
+                                    expectedPayloadPrefix = byteArrayOf(0x61, localId.toByte())
+                                ) ?: KwpProtocol.findResponse(
+                                    candidate, expectedSource = source,
+                                    expectedPayloadPrefix = byteArrayOf(0x7F, 0x21)
+                                )
+                                if (response != null && response.valid) {
+                                    val payload = response.payload
+                                    if (payload.size >= 2 && (payload[0].toInt() and 0xFF) == 0x61 &&
+                                        (payload[1].toInt() and 0xFF) == localId) {
+                                        val bytes = payload.copyOfRange(2, payload.size)
+                                        dataText = if (bytes.isEmpty()) "(bloque vacío)" else bytes.toHex()
+                                    } else if (payload.size >= 3 && (payload[0].toInt() and 0xFF) == 0x7F) {
+                                        dataText = "ECU rechazó solicitud · NRC 0x%02X".format(payload[2].toInt() and 0xFF)
+                                    } else {
+                                        dataText = "Respuesta no reconocida: " + payload.toHex()
+                                    }
+                                } else if (response != null) {
+                                    dataText = "Checksum incorrecto"
+                                } else {
+                                    dataText = "Trama no reconocida"
+                                }
+                            }
+                        } catch (e: InterruptedException) {
+                            Thread.currentThread().interrupt()
+                            break
+                        } catch (e: Exception) {
+                            dataText = "Error: " + (e.message ?: e.javaClass.simpleName)
+                        } finally {
+                            synchronized(initRxLock) { captureInitRx = false }
+                        }
+                        cycle.append("ID ").append("%02X".format(localId)).append(": ").append(dataText).append("\n")
+                        if (liveDataRunning) runOnUiThread {
+                            liveOutput.text = cycle.toString() + "\nNota: son bytes de bloque, no magnitudes físicas decodificadas."
+                        }
+                        Thread.sleep(120)
+                    }
+                    if (liveDataRunning) Thread.sleep(900)
+                }
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+            } catch (e: Exception) {
+                appendLog("ERROR EN VIVO " + profile + ": " + (e.message ?: e.javaClass.simpleName))
+            } finally {
+                synchronized(initRxLock) { captureInitRx = false }
+                liveDataRunning = false
+                runOnUiThread {
+                    liveStartButton.isEnabled = true
+                    if (validatedStartProfile == profile && port === serialPort && serialPort.isOpen) {
+                        startAutomaticTesterPresent(profile, source, serialPort)
+                    }
+                }
+                appendLog("EN VIVO " + profile + " detenido.")
+            }
+        }
+    }
+
+    private fun stopLiveParameterPolling() {
+        liveDataRunning = false
+        liveDataTask?.cancel(true)
+        liveDataTask = null
+        liveStartButton.isEnabled = true
+        appendLog("Solicitud de detener lectura en vivo.")
     }
 
     private fun showDelphiCatalog() {
