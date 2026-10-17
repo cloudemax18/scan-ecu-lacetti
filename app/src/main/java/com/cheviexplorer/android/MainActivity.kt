@@ -973,6 +973,10 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             return
         }
 
+        // Pausa Tester Present antes de programar la consulta: así no puede ganar la carrera
+        // entre el clic y el inicio de la captura RX ni contaminar la respuesta DTC.
+        testerPresentTask?.cancel(false)
+        testerPresentTask = null
         val frame = KwpProtocol.buildDtcReadRequest(source, isEngine)
         appendLog("LECTURA DTC $profile: solicitud de solo lectura reconstruida de main.pas.")
         executor.execute {
@@ -1054,8 +1058,12 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 val remaining = candidate.drop(response.bytes.size).toByteArray()
                 if (remaining.isNotEmpty()) appendLog("RX DTC restante/no clasificada: ${remaining.toHex()}")
             } catch (e: Exception) {
-                synchronized(initRxLock) { captureInitRx = false }
                 appendLog("ERROR LECTURA DTC $profile en $stage: ${e.javaClass.simpleName}: ${e.message ?: "(sin mensaje)"}")
+            } finally {
+                synchronized(initRxLock) { captureInitRx = false }
+                if (validatedStartProfile == profile && port === serialPort && serialPort.isOpen) {
+                    startAutomaticTesterPresent(profile, source, serialPort)
+                }
             }
         }
     }
