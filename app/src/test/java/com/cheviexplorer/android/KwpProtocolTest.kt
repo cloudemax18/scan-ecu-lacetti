@@ -19,6 +19,13 @@ class KwpProtocolTest {
     }
 
     @Test
+    fun buildsLocalIdentifierRequestsForBothKnownProfiles() {
+        assertArrayEquals(hex("82 11 F1 21 02 A7"), KwpProtocol.buildLocalIdentifierRequest(0x11, 0x02))
+        assertArrayEquals(hex("82 18 F1 21 01 AD"), KwpProtocol.buildLocalIdentifierRequest(0x18, 0x01))
+        assertArrayEquals(hex("82 11 F1 21 F0 95"), KwpProtocol.buildMr140ParameterRequest(0xF0))
+    }
+
+    @Test
     fun buildsTesterPresentRequestsForBothKnownProfiles() {
         assertArrayEquals(hex("81 11 F1 3E C1"), KwpProtocol.buildTesterPresentRequest(0x11))
         assertArrayEquals(hex("81 18 F1 3E C8"), KwpProtocol.buildTesterPresentRequest(0x18))
