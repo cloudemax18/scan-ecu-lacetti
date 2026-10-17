@@ -1185,11 +1185,17 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         liveDataTask = liveDataExecutor.submit {
             val positives = mutableListOf<String>()
             val negatives = mutableMapOf<Int, Int>()
+            var attempted = 0
             var noResponse = 0
+            var unrecognizedRx = 0
+            var checksumInvalid = 0
+            var ioErrors = 0
+            var completedNormally = false
             try {
                 for (localId in ids) {
                     if (!liveDataRunning || Thread.currentThread().isInterrupted ||
                         port !== serialPort || !serialPort.isOpen || validatedStartProfile != profile) break
+                    attempted++
                     var result = "sin respuesta"
                     try {
                         val request = KwpProtocol.buildLocalIdentifierRequest(source, localId)
@@ -1210,9 +1216,16 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                             ?: KwpProtocol.findResponse(candidate, expectedSource = source,
                                 expectedPayloadPrefix = byteArrayOf(0x7F, 0x21))
                         if (response == null) {
-                            noResponse++
+                            if (candidate.isEmpty()) {
+                                noResponse++
+                                result = "sin respuesta RX"
+                            } else {
+                                unrecognizedRx++
+                                result = "RX no reconocible · ${candidate.toHex()}"
+                            }
                         } else if (!response.valid) {
-                            result = "checksum inválido"
+                            checksumInvalid++
+                            result = "checksum inválido · ${response.bytes.toHex()}"
                         } else {
                             val payload = response.payload
                             if (payload.size >= 2 && (payload[0].toInt() and 0xFF) == 0x61 &&
@@ -1224,6 +1237,9 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                                 val nrc = payload[2].toInt() and 0xFF
                                 negatives[nrc] = (negatives[nrc] ?: 0) + 1
                                 result = "NRC %02X".format(nrc)
+                            } else {
+                                unrecognizedRx++
+                                result = "payload no reconocido · ${payload.toHex()}"
                             }
                         }
                         appendLog("MAPA KWP $profile ID %02X: %s".format(localId, result))
@@ -1231,14 +1247,20 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                         Thread.currentThread().interrupt()
                         break
                     } catch (e: Exception) {
+                        ioErrors++
                         appendLog("MAPA KWP $profile ID %02X error: %s".format(localId, e.message ?: e.javaClass.simpleName))
                     } finally {
                         synchronized(initRxLock) { captureInitRx = false }
                     }
                 }
+                completedNormally = attempted == ids.size && liveDataRunning &&
+                    !Thread.currentThread().isInterrupted && port === serialPort && serialPort.isOpen &&
+                    validatedStartProfile == profile
             } catch (e: Exception) {
+                ioErrors++
                 appendLog("VALIDACIÓN KWP $profile error: " + (e.message ?: e.javaClass.simpleName))
             } finally {
+                val finalStatus = if (completedNormally) "COMPLETADO" else "DETENIDO/INTERRUMPIDO"
                 synchronized(initRxLock) { captureInitRx = false }
                 liveDataRunning = false
                 runOnUiThread {
@@ -1246,25 +1268,30 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     liveScanButton.isEnabled = true
                     if (::labExtendedScanButton.isInitialized) labExtendedScanButton.isEnabled = true
                     liveOutput.text = buildString {
-                        append("Validación finalizada: ").append(profile).append("\n")
-                        append("Respuestas positivas: ").append(positives.size).append("\n")
-                        append("Sin respuesta: ").append(noResponse).append("\n")
+                        append("Validación ").append(finalStatus.lowercase(Locale.ROOT)).append(": ").append(profile).append("\n")
+                        append("IDs planificados: ").append(ids.size).append("\n")
+                        append("Solicitudes intentadas: ").append(attempted).append("\n")
+                        append("Respuestas positivas (checksum OK): ").append(positives.size).append("\n")
+                        append("Sin respuesta RX: ").append(noResponse).append("\n")
+                        append("RX no reconocible: ").append(unrecognizedRx).append("\n")
+                        append("Checksum inválido: ").append(checksumInvalid).append("\n")
+                        append("Errores de ejecución/I/O: ").append(ioErrors).append("\n")
                         append("Rechazos NRC: ").append(negatives.values.sum()).append("\n")
                         if (negatives.isNotEmpty()) {
                             append("NRC por código: ").append(negatives.entries.sortedBy { it.key }
                                 .joinToString { "0x%02X=%d".format(it.key, it.value) }).append("\n")
                         }
                         append("\nBLOQUES POSITIVOS (checksum validado)\n")
-                        if (positives.isEmpty()) append("No se encontraron respuestas positivas en el rango consultado.\n")
+                        if (positives.isEmpty()) append("No se encontraron respuestas positivas en las solicitudes procesadas.\n")
                         positives.forEach { append(it).append("\n") }
                         append("\nLas lecturas positivas son bloques brutos; sus campos físicos todavía deben mapearse.")
                     }
                     if (validatedStartProfile == profile && port === serialPort && serialPort.isOpen) {
                         startAutomaticTesterPresent(profile, source, serialPort)
                     }
-                    labOutput.text = "Barrido $scanLabel finalizado: $profile\nIDs consultados: ${ids.size}\nRespuestas positivas: ${positives.size}\nSin respuesta: $noResponse\nRechazos NRC: ${negatives.values.sum()}\n\nLos datos positivos están en Registro y el resumen completo en En vivo. Exporta el registro para compartir la captura."
+                    labOutput.text = "Barrido $scanLabel $finalStatus: $profile\nIDs planificados: ${ids.size}\nSolicitudes intentadas: $attempted\nPositivas: ${positives.size}\nSin respuesta: $noResponse\nRX no reconocible: $unrecognizedRx\nChecksum inválido: $checksumInvalid\nErrores: $ioErrors\nNRC: ${negatives.values.sum()}\n\nLos datos positivos están en Registro y el resumen completo en En vivo. Exporta el registro para compartir la captura."
                 }
-                appendLog("VALIDACIÓN KWP $profile ($scanLabel) finalizada; IDs=" + ids.size + ", positivos=" + positives.size + ", sin respuesta=" + noResponse + ".")
+                appendLog("VALIDACIÓN KWP $profile ($scanLabel) $finalStatus; planificados=${ids.size}, intentados=$attempted, positivos=${positives.size}, sin respuesta=$noResponse, RX no reconocible=$unrecognizedRx, checksum inválido=$checksumInvalid, errores=$ioErrors, NRC=${negatives.values.sum()}.")
             }
         }
     }
