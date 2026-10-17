@@ -21,7 +21,7 @@ class EcuIdentificationDecoderTest {
 
     @Test
     fun ignoresPayloadWithUnexpectedPrefix() {
-        assertTrue(EcuIdentificationDecoder.decode("MR-140", byteArrayOf(0x50, 0x80)).isEmpty())
+        assertTrue(EcuIdentificationDecoder.decode("MR-140", byteArrayOf(0x50.toByte(), 0x80.toByte())).isEmpty())
     }
 
     @Test
