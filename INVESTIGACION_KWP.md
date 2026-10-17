@@ -243,3 +243,55 @@ Direcciones de código relevantes del desensamblado:
 - [ ] Seguir las asignaciones de las variables de dirección [$004F6DA8] y [$004F6DA9] dentro de cada manejador de selección y determinar cuál es destino y cuál origen a partir de las tramas emitidas.
 - [ ] Seguir [$004F6DA6], que se añade como byte final de las peticiones, y verificar cómo se calcula el checksum en cada formato.
 - [ ] Decodificar las tablas de metadatos usando el selector global como clave; separar las entradas de MR-140 (0x12) de las de ZF (0x22) antes de correlacionar IDs y fórmulas.
+
+
+## 12. Investigación del archivo `.cedat` y estructura de la tabla Delphi (2026-10-17)
+
+### 12.1 Formato de archivo observado
+
+Archivo analizado: `archivos/2610161732 MR-140.cedat`.
+- Tamaño exacto: 30.464 bytes (`0x7700`).
+- La rutina `MenuItem_LoadClick` valida que el archivo tenga al menos `0x80` bytes y que su tamaño sea múltiplo de `0x40` (64 bytes). También lee los primeros 128 bytes por separado y, en ciertos casos, procesa el resto desde el desplazamiento `tamaño - bloque`.
+- Para este archivo, la división compatible con esas comprobaciones es una cabecera de 128 bytes y 474 bloques de 64 bytes: `128 + 474 × 64 = 30.464`.
+- El primer byte de la cabecera es `0x12`, el selector que el Delphi asigna a MR-140 (`N_MR140Click`). A continuación hay una cadena de identificación y relleno; no copiar datos identificativos al informe.
+- `MenuItem_SaveClick` genera el nombre con extensión `.cedat` y copia el archivo temporal `temp.tmp` al destino elegido. Otra ruta de guardado también copia `temp.tmp`; por eso el archivo parece ser un contenedor binario de sesión/datos, no un catálogo de parámetros en texto.
+
+**Límite de la conclusión:** la división en cabecera y bloques de 64 bytes está apoyada por las comprobaciones de tamaño del lector y por la estructura repetida del archivo. Aún no se ha documentado formalmente el significado de todos los campos de cada bloque.
+
+### 12.2 Bloques con solicitudes KWP repetidas
+
+En los bloques de 64 bytes desde el desplazamiento 128 aparecen repetidamente, en posiciones alternas, secuencias que comienzan así:
+
+- Solicitud aparente `82 11 F1 21 F0 95`, seguida de bytes con apariencia de respuesta `9F F1 11 61 F0 ...`.
+- Solicitud aparente `82 11 F1 21 F1 96`, seguida de bytes con apariencia de respuesta `A7 F1 11 61 F1 ...`.
+
+Las secuencias se repiten a lo largo del archivo, con bytes de tiempo/estado entre registros. Los valores `0x9F` y `0xA7` son coherentes con encabezados KWP de longitud variable, pero **no se declara validada cada trama**: hay que separar con certeza el paquete de los campos adicionales del registro y comprobar longitud/checksum antes de interpretar su contenido.
+
+Este hallazgo añade evidencia histórica de que el archivo guarda intercambios asociados a `21 F0` y `21 F1` que parecen contener los servicios positivos `61 F0` y `61 F1`. Esto contrasta con las sesiones físicas recientes de la app, donde esas peticiones recibieron NRC `0x31`. No son necesariamente contradictorias: el archivo puede proceder de otra sesión, variante, estado o momento. No cambiar la app ni dar por universalmente válidos esos IDs hasta comparar la captura completa y sus checksums.
+
+### 12.3 Tabla interna estática del ejecutable
+
+En `RaschetParam` (bloque de código alrededor de `004E6B70`) se observa:
+- La tabla empieza en la dirección `0x004F22AC`.
+- El tamaño de registro se recorre con `add eax, 0x24`: **36 bytes por entrada**.
+- El bucle compara el byte del desplazamiento `+0x00` con el selector global `[$004F6DA7]` y el valor de 32 bits en `+0x04` con el ID solicitado.
+- El límite de búsqueda es el índice `0x177` inclusive: **376 entradas** (`0x178` en total).
+- El campo de 32 bits en `+0x10` se compara con 1 y 2 en `VichMaxNomParam`, que calcula máximos separados según ese campo.
+- La rutina lee además campos en `+0x14` y `+0x18` para seleccionar bytes del búfer `[$004F6DF8]` y convertirlos a un valor numérico. En los caminos observados combina bytes como `byte0 × 256 + byte1` o usa un byte solo. El significado completo de cada campo, la regla de signo/escala y la relación con los nombres del catálogo siguen pendientes.
+
+Esta estructura confirma que el ejecutable tiene metadatos por unidad e ID y lógica para extraer/construir valores desde el búfer de respuesta. **No equivale todavía a un mapa completo de parámetros legible**, porque el contenido de la tabla está embebido en el ejecutable y aún no se ha reconstruido cada entrada.
+
+### 12.4 Diferencia entre el catálogo y el sondeo físico
+
+`archivos/CE.ini` contiene la sección `NaborParam12` con una lista seleccionada de números (01–71) y `SelectNaborParam12=*`. Esos números son coherentes con una selección/lista de parámetros de la familia seleccionada, pero no debe suponerse que todos sean IDs KWP enviados directamente sin seguir cada flujo de interfaz.
+
+El catálogo `archivos/cloude/mr140_parametros.json` describe parámetros individuales con posiciones y fórmulas, y en sus entradas iniciales asocia `peticion_local_id: 240` (decimal, `0xF0`). Por otra parte, `VspomRaschetParam` construye una petición genérica `82 <dst> <src> 21 <BL> <checksum>` en la rama usada por el selector MR-140 `0x12`, donde `BL` proviene del parámetro seleccionado. Esto sugiere que hay más de un flujo/modo de consulta en el Delphi (por ejemplo, lectura por ID frente a lectura de bloques locales), pero la relación exacta todavía no está demostrada.
+
+### 12.5 Próximos pasos concretos
+
+1. Describir todos los campos de los bloques de 64 bytes del `.cedat` y aislar los bytes reales de TX, RX, tiempo y metadatos.
+2. Validar longitud y checksum de las secuencias `21 F0` y `21 F1` almacenadas; compararlas con capturas físicas recientes, manteniendo cada sesión separada.
+3. Reconstruir los 376 registros de 36 bytes de la tabla estática desde el ejecutable o desde las fuentes disponibles, con los campos `+0x00`, `+0x04`, `+0x10`, `+0x14`, `+0x18` como primeros candidatos.
+4. Relacionar las entradas del selector `0x12` con `mr140_parametros.json` y la lista `NaborParam12`, sin asumir equivalencia entre índice de catálogo, ID de servicio KWP e índice de datos.
+5. Repetir la misma reconstrucción para el selector ZF `0x22`; no reutilizar automáticamente las fórmulas MR-140.
+6. Mantener la app en solo lectura y sin cambios de decodificación hasta obtener una correlación repetible entre ID, bytes de respuesta, fórmula y lectura física conocida.
