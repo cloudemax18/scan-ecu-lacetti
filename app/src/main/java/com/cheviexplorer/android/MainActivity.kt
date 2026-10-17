@@ -16,6 +16,7 @@ import android.content.IntentFilter
 import android.hardware.usb.UsbManager
 import android.os.Bundle
 import android.view.Gravity
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -530,8 +531,17 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
             nav.addView(navButton, LinearLayout.LayoutParams(0, -2, 1f))
         }
         root.addView(nav, lp(-1, -2))
+        val profileSelectionListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                updateActuatorControlsEnabled()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+        }
+        ecuProfile.onItemSelectedListener = profileSelectionListener
+        baud.onItemSelectedListener = profileSelectionListener
         showScreen("Inicio")
         setContentView(root)
+        updateActuatorControlsEnabled()
     }
 
     private fun checkForUpdates() {
@@ -834,6 +844,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                     val keyHex = keys.joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
                     appendLog("KWP StartCommunication: respuesta positiva 0xC1 al servicio 0x81; bytes de clave=$keyHex.")
                     validatedStartProfile = profile
+                    updateActuatorControlsEnabled()
                     startAutomaticTesterPresent(profile, if (profile == "MR-140") 0x11 else 0x18, serialPort = port)
                     appendLog("Estas claves no son una identificación de ECU; se puede probar el servicio de identificación 1A 80.")
                 } else {
@@ -1086,6 +1097,20 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
         }
     }
 
+    private fun updateActuatorControlsEnabled() {
+        runOnUiThread {
+            if (!::actuatorReadButton.isInitialized || !::actuatorOnButton.isInitialized ||
+                !::actuatorOffButton.isInitialized || !::ecuProfile.isInitialized || !::baud.isInitialized
+            ) return@runOnUiThread
+            val enabled = port?.isOpen == true && ecuProfile.selectedItemPosition == 0 &&
+                validatedStartProfile == "MR-140" && baud.selectedItemPosition == 0 &&
+                !liveDataRunning && !actuatorCommandRunning
+            actuatorReadButton.isEnabled = enabled
+            actuatorOnButton.isEnabled = enabled
+            actuatorOffButton.isEnabled = enabled
+        }
+    }
+
     private fun selectedMr140Actuator(): DelphiActuator? {
         if (!::actuatorSpinner.isInitialized) return null
         return DelphiActuatorCatalog.mr140.getOrNull(actuatorSpinner.selectedItemPosition)
@@ -1226,9 +1251,7 @@ class MainActivity : Activity(), SerialInputOutputManager.Listener {
                 actuatorCommandRunning = false
                 runOnUiThread {
                     actuatorStatusOutput.text = "$resultText\nActuador: ${actuator.label} · ID 0x%02X".format(actuator.localId)
-                    actuatorReadButton.isEnabled = true
-                    actuatorOnButton.isEnabled = true
-                    actuatorOffButton.isEnabled = true
+                    updateActuatorControlsEnabled()
                 }
                 if (validatedStartProfile == "MR-140" && port === serialPort && serialPort.isOpen) {
                     startAutomaticTesterPresent("MR-140", 0x11, serialPort)
