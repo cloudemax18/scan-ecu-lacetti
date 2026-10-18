@@ -116,7 +116,9 @@ internal object KwpProtocol {
         val state = if (activate) 0xFF else 0x00
         val payload = if (localId == 0x32) {
             require(injectorIndex != null && injectorIndex in 0..3) { "Injector test requires an index from 0 to 3" }
-            val selectorByte = if (activate) injectorIndex!! - 1 else injectorIndex!!
+            // Delphi subtracts one from the UI ItemIndex for both ON and OFF.
+            // injectorIndex is already normalized to 0..3, so use it unchanged.
+            val selectorByte = injectorIndex!!
             byteArrayOf(0x30, 0x32, 0x07, state.toByte(), selectorByte.toByte())
         } else {
             require(injectorIndex == null) { "Injector index is only valid for local ID 0x32" }
