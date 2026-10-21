@@ -1,0 +1,312 @@
+--- a/app/src/main/java/com/cheviexplorer/android/DynamicBlockDefinitions.kt	1970-01-01 00:00:00.000000000 +0000
++++ b/app/src/main/java/com/cheviexplorer/android/DynamicBlockDefinitions.kt	2026-10-21 01:17:56.551286343 +0000
+@@ -0,0 +1,190 @@
++package com.cheviexplorer.android
++
++import java.io.ByteArrayOutputStream
++
++/**
++ * Definiciones dinámicas del servicio KWP 0x2C que el ejecutable Delphi original (CheviExplorer1.8.exe)
++ * envía justo después de StartCommunication y antes de pedir `21 F0` / `21 F1`.
++ *
++ * Evidencia (análisis estático, NO probado en vehículo ni con este APK):
++ *  - main.pas TForm1.Start: MR-140 -> llamadas WriteReadComm en 0x4E4EF6 (F0) y 0x4E53FC (F1);
++ *    ZF 4HP16 -> 0x4E5ACA (F0). Las tres leen hasta 255 bytes (read count 0xFF).
++ *  - El EXE valida la respuesta `6C <bloque>` (RX[eco+3]==0x6C y RX[eco+4]==bloque) y aborta si no coincide.
++ *  - Las posiciones/tamaños coinciden con los offsets de la tabla de parámetros del EXE (offset - 10 = posición).
++ *
++ * Este objeto es PURO: construye y valida bytes. No envía nada y no está conectado a ninguna pantalla.
++ * `21 F0`/`21 F1` solo deben pedirse cuando [Session.canRead] sea verdadero para ese bloque.
++ */
++internal object DynamicBlockDefinitions {
++    /** MR-140: [pos, tam, identificadorComún]. ZF: [pos, tam, localId, offsetEnElLocalId]. */
++    data class Entry(val pos: Int, val size: Int, val source: Int, val offsetInSource: Int? = null)
++
++    enum class Mode { COMMON_ID, LOCAL_ID }
++
++    enum class Block(
++        val label: String,
++        val targetAddress: Int,
++        val blockId: Int,
++        val mode: Mode,
++        val entries: List<Entry>
++    ) {
++        MR140_F0("MR-140 F0", 0x11, 0xF0, Mode.COMMON_ID, listOf(
++        Entry(0x01, 1, 0x000B),
++        Entry(0x02, 1, 0x000D),
++        Entry(0x03, 1, 0x000E),
++        Entry(0x04, 1, 0x000F),
++        Entry(0x05, 1, 0x0011),
++        Entry(0x06, 2, 0x11AC),
++        Entry(0x08, 1, 0x0004),
++        Entry(0x09, 1, 0x1192),
++        Entry(0x0A, 2, 0x000C),
++        Entry(0x0C, 2, 0x12E3),
++        Entry(0x0E, 1, 0x1141),
++        Entry(0x0F, 1, 0x1143),
++        Entry(0x10, 1, 0x1145),
++        Entry(0x11, 1, 0x1146),
++        Entry(0x12, 1, 0x0007),
++        Entry(0x13, 1, 0x114E),
++        Entry(0x14, 1, 0x1155),
++        Entry(0x15, 1, 0x1101),
++        Entry(0x16, 1, 0x1170),
++        Entry(0x17, 1, 0x114B),
++        Entry(0x18, 1, 0x1172),
++        Entry(0x19, 1, 0x1190),
++        Entry(0x1A, 1, 0x0005),
++        Entry(0x1B, 1, 0x0006),
++        Entry(0x1C, 1, 0x119D),
++        Entry(0x1D, 1, 0x119E)
++        )),
++        MR140_F1("MR-140 F1", 0x11, 0xF1, Mode.COMMON_ID, listOf(
++        Entry(0x01, 1, 0x115E),
++        Entry(0x02, 2, 0x11A1),
++        Entry(0x04, 1, 0x11A6),
++        Entry(0x05, 2, 0x1193),
++        Entry(0x07, 1, 0x1176),
++        Entry(0x08, 1, 0x1100),
++        Entry(0x09, 1, 0x1104),
++        Entry(0x0A, 1, 0x1102),
++        Entry(0x0B, 1, 0x1103),
++        Entry(0x0C, 1, 0x11A0),
++        Entry(0x0D, 1, 0x1616),
++        Entry(0x0E, 1, 0x116F),
++        Entry(0x0F, 1, 0x12E2),
++        Entry(0x10, 1, 0x1144),
++        Entry(0x11, 1, 0x1200),
++        Entry(0x12, 2, 0x1201),
++        Entry(0x14, 2, 0x1202),
++        Entry(0x16, 2, 0x1203),
++        Entry(0x18, 2, 0x1204),
++        Entry(0x1A, 1, 0x11A3),
++        Entry(0x1B, 1, 0x12ED),
++        Entry(0x1C, 2, 0x121A),
++        Entry(0x1E, 1, 0x119B),
++        Entry(0x1F, 2, 0x11BB),
++        Entry(0x21, 1, 0x1171),
++        Entry(0x22, 2, 0x11C1),
++        Entry(0x24, 1, 0x11BD),
++        Entry(0x25, 1, 0x12F0)
++        )),
++        ZF_F0("ZF 4HP16 F0", 0x18, 0xF0, Mode.LOCAL_ID, listOf(
++        Entry(0x01, 1, 0x01, 1),
++        Entry(0x02, 1, 0x01, 2),
++        Entry(0x03, 1, 0x01, 3),
++        Entry(0x04, 1, 0x02, 1),
++        Entry(0x05, 2, 0x02, 2),
++        Entry(0x07, 1, 0x02, 4),
++        Entry(0x08, 2, 0x03, 1),
++        Entry(0x0A, 2, 0x03, 3),
++        Entry(0x0C, 2, 0x03, 5),
++        Entry(0x0E, 2, 0x03, 7),
++        Entry(0x10, 1, 0x03, 9),
++        Entry(0x11, 1, 0x03, 10),
++        Entry(0x12, 2, 0x03, 11),
++        Entry(0x14, 1, 0x03, 13),
++        Entry(0x15, 1, 0x03, 14),
++        Entry(0x16, 1, 0x04, 1),
++        Entry(0x17, 2, 0x04, 2),
++        Entry(0x19, 2, 0x04, 4),
++        Entry(0x1B, 2, 0x04, 6),
++        Entry(0x1D, 2, 0x04, 8),
++        Entry(0x1F, 2, 0x04, 10),
++        Entry(0x21, 2, 0x04, 12),
++        Entry(0x23, 2, 0x04, 14),
++        Entry(0x25, 2, 0x04, 16),
++        Entry(0x27, 1, 0x06, 1),
++        Entry(0x28, 1, 0x06, 3),
++        Entry(0x29, 1, 0x06, 4)
++        ));
++
++        /** Bytes de datos que devolverá `21 <bloque>` tras `61 <bloque>`. */
++        val dataBytes: Int get() = entries.last().pos + entries.last().size - 1
++        /** Byte de formato esperado en la respuesta `21 <bloque>` (0x80 | longitud). */
++        val readResponseFormatByte: Int get() = 0x80 or (2 + dataBytes)
++        /** Longitud total de la respuesta `21 <bloque>` con cabecera y checksum. */
++        val readResponseFrameLength: Int get() = dataBytes + 6
++        /** Bytes que el EXE pide a ReadFile para `21 <bloque>` (eco de 6 + respuesta). */
++        val exeReadCount: Int get() = dataBytes + 12
++    }
++
++    /** Prefijo de payload de la respuesta positiva a 0x2C: SID 0x6C + identificador del bloque. */
++    fun expectedPayloadPrefix(block: Block): ByteArray = byteArrayOf(0x6C, block.blockId.toByte())
++
++    fun buildDefinitionRequest(block: Block): ByteArray {
++        val body = ByteArrayOutputStream()
++        body.write(0x2C)
++        body.write(block.blockId)
++        for (e in block.entries) {
++            when (block.mode) {
++                Mode.COMMON_ID -> {
++                    body.write(0x02); body.write(e.pos); body.write(e.size)
++                    body.write((e.source shr 8) and 0xFF); body.write(e.source and 0xFF); body.write(0x01)
++                }
++                Mode.LOCAL_ID -> {
++                    body.write(0x01); body.write(e.pos); body.write(e.size)
++                    body.write(e.source and 0xFF); body.write(e.offsetInSource ?: error("ZF entry needs offset"))
++                }
++            }
++        }
++        val payload = body.toByteArray()
++        require(payload.size <= 0xFF) { "Definition body does not fit the one-byte length field" }
++        val frame = ByteArray(4 + payload.size + 1)
++        frame[0] = 0x80.toByte()
++        frame[1] = block.targetAddress.toByte()
++        frame[2] = 0xF1.toByte()
++        frame[3] = payload.size.toByte()
++        payload.copyInto(frame, destinationOffset = 4)
++        frame[frame.lastIndex] = checksum(frame.copyOfRange(0, frame.lastIndex)).toByte()
++        return frame
++    }
++
++    /** True solo si el checksum es válido y el payload empieza por `6C <bloque>`. */
++    fun isAcceptedResponse(frame: KwpProtocol.FrameCheck?, block: Block): Boolean {
++        if (frame == null || !frame.valid || frame.payload.size < 2) return false
++        return (frame.payload[0].toInt() and 0xFF) == 0x6C &&
++            (frame.payload[1].toInt() and 0xFF) == block.blockId
++    }
++
++    /** Motivo legible de rechazo; null si la respuesta es aceptable. */
++    fun rejectionReason(frame: KwpProtocol.FrameCheck?, block: Block): String? = when {
++        frame == null -> "sin respuesta"
++        !frame.valid -> "checksum inválido"
++        frame.payload.size >= 3 && (frame.payload[0].toInt() and 0xFF) == 0x7F &&
++            (frame.payload[1].toInt() and 0xFF) == 0x2C ->
++            "NRC 0x%02X a 0x2C".format(frame.payload[2].toInt() and 0xFF)
++        !isAcceptedResponse(frame, block) -> "respuesta distinta de 6C %02X".format(block.blockId)
++        else -> null
++    }
++
++    /**
++     * Compuerta de sesión: un bloque solo puede leerse con 0x21 después de que su definición haya sido
++     * aceptada en ESTA sesión. Debe reiniciarse con [reset] al desconectar o reiniciar la comunicación.
++     */
++    class Session {
++        private val accepted = mutableSetOf<Block>()
++        fun markAccepted(block: Block) { accepted.add(block) }
++        fun canRead(block: Block): Boolean = block in accepted
++        fun reset() = accepted.clear()
++    }
++
++    private fun checksum(bytes: ByteArray): Int = bytes.sumOf { it.toInt() and 0xFF } and 0xFF
++}
+--- a/app/src/test/java/com/cheviexplorer/android/DynamicBlockDefinitionsTest.kt	1970-01-01 00:00:00.000000000 +0000
++++ b/app/src/test/java/com/cheviexplorer/android/DynamicBlockDefinitionsTest.kt	2026-10-21 01:18:17.465441376 +0000
+@@ -0,0 +1,116 @@
++package com.cheviexplorer.android
++
++import org.junit.Assert.assertArrayEquals
++import org.junit.Assert.assertEquals
++import org.junit.Assert.assertFalse
++import org.junit.Assert.assertNotNull
++import org.junit.Assert.assertNull
++import org.junit.Assert.assertTrue
++import org.junit.Test
++
++/**
++ * Pruebas unitarias ESTÁTICAS: comparan bytes contra la reconstrucción del EXE
++ * (opera/claud/tools/verify_kwp_sequences.py reproduce la misma comprobación contra el .exe).
++ * No sustituyen a una prueba en vehículo.
++ */
++class DynamicBlockDefinitionsTest {
++    private val mr140F0 = hex("80 11 F1 9E 2C F0 02 01 01 00 0B 01 02 02 01 00 0D 01 02 03 01 00 0E 01 02 04 01 00 0F 01 02 05 01 00 11 01 02 06 02 11 AC 01 02 08 01 00 04 01 02 09 01 11 92 01 02 0A 02 00 0C 01 02 0C 02 12 E3 01 02 0E 01 11 41 01 02 0F 01 11 43 01 02 10 01 11 45 01 02 11 01 11 46 01 02 12 01 00 07 01 02 13 01 11 4E 01 02 14 01 11 55 01 02 15 01 11 01 01 02 16 01 11 70 01 02 17 01 11 4B 01 02 18 01 11 72 01 02 19 01 11 90 01 02 1A 01 00 05 01 02 1B 01 00 06 01 02 1C 01 11 9D 01 02 1D 01 11 9E 01 80")
++    private val mr140F1 = hex("80 11 F1 AA 2C F1 02 01 01 11 5E 01 02 02 02 11 A1 01 02 04 01 11 A6 01 02 05 02 11 93 01 02 07 01 11 76 01 02 08 01 11 00 01 02 09 01 11 04 01 02 0A 01 11 02 01 02 0B 01 11 03 01 02 0C 01 11 A0 01 02 0D 01 16 16 01 02 0E 01 11 6F 01 02 0F 01 12 E2 01 02 10 01 11 44 01 02 11 01 12 00 01 02 12 02 12 01 01 02 14 02 12 02 01 02 16 02 12 03 01 02 18 02 12 04 01 02 1A 01 11 A3 01 02 1B 01 12 ED 01 02 1C 02 12 1A 01 02 1E 01 11 9B 01 02 1F 02 11 BB 01 02 21 01 11 71 01 02 22 02 11 C1 01 02 24 01 11 BD 01 02 25 01 12 F0 01 95")
++    private val zfF0 = hex("80 18 F1 89 2C F0 01 01 01 01 01 01 02 01 01 02 01 03 01 01 03 01 04 01 02 01 01 05 02 02 02 01 07 01 02 04 01 08 02 03 01 01 0A 02 03 03 01 0C 02 03 05 01 0E 02 03 07 01 10 01 03 09 01 11 01 03 0A 01 12 02 03 0B 01 14 01 03 0D 01 15 01 03 0E 01 16 01 04 01 01 17 02 04 02 01 19 02 04 04 01 1B 02 04 06 01 1D 02 04 08 01 1F 02 04 0A 01 21 02 04 0C 01 23 02 04 0E 01 25 02 04 10 01 27 01 06 01 01 28 01 06 03 01 29 01 06 04 8F")
++
++    @Test
++    fun buildsExactBytesReconstructedFromExe() {
++        assertArrayEquals(mr140F0, DynamicBlockDefinitions.buildDefinitionRequest(DynamicBlockDefinitions.Block.MR140_F0))
++        assertArrayEquals(mr140F1, DynamicBlockDefinitions.buildDefinitionRequest(DynamicBlockDefinitions.Block.MR140_F1))
++        assertArrayEquals(zfF0, DynamicBlockDefinitions.buildDefinitionRequest(DynamicBlockDefinitions.Block.ZF_F0))
++    }
++
++    @Test
++    fun framesHaveExpectedLengthsHeadersAndChecksums() {
++        data class Expect(val frame: ByteArray, val total: Int, val lenField: Int, val target: Int, val block: Int, val checksum: Int)
++        listOf(
++            Expect(mr140F0, 163, 0x9E, 0x11, 0xF0, 0x80),
++            Expect(mr140F1, 175, 0xAA, 0x11, 0xF1, 0x95),
++            Expect(zfF0, 142, 0x89, 0x18, 0xF0, 0x8F)
++        ).forEach { e ->
++            assertEquals(e.total, e.frame.size)
++            assertEquals(0x80, e.frame[0].toInt() and 0xFF)
++            assertEquals(e.target, e.frame[1].toInt() and 0xFF)
++            assertEquals(0xF1, e.frame[2].toInt() and 0xFF)
++            assertEquals(e.lenField, e.frame[3].toInt() and 0xFF)
++            assertEquals(4 + e.lenField + 1, e.frame.size)
++            assertEquals(0x2C, e.frame[4].toInt() and 0xFF)
++            assertEquals(e.block, e.frame[5].toInt() and 0xFF)
++            assertEquals(e.checksum, e.frame.last().toInt() and 0xFF)
++            assertEquals(e.checksum, e.frame.copyOfRange(0, e.frame.lastIndex).sumOf { it.toInt() and 0xFF } and 0xFF)
++        }
++    }
++
++    @Test
++    fun entriesAreContiguousAndTotalsMatchExpectedReadResponses() {
++        for (block in DynamicBlockDefinitions.Block.values()) {
++            var next = 1
++            for (e in block.entries) {
++                assertEquals("${block.label} hueco en pos $next", next, e.pos)
++                next += e.size
++            }
++        }
++        assertEquals(29, DynamicBlockDefinitions.Block.MR140_F0.dataBytes)
++        assertEquals(37, DynamicBlockDefinitions.Block.MR140_F1.dataBytes)
++        assertEquals(41, DynamicBlockDefinitions.Block.ZF_F0.dataBytes)
++        assertEquals(0x9F, DynamicBlockDefinitions.Block.MR140_F0.readResponseFormatByte)
++        assertEquals(0xA7, DynamicBlockDefinitions.Block.MR140_F1.readResponseFormatByte)
++        assertEquals(0xAB, DynamicBlockDefinitions.Block.ZF_F0.readResponseFormatByte)
++        assertEquals(35, DynamicBlockDefinitions.Block.MR140_F0.readResponseFrameLength)
++        assertEquals(43, DynamicBlockDefinitions.Block.MR140_F1.readResponseFrameLength)
++        // read counts que usa el EXE para 21 F0 / 21 F1 (MR-140) y 21 F0 (ZF)
++        assertEquals(41, DynamicBlockDefinitions.Block.MR140_F0.exeReadCount)
++        assertEquals(49, DynamicBlockDefinitions.Block.MR140_F1.exeReadCount)
++        assertEquals(53, DynamicBlockDefinitions.Block.ZF_F0.exeReadCount)
++    }
++
++    @Test
++    fun androidMr140TableCoversExactlyTheBytesOfEachBlock() {
++        // Mr140Params.kt: 24 parámetros F0 (último byte usado = 29 = tamaño de F0) y
++        // 32 parámetros F1 (último byte usado = 33; los bytes 34..37 de F1 no tienen fila en la tabla del EXE).
++        assertEquals(24, Mr140.decodeGroup(0xF0, ByteArray(29)).size)
++        assertEquals(32, Mr140.decodeGroup(0xF1, ByteArray(37)).size)
++        assertEquals(32, Mr140.decodeGroup(0xF1, ByteArray(33)).size)
++        assertTrue(Mr140.decodeGroup(0xF0, ByteArray(28)).size < 24)
++        assertTrue(Mr140.decodeGroup(0xF1, ByteArray(32)).size < 32)
++    }
++
++    @Test
++    fun acceptsOnlyPositive6CResponseWithMatchingBlockAndValidChecksum() {
++        val block = DynamicBlockDefinitions.Block.MR140_F0
++        val ok = frame(valid = true, payload = hex("6C F0"))
++        assertTrue(DynamicBlockDefinitions.isAcceptedResponse(ok, block))
++        assertNull(DynamicBlockDefinitions.rejectionReason(ok, block))
++        assertFalse(DynamicBlockDefinitions.isAcceptedResponse(frame(true, hex("6C F1")), block))
++        assertFalse(DynamicBlockDefinitions.isAcceptedResponse(frame(false, hex("6C F0")), block))
++        assertFalse(DynamicBlockDefinitions.isAcceptedResponse(frame(true, hex("7E")), block))
++        assertFalse(DynamicBlockDefinitions.isAcceptedResponse(null, block))
++        assertEquals("NRC 0x31 a 0x2C", DynamicBlockDefinitions.rejectionReason(frame(true, hex("7F 2C 31")), block))
++        assertEquals("checksum inválido", DynamicBlockDefinitions.rejectionReason(frame(false, hex("6C F0")), block))
++        assertEquals("sin respuesta", DynamicBlockDefinitions.rejectionReason(null, block))
++        assertNotNull(DynamicBlockDefinitions.rejectionReason(frame(true, hex("7E")), block))
++    }
++
++    @Test
++    fun readGateStaysClosedUntilDefinitionAcceptedAndResetsOnDisconnect() {
++        val session = DynamicBlockDefinitions.Session()
++        assertFalse(session.canRead(DynamicBlockDefinitions.Block.MR140_F0))
++        session.markAccepted(DynamicBlockDefinitions.Block.MR140_F0)
++        assertTrue(session.canRead(DynamicBlockDefinitions.Block.MR140_F0))
++        assertFalse(session.canRead(DynamicBlockDefinitions.Block.MR140_F1))
++        assertFalse(session.canRead(DynamicBlockDefinitions.Block.ZF_F0))
++        session.reset()
++        assertFalse(session.canRead(DynamicBlockDefinitions.Block.MR140_F0))
++    }
++
++    private fun frame(valid: Boolean, payload: ByteArray) =
++        KwpProtocol.FrameCheck(valid, "test", ByteArray(0), payload)
++
++    private fun hex(value: String): ByteArray =
++        value.split(" ").map { it.toInt(16).toByte() }.toByteArray()
++}

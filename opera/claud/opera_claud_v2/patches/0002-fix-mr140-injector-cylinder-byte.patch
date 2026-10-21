@@ -1,0 +1,39 @@
+--- a/app/src/main/java/com/cheviexplorer/android/KwpProtocol.kt	2026-10-21 01:17:56.524906813 +0000
++++ b/app/src/main/java/com/cheviexplorer/android/KwpProtocol.kt	2026-10-21 01:18:17.483035182 +0000
+@@ -116,7 +116,10 @@
+         val state = if (activate) 0xFF else 0x00
+         val payload = if (localId == 0x32) {
+             require(injectorIndex != null && injectorIndex in 0..3) { "Injector test requires an index from 0 to 3" }
+-            val selectorByte = if (activate) injectorIndex!! - 1 else injectorIndex!!
++            // EXE (Graf.pas test_ONClick 0x4DEAE3 / test_OFFClick 0x4DE953): byte = ComboBox.ItemIndex - 1, igual en ON y OFF.
++            // El combo del EXE tiene el ítem 0 = "-" y los inyectores son ItemIndex 1..4, por tanto el byte es 0..3.
++            // `injectorIndex` ya es 0..3 (inyector 1..4), así que se envía tal cual en ambos casos.
++            val selectorByte = injectorIndex!!
+             byteArrayOf(0x30, 0x32, 0x07, state.toByte(), selectorByte.toByte())
+         } else {
+             require(injectorIndex == null) { "Injector index is only valid for local ID 0x32" }
+--- a/app/src/test/java/com/cheviexplorer/android/DelphiActuatorProtocolTest.kt	2026-10-21 01:17:56.525288381 +0000
++++ b/app/src/test/java/com/cheviexplorer/android/DelphiActuatorProtocolTest.kt	2026-10-21 01:18:17.483187297 +0000
+@@ -18,10 +18,19 @@
+     }
+ 
+     @Test
+-    fun preservesDelphiInjectorSpecialCaseForAllFourCylinders() {
+-        assertArrayEquals(hex("85 11 F1 30 32 07 FF FF EE"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, true, 0))
++    fun injectorCylinderByteIsItemIndexMinusOneForBothOnAndOff() {
++        // EXE: ItemIndex 1..4 -> byte 0..3, en ON y en OFF (análisis estático; no probado en vehículo).
++        for (cyl in 0..3) {
++            val on = KwpProtocol.buildMr140ActuatorControlRequest(0x32, true, cyl)
++            val off = KwpProtocol.buildMr140ActuatorControlRequest(0x32, false, cyl)
++            assertEquals(cyl, on[7].toInt() and 0xFF)
++            assertEquals(cyl, off[7].toInt() and 0xFF)
++            assertEquals(0xFF, on[6].toInt() and 0xFF)
++            assertEquals(0x00, off[6].toInt() and 0xFF)
++        }
++        assertArrayEquals(hex("85 11 F1 30 32 07 FF 00 EF"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, true, 0))
+         assertArrayEquals(hex("85 11 F1 30 32 07 00 00 F0"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, false, 0))
+-        assertArrayEquals(hex("85 11 F1 30 32 07 FF 02 F1"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, true, 3))
++        assertArrayEquals(hex("85 11 F1 30 32 07 FF 03 F2"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, true, 3))
+         assertArrayEquals(hex("85 11 F1 30 32 07 00 03 F3"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, false, 3))
+     }
+ 
