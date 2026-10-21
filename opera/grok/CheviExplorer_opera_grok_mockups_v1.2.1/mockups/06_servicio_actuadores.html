@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CheviExplorer — Servicio / Actuadores</title>
+<style>
+  :root {
+    --bg: #0C0C0E; --surface: #17171B; --accent: #007AFF;
+    --text: #FFFFFF; --text-sec: #A0A0AB; --border: #2B2B32;
+    --success: #1E9E66; --warning: #FF9500; --error: #FF3B30;
+    --page-bg: #1a1a1e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--page-bg); font-family: Roboto, sans-serif;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;
+    padding: 16px; color: var(--text);
+  }
+  .phone {
+    width: 100%; max-width: 360px; background: var(--bg);
+    border-radius: 28px; overflow: hidden; border: 2px solid var(--border);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .status-sys { min-height: 28px; display: flex; justify-content: space-between; align-items: center; padding: 4px 16px; font-size: 11px; color: var(--text-sec); }
+  .app-bar { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .app-title { font-size: 18px; font-weight: 700; }
+  .app-sub { font-size: 12px; color: var(--text-sec); margin-top: 2px; }
+  .caption { width: 100%; max-width: 360px; text-align: center; font-size: 12px; color: var(--text-sec); }
+  .warn {
+    margin: 16px; padding: 14px; border-radius: 12px;
+    background: rgba(255,149,0,0.12); border: 1px solid rgba(255,149,0,0.4);
+    font-size: 12px; color: var(--warning); line-height: 1.45;
+  }
+  .empty {
+    margin: 24px 16px; text-align: center; padding: 28px 16px;
+    background: var(--surface); border-radius: 16px; border: 1px solid var(--border);
+  }
+  .empty-title { font-size: 15px; font-weight: 600; }
+  .empty-sub { font-size: 12px; color: var(--text-sec); margin-top: 8px; line-height: 1.4; }
+  .label { font-size: 12px; color: var(--text-sec); margin: 12px 16px 6px; }
+  .spinner-like {
+    margin: 0 16px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; font-size: 13px; min-height: 48px;
+  }
+  .btn {
+    display: block; width: calc(100% - 32px); margin: 10px 16px; padding: 14px;
+    border-radius: 12px; border: none; font-size: 14px; font-weight: 600; min-height: 48px; cursor: default;
+  }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-on { background: var(--success); color: var(--text); }
+  .btn-off { background: var(--warning); color: var(--bg); }
+  .btn-sec { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .btn-dis { background: var(--border); color: var(--text-sec); }
+  .nav { display: flex; border-top: 1px solid var(--border); margin-top: 16px; }
+  .nav-item { flex: 1; text-align: center; padding: 10px 4px; font-size: 10px; color: var(--text-sec); text-decoration: none; min-height: 48px; }
+  .nav-item.active { color: var(--accent); }
+  .nav-icon { font-size: 18px; display: block; }
+  .tag {
+    display: inline-block; margin-top: 10px; font-size: 10px; padding: 3px 8px;
+    border-radius: 6px; background: rgba(0,122,255,0.15); color: var(--accent);
+  }
+  .foot { padding: 0 16px 8px; font-size: 11px; color: var(--text-sec); line-height: 1.4; }
+  @media (max-width: 400px) { .phone { border-radius: 16px; } }
+</style>
+</head>
+<body>
+  <div>
+    <p class="caption">A · DriverIM MR-140 en codigo · validacion vehiculo PENDIENTE</p>
+    <div class="phone" role="main" aria-label="Actuadores MR-140">
+      <div class="status-sys"><span>9:41</span><span>MR-140</span></div>
+      <div class="app-bar">
+        <div class="app-title">Actuadores · DriverIM</div>
+        <div class="app-sub">Catalogo EXE · destino 0x11</div>
+      </div>
+      <div class="warn" role="alert">
+        Motor apagado, contacto ON, selector P/N, freno aplicado. Manos lejos de ventiladores/correas.
+        OFF automatico ~3 s; si se pierde el enlace no se garantiza liberacion.
+        Validacion en vehiculo: PENDIENTE. Este mockup no ejecuta comandos.
+      </div>
+      <div class="label">Actuador del catalogo original</div>
+      <div class="spinner-like">Rele ventilador · baja velocidad · 0x13</div>
+      <button type="button" class="btn btn-sec">Leer estado · 0x30 01</button>
+      <button type="button" class="btn btn-on">Activar 3 s · 0x30 07 FF</button>
+      <button type="button" class="btn btn-off">Desactivar · 0x30 07 00</button>
+      <div class="foot">
+        Adaptacion acelerador (0x2C): <strong style="color:var(--warning)">UI deshabilitada</strong> hasta validar rutina completa del EXE.
+        <br><span class="tag">CONFIRMADO EN CODIGO · no PROBADO EN DISPOSITIVO</span>
+      </div>
+      <nav class="nav" aria-label="Navegacion">
+        <a class="nav-item" href="01_inicio.html"><span class="nav-icon">⌂</span>Inicio</a>
+        <a class="nav-item" href="03_diagnostico_dtc.html"><span class="nav-icon">⚠</span>DTC</a>
+        <a class="nav-item" href="04_datos_en_vivo.html"><span class="nav-icon">▤</span>Datos</a>
+        <a class="nav-item active" href="05_laboratorio_kwp.html"><span class="nav-icon">⚗</span>Lab</a>
+        <a class="nav-item" href="06_servicio_actuadores.html"><span class="nav-icon">⋯</span>Mas</a>
+      </nav>
+    </div>
+  </div>
+  <div>
+    <p class="caption">B · ZF / HV-240 · sin actuadores ni aprendizaje disponibles</p>
+    <div class="phone" role="main" aria-label="Servicio no disponible">
+      <div class="status-sys"><span>9:41</span><span>ZF 4HP16</span></div>
+      <div class="app-bar">
+        <div class="app-title">Servicio y actuadores</div>
+        <div class="app-sub">ZF · sin rutina reconstruida</div>
+      </div>
+      <div class="empty">
+        <div class="empty-title">Sin procedimientos confirmados para esta ECU</div>
+        <div class="empty-sub">
+          No se habilitan actuadores ZF sin reconstruir la rutina original.
+          HV-240: conexion no habilitada hasta evidencia propia (no hereda MR-140).
+          Aprendizaje/adaptacion: no disponible en este perfil.
+        </div>
+      </div>
+      <button type="button" class="btn btn-dis" disabled aria-disabled="true">Controles deshabilitados</button>
+      <nav class="nav" aria-label="Navegacion">
+        <a class="nav-item" href="01_inicio.html"><span class="nav-icon">⌂</span>Inicio</a>
+        <a class="nav-item" href="03_diagnostico_dtc.html"><span class="nav-icon">⚠</span>DTC</a>
+        <a class="nav-item" href="04_datos_en_vivo.html"><span class="nav-icon">▤</span>Datos</a>
+        <a class="nav-item" href="05_laboratorio_kwp.html"><span class="nav-icon">⚗</span>Lab</a>
+        <a class="nav-item active" href="06_servicio_actuadores.html"><span class="nav-icon">⋯</span>Mas</a>
+      </nav>
+    </div>
+  </div>
+</body>
+</html>
