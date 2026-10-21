@@ -2,7 +2,12 @@
  "meta": {
   "generado": "2026-10-17",
   "fuente": "CheviExplorer1.8.exe / dumps1.8/main.pas + Graf.pas",
-  "nota": "SRC=F1; checksum = suma mod 256; \"chk\" calculado en tx. read count = bytes que pide ReadFile (incluye eco)."
+  "nota": "SRC=F1; checksum = suma mod 256; \"chk\" calculado en tx. read count = bytes que pide ReadFile (incluye eco).",
+  "version": 2,
+  "fecha": "2026-10-20",
+  "tipo": "ANALISIS ESTATICO. Nada de este archivo se ha probado en el vehiculo ni con el APK.",
+  "verificacion": "opera/claud/tools/verify_kwp_sequences.py (11 pruebas, OK al generar; ver tools/verify_run_log.txt)",
+  "nota_repo": "Se contrasto con el snapshot scan-ecu-lacetti-main.zip del 2026-10-17; no se pudo leer el repo vigente ni opera/claud/ existente."
  },
  "secuencias": [
   {
@@ -57,8 +62,9 @@
    ],
    "T_ms": {
     "defecto": 24,
-    "con_casilla_OptionsForm_+0x320_marcada": 21,
-    "reintentos": "3 intentos por valor de T; si falla T se incrementa hasta T=25 (limite: T<26)"
+    "con_casilla_Altinit_marcada": 21,
+    "etiqueta_casilla": "TOptionsForm.Altinit = \"Альтернативная инициализация ЭБУ\" (Options.dfm)",
+    "reintentos": "3 intentos por valor de T; T sube hasta 25 (limite T<26)"
    },
    "tx": null,
    "rx_esperada": null,
@@ -158,7 +164,161 @@
    "referencia_exe": "main.pas Start rama selector 0x12 (0x4E4A67-0x4E5423); llamada WriteReadComm 0x4E4EF6 (L2438); frame completo reconstruido en defs2c",
    "evidencia_captura": "NINGUNA captura contiene esta trama (la app Android nunca la envia). Indirecta: .cedat muestra 21 F0 -> 9F F1 11 61 F0 + 29 bytes + chk (237/237 OK) que coincide con el tamano total de la definicion (29)",
    "confianza": "CONFIRMADO_EXE (bytes); respuesta del ECU NO_VERIFICADO en Android",
-   "nota_orden": "el EXE envia F0 y F1 seguidas y valida despues de cada llamada; read count 0xFF"
+   "nota_orden": "el EXE envia F0 y F1 seguidas y valida despues de cada llamada; read count 0xFF",
+   "entradas": [
+    {
+     "pos": 1,
+     "size": 1,
+     "cid": "000B"
+    },
+    {
+     "pos": 2,
+     "size": 1,
+     "cid": "000D"
+    },
+    {
+     "pos": 3,
+     "size": 1,
+     "cid": "000E"
+    },
+    {
+     "pos": 4,
+     "size": 1,
+     "cid": "000F"
+    },
+    {
+     "pos": 5,
+     "size": 1,
+     "cid": "0011"
+    },
+    {
+     "pos": 6,
+     "size": 2,
+     "cid": "11AC"
+    },
+    {
+     "pos": 8,
+     "size": 1,
+     "cid": "0004"
+    },
+    {
+     "pos": 9,
+     "size": 1,
+     "cid": "1192"
+    },
+    {
+     "pos": 10,
+     "size": 2,
+     "cid": "000C"
+    },
+    {
+     "pos": 12,
+     "size": 2,
+     "cid": "12E3"
+    },
+    {
+     "pos": 14,
+     "size": 1,
+     "cid": "1141"
+    },
+    {
+     "pos": 15,
+     "size": 1,
+     "cid": "1143"
+    },
+    {
+     "pos": 16,
+     "size": 1,
+     "cid": "1145"
+    },
+    {
+     "pos": 17,
+     "size": 1,
+     "cid": "1146"
+    },
+    {
+     "pos": 18,
+     "size": 1,
+     "cid": "0007"
+    },
+    {
+     "pos": 19,
+     "size": 1,
+     "cid": "114E"
+    },
+    {
+     "pos": 20,
+     "size": 1,
+     "cid": "1155"
+    },
+    {
+     "pos": 21,
+     "size": 1,
+     "cid": "1101"
+    },
+    {
+     "pos": 22,
+     "size": 1,
+     "cid": "1170"
+    },
+    {
+     "pos": 23,
+     "size": 1,
+     "cid": "114B"
+    },
+    {
+     "pos": 24,
+     "size": 1,
+     "cid": "1172"
+    },
+    {
+     "pos": 25,
+     "size": 1,
+     "cid": "1190"
+    },
+    {
+     "pos": 26,
+     "size": 1,
+     "cid": "0005"
+    },
+    {
+     "pos": 27,
+     "size": 1,
+     "cid": "0006"
+    },
+    {
+     "pos": 28,
+     "size": 1,
+     "cid": "119D"
+    },
+    {
+     "pos": 29,
+     "size": 1,
+     "cid": "119E"
+    }
+   ],
+   "cuerpo_hex_sin_checksum": "80 11 F1 9E 2C F0 02 01 01 00 0B 01 02 02 01 00 0D 01 02 03 01 00 0E 01 02 04 01 00 0F 01 02 05 01 00 11 01 02 06 02 11 AC 01 02 08 01 00 04 01 02 09 01 11 92 01 02 0A 02 00 0C 01 02 0C 02 12 E3 01 02 0E 01 11 41 01 02 0F 01 11 43 01 02 10 01 11 45 01 02 11 01 11 46 01 02 12 01 00 07 01 02 13 01 11 4E 01 02 14 01 11 55 01 02 15 01 11 01 01 02 16 01 11 70 01 02 17 01 11 4B 01 02 18 01 11 72 01 02 19 01 11 90 01 02 1A 01 00 05 01 02 1B 01 00 06 01 02 1C 01 11 9D 01 02 1D 01 11 9E 01",
+   "checksum_calculado": "80",
+   "total_datos_bloque": 29,
+   "respuesta_lectura_posterior": {
+    "formato": "0x9F",
+    "longitud_total": 35,
+    "read_count_exe": 41
+   },
+   "criterios_aceptacion": [
+    "Trama con checksum valido (suma mod 256) y origen = ECU (0x11) destino F1",
+    "payload empieza por 6C F0",
+    "es la validacion literal del EXE: RX[166]==0x6C y RX[167]==0xF0 (indices sobre el buffer RX con eco)"
+   ],
+   "criterios_rechazo": [
+    "NRC 7F 2C xx (registrar xx; el EXE no lo interpreta: aborta)",
+    "payload distinto de 6C F0 (incluye 7E de Tester Present intercalado)",
+    "checksum invalido o sin respuesta dentro del timeout",
+    "En el EXE cualquier rechazo llama a 0x4E9784 y sale de Start; la app NO debe pedir 21 F0/F1 en esa sesion"
+   ],
+   "precondicion_para_leer": "No enviar 21 F0 hasta que esta definicion sea aceptada en la sesion actual (DynamicBlockDefinitions.Session.canRead).",
+   "nota_tester_present": "Cancelar/omitir el TP mientras dura la secuencia (la trama sola tarda ~157 ms a 10400 baud)",
+   "evidencia_vehiculo": "NINGUNA: ninguna captura contiene 2C. Indirecto: .cedat del EXE con F0/F1 validos y tamanos iguales."
   },
   {
    "id": "DEFINE_F1_MR140",
@@ -185,7 +345,171 @@
    "pasos_salida": [],
    "referencia_exe": "main.pas Start 0x4E53FC (L2633)",
    "evidencia_captura": "NINGUNA (ver DEFINE_F0_MR140); .cedat: 21 F1 -> A7 F1 11 61 F1 + 37 bytes + chk (237/237 OK)",
-   "confianza": "CONFIRMADO_EXE (bytes)"
+   "confianza": "CONFIRMADO_EXE (bytes)",
+   "entradas": [
+    {
+     "pos": 1,
+     "size": 1,
+     "cid": "115E"
+    },
+    {
+     "pos": 2,
+     "size": 2,
+     "cid": "11A1"
+    },
+    {
+     "pos": 4,
+     "size": 1,
+     "cid": "11A6"
+    },
+    {
+     "pos": 5,
+     "size": 2,
+     "cid": "1193"
+    },
+    {
+     "pos": 7,
+     "size": 1,
+     "cid": "1176"
+    },
+    {
+     "pos": 8,
+     "size": 1,
+     "cid": "1100"
+    },
+    {
+     "pos": 9,
+     "size": 1,
+     "cid": "1104"
+    },
+    {
+     "pos": 10,
+     "size": 1,
+     "cid": "1102"
+    },
+    {
+     "pos": 11,
+     "size": 1,
+     "cid": "1103"
+    },
+    {
+     "pos": 12,
+     "size": 1,
+     "cid": "11A0"
+    },
+    {
+     "pos": 13,
+     "size": 1,
+     "cid": "1616"
+    },
+    {
+     "pos": 14,
+     "size": 1,
+     "cid": "116F"
+    },
+    {
+     "pos": 15,
+     "size": 1,
+     "cid": "12E2"
+    },
+    {
+     "pos": 16,
+     "size": 1,
+     "cid": "1144"
+    },
+    {
+     "pos": 17,
+     "size": 1,
+     "cid": "1200"
+    },
+    {
+     "pos": 18,
+     "size": 2,
+     "cid": "1201"
+    },
+    {
+     "pos": 20,
+     "size": 2,
+     "cid": "1202"
+    },
+    {
+     "pos": 22,
+     "size": 2,
+     "cid": "1203"
+    },
+    {
+     "pos": 24,
+     "size": 2,
+     "cid": "1204"
+    },
+    {
+     "pos": 26,
+     "size": 1,
+     "cid": "11A3"
+    },
+    {
+     "pos": 27,
+     "size": 1,
+     "cid": "12ED"
+    },
+    {
+     "pos": 28,
+     "size": 2,
+     "cid": "121A"
+    },
+    {
+     "pos": 30,
+     "size": 1,
+     "cid": "119B"
+    },
+    {
+     "pos": 31,
+     "size": 2,
+     "cid": "11BB"
+    },
+    {
+     "pos": 33,
+     "size": 1,
+     "cid": "1171"
+    },
+    {
+     "pos": 34,
+     "size": 2,
+     "cid": "11C1"
+    },
+    {
+     "pos": 36,
+     "size": 1,
+     "cid": "11BD"
+    },
+    {
+     "pos": 37,
+     "size": 1,
+     "cid": "12F0"
+    }
+   ],
+   "cuerpo_hex_sin_checksum": "80 11 F1 AA 2C F1 02 01 01 11 5E 01 02 02 02 11 A1 01 02 04 01 11 A6 01 02 05 02 11 93 01 02 07 01 11 76 01 02 08 01 11 00 01 02 09 01 11 04 01 02 0A 01 11 02 01 02 0B 01 11 03 01 02 0C 01 11 A0 01 02 0D 01 16 16 01 02 0E 01 11 6F 01 02 0F 01 12 E2 01 02 10 01 11 44 01 02 11 01 12 00 01 02 12 02 12 01 01 02 14 02 12 02 01 02 16 02 12 03 01 02 18 02 12 04 01 02 1A 01 11 A3 01 02 1B 01 12 ED 01 02 1C 02 12 1A 01 02 1E 01 11 9B 01 02 1F 02 11 BB 01 02 21 01 11 71 01 02 22 02 11 C1 01 02 24 01 11 BD 01 02 25 01 12 F0 01",
+   "checksum_calculado": "95",
+   "total_datos_bloque": 37,
+   "respuesta_lectura_posterior": {
+    "formato": "0xA7",
+    "longitud_total": 43,
+    "read_count_exe": 49
+   },
+   "criterios_aceptacion": [
+    "Trama con checksum valido (suma mod 256) y origen = ECU (0x11) destino F1",
+    "payload empieza por 6C F1",
+    "es la validacion literal del EXE: RX[178]==0x6C y RX[179]==0xF1 (indices sobre el buffer RX con eco)"
+   ],
+   "criterios_rechazo": [
+    "NRC 7F 2C xx (registrar xx; el EXE no lo interpreta: aborta)",
+    "payload distinto de 6C F1 (incluye 7E de Tester Present intercalado)",
+    "checksum invalido o sin respuesta dentro del timeout",
+    "En el EXE cualquier rechazo llama a 0x4E9784 y sale de Start; la app NO debe pedir 21 F0/F1 en esa sesion"
+   ],
+   "precondicion_para_leer": "No enviar 21 F1 hasta que esta definicion sea aceptada en la sesion actual (DynamicBlockDefinitions.Session.canRead).",
+   "nota_tester_present": "Cancelar/omitir el TP mientras dura la secuencia (la trama sola tarda ~168 ms a 10400 baud)",
+   "evidencia_vehiculo": "NINGUNA: ninguna captura contiene 2C. Indirecto: .cedat del EXE con F0/F1 validos y tamanos iguales."
   },
   {
    "id": "DEFINE_F0_ZF",
@@ -212,7 +536,193 @@
    "pasos_salida": [],
    "referencia_exe": "main.pas Start rama selector 0x22 (0x4E5800-0x4E5AF1), llamada L2947",
    "evidencia_captura": "NINGUNA con 2C. Capturas Android: 21 F0 -> 7F 21 22 (conditionsNotCorrect) y 21 F1/FB -> 7F 21 12; LID 01,02,03,04,11 positivos; LID 06 no probado",
-   "confianza": "CONFIRMADO_EXE (bytes); efecto en vehiculo NO_VERIFICADO"
+   "confianza": "CONFIRMADO_EXE (bytes); efecto en vehiculo NO_VERIFICADO",
+   "entradas": [
+    {
+     "pos": 1,
+     "size": 1,
+     "lid": "01",
+     "loff": 1
+    },
+    {
+     "pos": 2,
+     "size": 1,
+     "lid": "01",
+     "loff": 2
+    },
+    {
+     "pos": 3,
+     "size": 1,
+     "lid": "01",
+     "loff": 3
+    },
+    {
+     "pos": 4,
+     "size": 1,
+     "lid": "02",
+     "loff": 1
+    },
+    {
+     "pos": 5,
+     "size": 2,
+     "lid": "02",
+     "loff": 2
+    },
+    {
+     "pos": 7,
+     "size": 1,
+     "lid": "02",
+     "loff": 4
+    },
+    {
+     "pos": 8,
+     "size": 2,
+     "lid": "03",
+     "loff": 1
+    },
+    {
+     "pos": 10,
+     "size": 2,
+     "lid": "03",
+     "loff": 3
+    },
+    {
+     "pos": 12,
+     "size": 2,
+     "lid": "03",
+     "loff": 5
+    },
+    {
+     "pos": 14,
+     "size": 2,
+     "lid": "03",
+     "loff": 7
+    },
+    {
+     "pos": 16,
+     "size": 1,
+     "lid": "03",
+     "loff": 9
+    },
+    {
+     "pos": 17,
+     "size": 1,
+     "lid": "03",
+     "loff": 10
+    },
+    {
+     "pos": 18,
+     "size": 2,
+     "lid": "03",
+     "loff": 11
+    },
+    {
+     "pos": 20,
+     "size": 1,
+     "lid": "03",
+     "loff": 13
+    },
+    {
+     "pos": 21,
+     "size": 1,
+     "lid": "03",
+     "loff": 14
+    },
+    {
+     "pos": 22,
+     "size": 1,
+     "lid": "04",
+     "loff": 1
+    },
+    {
+     "pos": 23,
+     "size": 2,
+     "lid": "04",
+     "loff": 2
+    },
+    {
+     "pos": 25,
+     "size": 2,
+     "lid": "04",
+     "loff": 4
+    },
+    {
+     "pos": 27,
+     "size": 2,
+     "lid": "04",
+     "loff": 6
+    },
+    {
+     "pos": 29,
+     "size": 2,
+     "lid": "04",
+     "loff": 8
+    },
+    {
+     "pos": 31,
+     "size": 2,
+     "lid": "04",
+     "loff": 10
+    },
+    {
+     "pos": 33,
+     "size": 2,
+     "lid": "04",
+     "loff": 12
+    },
+    {
+     "pos": 35,
+     "size": 2,
+     "lid": "04",
+     "loff": 14
+    },
+    {
+     "pos": 37,
+     "size": 2,
+     "lid": "04",
+     "loff": 16
+    },
+    {
+     "pos": 39,
+     "size": 1,
+     "lid": "06",
+     "loff": 1
+    },
+    {
+     "pos": 40,
+     "size": 1,
+     "lid": "06",
+     "loff": 3
+    },
+    {
+     "pos": 41,
+     "size": 1,
+     "lid": "06",
+     "loff": 4
+    }
+   ],
+   "cuerpo_hex_sin_checksum": "80 18 F1 89 2C F0 01 01 01 01 01 01 02 01 01 02 01 03 01 01 03 01 04 01 02 01 01 05 02 02 02 01 07 01 02 04 01 08 02 03 01 01 0A 02 03 03 01 0C 02 03 05 01 0E 02 03 07 01 10 01 03 09 01 11 01 03 0A 01 12 02 03 0B 01 14 01 03 0D 01 15 01 03 0E 01 16 01 04 01 01 17 02 04 02 01 19 02 04 04 01 1B 02 04 06 01 1D 02 04 08 01 1F 02 04 0A 01 21 02 04 0C 01 23 02 04 0E 01 25 02 04 10 01 27 01 06 01 01 28 01 06 03 01 29 01 06 04",
+   "checksum_calculado": "8F",
+   "total_datos_bloque": 41,
+   "respuesta_lectura_posterior": {
+    "formato": "0xAB",
+    "longitud_total": 47,
+    "read_count_exe": 53
+   },
+   "criterios_aceptacion": [
+    "Trama con checksum valido (suma mod 256) y origen = ECU (0x18) destino F1",
+    "payload empieza por 6C F0",
+    "es la validacion literal del EXE: RX[145]==0x6C y RX[146]==0xF0 (indices sobre el buffer RX con eco)"
+   ],
+   "criterios_rechazo": [
+    "NRC 7F 2C xx (registrar xx; el EXE no lo interpreta: aborta)",
+    "payload distinto de 6C F0 (incluye 7E de Tester Present intercalado)",
+    "checksum invalido o sin respuesta dentro del timeout",
+    "En el EXE cualquier rechazo llama a 0x4E9784 y sale de Start; la app NO debe pedir 21 F0/F1 en esa sesion"
+   ],
+   "precondicion_para_leer": "No enviar 21 F0 hasta que esta definicion sea aceptada en la sesion actual (DynamicBlockDefinitions.Session.canRead).",
+   "nota_tester_present": "Cancelar/omitir el TP mientras dura la secuencia (la trama sola tarda ~137 ms a 10400 baud)",
+   "evidencia_vehiculo": "NINGUNA: ninguna captura contiene 2C. Indirecto: .cedat del EXE con F0/F1 validos y tamanos iguales."
   },
   {
    "id": "READ_F0_MR140",
@@ -239,7 +749,8 @@
    "pasos_salida": [],
    "referencia_exe": "main.pas TimerParamTimer L12443-13036 (rama sel 0x12 @0x4E63E7, ecx=0x29) + VspomRaschetParam L13036-13341",
    "evidencia_captura": "archivos/2610161732 MR-140.cedat: 237 pares TX 82 11 F1 21 F0 95 / RX 9F F1 11 61 F0 ... con checksum valido",
-   "confianza": "CONFIRMADO_VEHICULO (.cedat del EXE) para trama y longitud"
+   "confianza": "CONFIRMADO_VEHICULO (.cedat del EXE) para trama y longitud",
+   "precondicion_bloqueante": "Habilitar solo tras aceptar la definicion 2C correspondiente en la sesion (no hay captura que pruebe que el bloque exista sin ella)."
   },
   {
    "id": "READ_F1_MR140",
@@ -264,7 +775,8 @@
    "pasos_salida": [],
    "referencia_exe": "main.pas TimerParamTimer rama 0x12 (ecx=0x31)",
    "evidencia_captura": ".cedat: 237 pares validos",
-   "confianza": "CONFIRMADO_VEHICULO (.cedat)"
+   "confianza": "CONFIRMADO_VEHICULO (.cedat)",
+   "precondicion_bloqueante": "Habilitar solo tras aceptar la definicion 2C correspondiente en la sesion (no hay captura que pruebe que el bloque exista sin ella)."
   },
   {
    "id": "READ_F0_ZF",
@@ -290,7 +802,8 @@
    "pasos_salida": [],
    "referencia_exe": "main.pas TimerParamTimer rama sel 0x22 @0x4E65CD (ecx=0x35)",
    "evidencia_captura": "sin captura del EXE para ZF",
-   "confianza": "CONFIRMADO_EXE; respuesta NO_VERIFICADO"
+   "confianza": "CONFIRMADO_EXE; respuesta NO_VERIFICADO",
+   "precondicion_bloqueante": "Habilitar solo tras aceptar la definicion 2C correspondiente en la sesion (no hay captura que pruebe que el bloque exista sin ella)."
   },
   {
    "id": "LID_01_ZF",
@@ -575,7 +1088,9 @@
    ],
    "referencia_exe": "main.pas Button_ObuchenieClick L14950-15290; constantes 0x4EDACC=500.0 0x4EDB70=4300.0 0x4EDB74=80.0 0x4EDB78=2000.0",
    "evidencia_captura": "ninguna",
-   "confianza": "CONFIRMADO_EXE; NO_VERIFICADO en vehiculo"
+   "confianza": "CONFIRMADO_EXE; NO_VERIFICADO en vehiculo",
+   "abortar": "El EXE solo cancela el bucle con el boton Cancelar (bandera VA 0x4F721E) y no envia ningun comando de cancelacion al ECU; fin de aprendizaje: no determinado.",
+   "autorizacion_fisica": "NO AUTORIZADA. Requiere F0 funcional (DEFINE_F0_MR140 aceptada) y prueba supervisada."
   },
   {
    "id": "ACTUATOR_STATUS",
@@ -652,7 +1167,49 @@
    ],
    "referencia_exe": "Graf.pas test_ONClick L6747-6990, test_OFFClick L6535-6746, CaseIMSelect L6195-6535 (tabla 0x4DE6AC), FormClose L5071",
    "evidencia_captura": "ninguna",
-   "confianza": "CONFIRMADO_EXE; NO_VERIFICADO en vehiculo"
+   "confianza": "CONFIRMADO_EXE; NO_VERIFICADO en vehiculo",
+   "inyectores_trama_correcta_segun_exe": {
+    "inyector_1": {
+     "ItemIndex_EXE": 1,
+     "byte_cilindro": "00",
+     "ON": "85 11 F1 30 32 07 FF 00 EF",
+     "OFF": "85 11 F1 30 32 07 00 00 F0"
+    },
+    "inyector_2": {
+     "ItemIndex_EXE": 2,
+     "byte_cilindro": "01",
+     "ON": "85 11 F1 30 32 07 FF 01 F0",
+     "OFF": "85 11 F1 30 32 07 00 01 F1"
+    },
+    "inyector_3": {
+     "ItemIndex_EXE": 3,
+     "byte_cilindro": "02",
+     "ON": "85 11 F1 30 32 07 FF 02 F1",
+     "OFF": "85 11 F1 30 32 07 00 02 F2"
+    },
+    "inyector_4": {
+     "ItemIndex_EXE": 4,
+     "byte_cilindro": "03",
+     "ON": "85 11 F1 30 32 07 FF 03 F2",
+     "OFF": "85 11 F1 30 32 07 00 03 F3"
+    }
+   },
+   "android_snapshot_2026-10-17": {
+    "ON": "injectorIndex-1 (inyector 1 -> FF, 2 -> 00, 3 -> 01, 4 -> 02)",
+    "OFF": "injectorIndex (00..03, coincide con el EXE)",
+    "parche": "patches/0002-fix-mr140-injector-cylinder-byte.patch"
+   },
+   "precondiciones_en_exe": "Ninguna comprobacion de contacto/motor/velocidad en el codigo; solo Sleep(100 ms) y que se haya elegido un ID. Condiciones de seguridad adicionales: no determinadas.",
+   "respuesta_esperada": {
+    "positiva": "SID 0x70 (RX[10] tras eco de 7 u 8 bytes segun trama; Driver() lo usa para consulta de estado)",
+    "estado": "ON compara RX[14] y RX[15] con 0 para elegir el texto del panel; semantica de esos bytes no determinada"
+   },
+   "abortar": [
+    "OFF: 84 11 F1 30 <ID> 07 00 (inyector: 85 ... 07 00 <cil>)",
+    "Devolver control: 83 11 F1 30 <ID> 00 (FormClose / DriveIMClick del EXE)",
+    "No hay temporizador de apagado automatico en el EXE"
+   ],
+   "autorizacion_fisica": "NO AUTORIZADA. Reconstruir el EXE no prueba que sea seguro ni que el ECU responda; requiere prueba supervisada."
   },
   {
    "id": "ACTUATOR_RELEASE",
@@ -713,6 +1270,28 @@
    "referencia_exe": "Button_ECUIdentClick 0x4EA145-0x4EA162 y Button_SbrosClick 0x4ED4B3: SecurityAccess solo si sel-0x11 in {0,2}",
    "evidencia_captura": "-",
    "confianza": "CONFIRMADO_EXE"
+  },
+  {
+   "id": "HV240_NO_DETERMINADO",
+   "ecu": "HV-240",
+   "descripcion": "El EXE no tiene un selector HV-240 propio: la lista ecus_soportadas.json trae \"MR-140\" (selector 0x12). No se reutiliza ninguna secuencia MR-140 para HV-240.",
+   "tx": null,
+   "rx_esperada": null,
+   "nrc": [],
+   "timeout": null,
+   "pasos_salida": [],
+   "referencia_exe": "archivos/cloude/ecus_soportadas.json; docs/investigacion-protocolos-y-actuadores.md (menciona MR-140/HV-240 en la ayuda del programa, sin protocolo propio)",
+   "evidencia_captura": "Ninguna captura identifica el tipo de ECU (la respuesta 1A 80 del motor nunca se capturo).",
+   "confianza": "NO_VERIFICADO"
   }
+ ],
+ "preguntas_no_resueltas": [
+  "Acepta el MR-140 del coche las tramas 2C F0 / 2C F1 y devuelve 6C F0 / 6C F1? (sin captura)",
+  "Acepta la TCU ZF la trama 2C F0 y que devuelve el LID 06? (sin captura)",
+  "Respuesta MR-140 a 1A 80 (byte de longitud esperado 0x50) y a 19 DA FF 00 sin Tester Present intercalado",
+  "Que representan en el ECU los identificadores comunes de las entradas 2C (solo se conocen los nombres que el EXE asigna a cada offset)",
+  "Los IDs 69-71 son siempre 0 en MR-140? (analisis estatico: si; no observado)",
+  "Respuesta completa del borrado de DTC y condiciones de aceptacion del EXE",
+  "Fin de aprendizaje de acelerador: existe comando de cierre en el ECU? (el EXE no envia ninguno)"
  ]
 }
