@@ -111,3 +111,19 @@
 - Sin afirmación de “aprobado para producción” ni “probado en dispositivo”.  
 
 **Siguiente paso recomendado por la auditoría:** con P0 documentales cerrados, contrastar de nuevo con el SHA de implementación y solo entonces modificar Kotlin en incrementos pequeños.
+
+
+---
+
+## Addendum de integración — 2026-10-20
+
+Este documento es una especificación de UI y auditoría documental. No demuestra que los mockups se hayan convertido en pantallas Kotlin ni que el APK se haya probado en dispositivo.
+
+- Antes de implementar un mockup, comparar sus estados, etiquetas, colores y navegación con MainActivity.kt en el SHA vigente.
+- Mantener visibles las diferencias entre CONFIRMADO_EN_CODIGO, CONFIRMADO_EN_CAPTURA, PROBADO_EN_DISPOSITIVO y PENDIENTE.
+- Mantener HV-240 bloqueada/no conectable hasta que exista evidencia y perfil propio; no heredar MR-140.
+- No incluir botones operativos de actuadores ni aprendizaje que puedan enviar tramas reales mientras el procedimiento no haya superado la revisión de seguridad y protocolo.
+- Los mockups HTML son material de diseño; no forman parte de una APK funcional por sí solos.
+- El estado de pruebas físicas sigue siendo pendiente salvo que el usuario aporte logs/capturas del teléfono y vehículo.
+
+Para el estado del proyecto, tareas pendientes y procedimiento de recuperación, consultar [INTEGRACION_BITACORA_CONTINUIDAD.md](../INTEGRACION_BITACORA_CONTINUIDAD.md).
