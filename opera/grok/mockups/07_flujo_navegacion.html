@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CheviExplorer — Flujo de navegación</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #121216; font-family: Roboto, sans-serif;
+    color: #FFF; padding: 32px; min-height: 100vh;
+  }
+  h1 { font-size: 22px; margin-bottom: 8px; }
+  .sub { color: #A0A0AB; font-size: 13px; margin-bottom: 28px; max-width: 720px; line-height: 1.45; }
+  .flow {
+    display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;
+    max-width: 960px;
+  }
+  .node {
+    background: #17171B; border: 1px solid #2B2B32; border-radius: 14px;
+    padding: 14px 16px; min-width: 140px; max-width: 180px;
+  }
+  .node h3 { font-size: 13px; color: #007AFF; margin-bottom: 6px; }
+  .node p { font-size: 11px; color: #A0A0AB; line-height: 1.35; }
+  .node.home { border-color: #007AFF; }
+  .node.warn { border-color: #FF9500; }
+  .arrow {
+    align-self: center; color: #546E7A; font-size: 20px; padding: 0 4px;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
+  .legend { margin-top: 32px; font-size: 12px; color: #A0A0AB; line-height: 1.6; }
+  .legend code { background: #2B2B32; padding: 1px 6px; border-radius: 4px; color: #FFF; }
+  table { width: 100%; max-width: 720px; border-collapse: collapse; margin-top: 16px; font-size: 12px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #2B2B32; }
+  th { color: #A0A0AB; font-weight: 500; }
+</style>
+</head>
+<body>
+  <h1>CheviExplorer — Flujo de navegación (v1.2)</h1>
+  <p class="sub">
+    Arquitectura: una Activity con secciones (<code>makeScreen</code> / <code>showScreen</code>).
+    No se exige bottom navigation de 5 ítems; el mockup lo usa solo como referencia visual.
+    Paleta real del código: #0C0C0E · #17171B · #007AFF.
+  </p>
+
+  <div class="row">
+    <div class="node home">
+      <h3>1. Inicio</h3>
+      <p>Perfil ECU · badge conexión · conectar / init · accesos rápidos</p>
+    </div>
+    <span class="arrow">→</span>
+    <div class="node">
+      <h3>2. Conexión KKL</h3>
+      <p>Permiso → detectado → puerto → init KWP → validado / error</p>
+    </div>
+    <span class="arrow">→</span>
+    <div class="node home">
+      <h3>Inicio (conectado)</h3>
+      <p>KWP validado · acciones de diagnóstico habilitadas según perfil</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="node">
+      <h3>3. DTC</h3>
+      <p>Leer · lista · borrar deshabilitado · 0 DTC solo si captura del perfil</p>
+    </div>
+    <div class="node">
+      <h3>4. Datos en vivo</h3>
+      <p>ID + hex + badge “Sin datos confirmados” · Detener</p>
+    </div>
+    <div class="node">
+      <h3>5. Laboratorio</h3>
+      <p>Contadores reales · Detener · exportar · DriverIM MR-140</p>
+    </div>
+    <div class="node warn">
+      <h3>6. Servicio</h3>
+      <p>Matriz por procedimiento · ZF/HV bloqueados · adaptación pendiente</p>
+    </div>
+    <div class="node">
+      <h3>7. Registro / Ajustes</h3>
+      <p>Log · exportar · baud · acerca de</p>
+    </div>
+  </div>
+
+  <div class="legend">
+    <strong>Reglas de flujo</strong>
+    <table>
+      <tr><th>Desde</th><th>Hacia</th><th>Condición</th></tr>
+      <tr><td>Inicio</td><td>Conexión</td><td>Conectar / permiso USB</td></tr>
+      <tr><td>Conexión</td><td>Inicio</td><td>Puerto abierto o KWP validado / cancelar</td></tr>
+      <tr><td>Cualquiera</td><td>DTC / Datos / Lab</td><td>Preferible con KWP validado; UI puede mostrar empty si no</td></tr>
+      <tr><td>Lab</td><td>Actuadores</td><td>Solo perfil MR-140 + puerto; resto empty state</td></tr>
+      <tr><td>HV-240 seleccionado</td><td>—</td><td>Operaciones bloqueadas hasta evidencia propia</td></tr>
+    </table>
+    <p style="margin-top:16px">Archivos HTML de este pack: abrir en navegador para vista de referencia implementable (no son capturas del APK).</p>
+  </div>
+</body>
+</html>

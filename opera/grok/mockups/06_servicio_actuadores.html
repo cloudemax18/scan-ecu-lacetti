@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CheviExplorer — Servicio / Actuadores</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #1a1a1e; font-family: Roboto, sans-serif; display: flex; justify-content: center; padding: 24px; gap: 24px; flex-wrap: wrap; }
+  .phone { width: 360px; background: #0C0C0E; border-radius: 28px; overflow: hidden; border: 2px solid #2B2B32; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .status-sys { height: 28px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; font-size: 11px; color: #A0A0AB; }
+  .app-bar { padding: 12px 16px; border-bottom: 1px solid #2B2B32; }
+  .app-title { font-size: 18px; font-weight: 700; color: #FFF; }
+  .app-sub { font-size: 12px; color: #A0A0AB; margin-top: 2px; }
+  .caption { text-align: center; color: #A0A0AB; font-size: 12px; margin-bottom: 8px; width: 360px; }
+  .warn {
+    margin: 16px; padding: 14px; border-radius: 12px;
+    background: rgba(255,149,0,0.12); border: 1px solid rgba(255,149,0,0.4);
+    font-size: 12px; color: #FF9500; line-height: 1.45;
+  }
+  .empty {
+    margin: 24px 16px; text-align: center; padding: 28px 16px;
+    background: #17171B; border-radius: 16px; border: 1px solid #2B2B32;
+  }
+  .empty-title { font-size: 15px; color: #FFF; font-weight: 600; }
+  .empty-sub { font-size: 12px; color: #A0A0AB; margin-top: 8px; line-height: 1.4; }
+  .label { font-size: 12px; color: #A0A0AB; margin: 12px 16px 6px; }
+  .spinner-like {
+    margin: 0 16px; background: #17171B; border: 1px solid #2B2B32; border-radius: 12px;
+    padding: 14px 16px; color: #FFFFFF; font-size: 13px;
+  }
+  .btn { display: block; width: calc(100% - 32px); margin: 10px 16px; padding: 14px; border-radius: 12px; border: none; font-size: 14px; font-weight: 600; }
+  .btn-on { background: #1E9E66; color: #FFF; }
+  .btn-off { background: #FF9500; color: #0C0C0E; }
+  .btn-sec { background: #17171B; color: #FFF; border: 1px solid #2B2B32; }
+  .btn-dis { background: #2B2B32; color: #A0A0AB; }
+  .nav { display: flex; border-top: 1px solid #2B2B32; margin-top: 16px; }
+  .nav-item { flex: 1; text-align: center; padding: 10px 4px; font-size: 10px; color: #A0A0AB; }
+  .nav-item.active { color: #007AFF; }
+  .nav-icon { font-size: 18px; display: block; }
+  .tag { display: inline-block; margin-top: 10px; font-size: 10px; padding: 3px 8px; border-radius: 6px; background: rgba(0,122,255,0.15); color: #007AFF; }
+</style>
+</head>
+<body>
+  <div>
+    <div class="caption">DriverIM MR-140 presente en código · validación en vehículo PENDIENTE</div>
+    <div class="phone">
+      <div class="status-sys"><span>9:41</span><span>MR-140</span></div>
+      <div class="app-bar">
+        <div class="app-title">Actuadores · DriverIM</div>
+        <div class="app-sub">Catálogo EXE · destino 0x11</div>
+      </div>
+      <div class="warn">
+        Motor apagado, contacto ON, selector P/N, freno aplicado. Manos lejos de ventiladores/correas. OFF automático ~3 s; si se pierde el enlace no se garantiza liberación. Validación en vehículo: PENDIENTE.
+      </div>
+      <div class="label">Actuador del catálogo original</div>
+      <div class="spinner-like">Relé ventilador · baja velocidad · 0x13</div>
+      <button class="btn btn-sec">Leer estado · 0x30 01</button>
+      <button class="btn btn-on">Activar 3 s · 0x30 07 FF</button>
+      <button class="btn btn-off">Desactivar · 0x30 07 00</button>
+      <div style="padding:0 16px;font-size:11px;color:#A0A0AB;line-height:1.4">
+        Adaptación acelerador (0x2C): <strong style="color:#FF9500">UI deshabilitada</strong> hasta validar rutina completa del EXE.
+        <span class="tag">CONFIRMADO EN CÓDIGO · no PROBADO EN DISPOSITIVO</span>
+      </div>
+      <div class="nav">
+        <div class="nav-item"><span class="nav-icon">⌂</span>Inicio</div>
+        <div class="nav-item"><span class="nav-icon">⚠</span>DTC</div>
+        <div class="nav-item"><span class="nav-icon">▤</span>Datos</div>
+        <div class="nav-item active"><span class="nav-icon">⚗</span>Lab</div>
+        <div class="nav-item"><span class="nav-icon">⋯</span>Más</div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="caption">Perfil no MR-140 / sin evidencia · controles bloqueados</div>
+    <div class="phone">
+      <div class="status-sys"><span>9:41</span><span>ZF 4HP16</span></div>
+      <div class="app-bar">
+        <div class="app-title">Servicio y actuadores</div>
+        <div class="app-sub">ZF · sin rutina reconstruida</div>
+      </div>
+      <div class="empty">
+        <div class="empty-title">Sin procedimientos confirmados para esta ECU</div>
+        <div class="empty-sub">No se habilitan actuadores ZF sin reconstruir la rutina original. HV-240: conexión no habilitada hasta evidencia propia.</div>
+      </div>
+      <button class="btn btn-dis">Controles deshabilitados</button>
+      <div class="nav">
+        <div class="nav-item"><span class="nav-icon">⌂</span>Inicio</div>
+        <div class="nav-item"><span class="nav-icon">⚠</span>DTC</div>
+        <div class="nav-item"><span class="nav-icon">▤</span>Datos</div>
+        <div class="nav-item active"><span class="nav-icon">⚗</span>Lab</div>
+        <div class="nav-item"><span class="nav-icon">⋯</span>Más</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

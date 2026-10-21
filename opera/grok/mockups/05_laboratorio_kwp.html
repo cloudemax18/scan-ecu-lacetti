@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CheviExplorer — Laboratorio KWP</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #1a1a1e; font-family: Roboto, sans-serif; display: flex; justify-content: center; padding: 24px; }
+  .phone { width: 360px; background: #0C0C0E; border-radius: 28px; overflow: hidden; border: 2px solid #2B2B32; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .status-sys { height: 28px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; font-size: 11px; color: #A0A0AB; }
+  .app-bar { padding: 12px 16px; border-bottom: 1px solid #2B2B32; }
+  .app-title { font-size: 18px; font-weight: 700; color: #FFF; }
+  .app-sub { font-size: 12px; color: #007AFF; margin-top: 2px; }
+  .panel {
+    margin: 12px 16px; padding: 14px; background: #17171B;
+    border-radius: 14px; border: 1px solid #2B2B32;
+  }
+  .panel-title { font-size: 12px; color: #A0A0AB; margin-bottom: 10px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat {
+    background: #0C0C0E; border-radius: 10px; padding: 10px;
+    border: 1px solid #2B2B32;
+  }
+  .stat-n { font-size: 20px; font-weight: 700; color: #FFF; font-family: ui-monospace, monospace; }
+  .stat-l { font-size: 10px; color: #A0A0AB; margin-top: 2px; }
+  .stat-n.pos { color: #1E9E66; }
+  .stat-n.nrc { color: #FF9500; }
+  .stat-n.none { color: #A0A0AB; }
+  .bar { height: 6px; background: #2B2B32; border-radius: 3px; margin-top: 12px; overflow: hidden; }
+  .bar > div { height: 100%; width: 44%; background: #007AFF; }
+  .list { margin: 0 16px; max-height: 160px; overflow: hidden; }
+  .item {
+    display: flex; justify-content: space-between; padding: 8px 0;
+    border-bottom: 1px solid #2B2B32; font-size: 12px;
+  }
+  .item-id { font-family: ui-monospace, monospace; color: #007AFF; }
+  .item-st { color: #A0A0AB; }
+  .item-st.ok { color: #1E9E66; }
+  .item-st.nrc { color: #FF9500; }
+  .actions { padding: 12px 16px; display: flex; gap: 8px; }
+  .btn { flex: 1; padding: 14px; border-radius: 12px; border: none; font-size: 14px; font-weight: 600; }
+  .btn-stop { background: #FF3B30; color: #FFF; }
+  .btn-sec { background: #17171B; color: #FFF; border: 1px solid #2B2B32; }
+  .note { margin: 0 16px 12px; font-size: 11px; color: #A0A0AB; line-height: 1.35; }
+  .nav { display: flex; border-top: 1px solid #2B2B32; }
+  .nav-item { flex: 1; text-align: center; padding: 10px 4px; font-size: 10px; color: #A0A0AB; }
+  .nav-item.active { color: #007AFF; }
+  .nav-icon { font-size: 18px; display: block; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status-sys"><span>9:41</span><span>Lab · en curso</span></div>
+  <div class="app-bar">
+    <div class="app-title">Laboratorio KWP</div>
+    <div class="app-sub">Solo lectura · contadores reales</div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">Barrido base 0x21 · progreso real (no inventado)</div>
+    <div class="grid">
+      <div class="stat"><div class="stat-n">67</div><div class="stat-l">Planificados</div></div>
+      <div class="stat"><div class="stat-n">30</div><div class="stat-l">Intentos</div></div>
+      <div class="stat"><div class="stat-n pos">4</div><div class="stat-l">Positivos</div></div>
+      <div class="stat"><div class="stat-n nrc">18</div><div class="stat-l">NRC</div></div>
+      <div class="stat"><div class="stat-n none">8</div><div class="stat-l">Sin resp. / timeout / chk*</div></div>
+      <div class="stat"><div class="stat-n">—</div><div class="stat-l">Checksum solo*</div></div>
+    </div>
+    <div class="bar"><div></div></div>
+  </div>
+  <div class="note">* IdProbe agrupa “sin respuesta/timeout/checksum”. No mostrar contadores separados si el código no los distingue.</div>
+  <div class="list">
+    <div class="item"><span class="item-id">01</span><span class="item-st nrc">NRC 0x31</span></div>
+    <div class="item"><span class="item-id">02</span><span class="item-st ok">positiva · 20 B</span></div>
+    <div class="item"><span class="item-id">03</span><span class="item-st ok">positiva · 4 B</span></div>
+    <div class="item"><span class="item-id">04</span><span class="item-st ok">positiva · 4 B</span></div>
+    <div class="item"><span class="item-id">11</span><span class="item-st nrc">NRC 0x31</span></div>
+  </div>
+  <div class="actions">
+    <button class="btn btn-stop">Detener</button>
+    <button class="btn btn-sec">Exportar log</button>
+  </div>
+  <div class="note" style="margin-bottom:16px">Detener → stopLiveParameterPolling() (parada cooperativa; consultas en espera pueden terminar).</div>
+  <div class="nav">
+    <div class="nav-item"><span class="nav-icon">⌂</span>Inicio</div>
+    <div class="nav-item"><span class="nav-icon">⚠</span>DTC</div>
+    <div class="nav-item"><span class="nav-icon">▤</span>Datos</div>
+    <div class="nav-item active"><span class="nav-icon">⚗</span>Lab</div>
+    <div class="nav-item"><span class="nav-icon">⋯</span>Más</div>
+  </div>
+</div>
+</body>
+</html>

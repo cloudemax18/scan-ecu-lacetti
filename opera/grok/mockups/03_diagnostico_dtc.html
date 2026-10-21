@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CheviExplorer — Diagnóstico DTC</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #1a1a1e; font-family: Roboto, sans-serif; display: flex; justify-content: center; padding: 24px; gap: 24px; flex-wrap: wrap; }
+  .phone { width: 360px; background: #0C0C0E; border-radius: 28px; overflow: hidden; border: 2px solid #2B2B32; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .status-sys { height: 28px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; font-size: 11px; color: #A0A0AB; }
+  .app-bar { padding: 12px 16px; border-bottom: 1px solid #2B2B32; }
+  .app-title { font-size: 18px; font-weight: 700; color: #FFF; }
+  .app-sub { font-size: 12px; color: #1E9E66; margin-top: 2px; }
+  .caption { text-align: center; color: #A0A0AB; font-size: 12px; margin-bottom: 8px; width: 360px; }
+  .empty {
+    margin: 32px 16px; text-align: center; padding: 24px;
+    background: #17171B; border-radius: 16px; border: 1px solid #2B2B32;
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-title { font-size: 16px; color: #FFF; font-weight: 600; }
+  .empty-sub { font-size: 13px; color: #A0A0AB; margin-top: 6px; line-height: 1.4; }
+  .btn { display: block; width: calc(100% - 32px); margin: 12px 16px; padding: 14px; border-radius: 12px; border: none; font-size: 15px; font-weight: 600; }
+  .btn-pri { background: #007AFF; color: #FFF; }
+  .btn-dis { background: #2B2B32; color: #A0A0AB; }
+  .card {
+    margin: 12px 16px; padding: 14px; background: #17171B;
+    border-radius: 14px; border: 1px solid #2B2B32;
+  }
+  .code { font-family: ui-monospace, monospace; font-size: 20px; color: #FFF; font-weight: 700; }
+  .desc { font-size: 13px; color: #A0A0AB; margin-top: 6px; }
+  .ev { font-family: ui-monospace, monospace; font-size: 11px; color: #007AFF; margin-top: 8px; }
+  .nav { display: flex; border-top: 1px solid #2B2B32; }
+  .nav-item { flex: 1; text-align: center; padding: 10px 4px; font-size: 10px; color: #A0A0AB; }
+  .nav-item.active { color: #007AFF; }
+  .nav-icon { font-size: 18px; display: block; }
+  .tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 6px; background: rgba(255,149,0,0.2); color: #FF9500; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <div>
+    <div class="caption">Estado: 0 DTC (solo si captura del perfil lo respalda · MR-140)</div>
+    <div class="phone">
+      <div class="status-sys"><span>9:41</span><span>MR-140 · KWP</span></div>
+      <div class="app-bar">
+        <div class="app-title">Códigos de avería</div>
+        <div class="app-sub">MR-140 · comunicación establecida</div>
+      </div>
+      <div class="empty">
+        <div class="empty-icon">✓</div>
+        <div class="empty-title">No se detectaron códigos</div>
+        <div class="empty-sub">Respuesta compatible con cero DTC para esta consulta (perfil MR-140). No generalizar a otros perfiles.</div>
+      </div>
+      <button class="btn btn-pri">Leer DTC</button>
+      <button class="btn btn-dis">Borrar DTC · no habilitado</button>
+      <div class="nav">
+        <div class="nav-item"><span class="nav-icon">⌂</span>Inicio</div>
+        <div class="nav-item active"><span class="nav-icon">⚠</span>DTC</div>
+        <div class="nav-item"><span class="nav-icon">▤</span>Datos</div>
+        <div class="nav-item"><span class="nav-icon">⚗</span>Lab</div>
+        <div class="nav-item"><span class="nav-icon">⋯</span>Más</div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="caption">Estado: con código · descripción según catálogo o “Sin descripción confirmada”</div>
+    <div class="phone">
+      <div class="status-sys"><span>9:41</span><span>MR-140 · KWP</span></div>
+      <div class="app-bar">
+        <div class="app-title">Códigos de avería</div>
+        <div class="app-sub">MR-140 · comunicación establecida</div>
+      </div>
+      <div class="card">
+        <div class="code">PXXXX</div>
+        <div class="desc">Sin descripción confirmada</div>
+        <div class="ev">Evidencia: 59 … (bytes de respuesta)</div>
+        <div class="tag">Sin estados Presente/Histórico inventados</div>
+      </div>
+      <button class="btn btn-pri">Leer DTC</button>
+      <button class="btn btn-dis">Borrar DTC · no habilitado</button>
+      <div class="nav">
+        <div class="nav-item"><span class="nav-icon">⌂</span>Inicio</div>
+        <div class="nav-item active"><span class="nav-icon">⚠</span>DTC</div>
+        <div class="nav-item"><span class="nav-icon">▤</span>Datos</div>
+        <div class="nav-item"><span class="nav-icon">⚗</span>Lab</div>
+        <div class="nav-item"><span class="nav-icon">⋯</span>Más</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
