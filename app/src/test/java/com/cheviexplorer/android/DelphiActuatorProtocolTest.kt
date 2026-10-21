@@ -18,10 +18,14 @@ class DelphiActuatorProtocolTest {
     }
 
     @Test
-    fun preservesDelphiInjectorSpecialCaseForAllFourCylinders() {
-        assertArrayEquals(hex("85 11 F1 30 32 07 FF FF EE"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, true, 0))
+    fun onAndOffUseTheSameCylinderSelectorForAllFourInjectors() {
+        assertArrayEquals(hex("85 11 F1 30 32 07 FF 00 EF"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, true, 0))
         assertArrayEquals(hex("85 11 F1 30 32 07 00 00 F0"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, false, 0))
-        assertArrayEquals(hex("85 11 F1 30 32 07 FF 02 F1"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, true, 3))
+        assertArrayEquals(hex("85 11 F1 30 32 07 FF 01 F0"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, true, 1))
+        assertArrayEquals(hex("85 11 F1 30 32 07 00 01 F1"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, false, 1))
+        assertArrayEquals(hex("85 11 F1 30 32 07 FF 02 F1"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, true, 2))
+        assertArrayEquals(hex("85 11 F1 30 32 07 00 02 F2"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, false, 2))
+        assertArrayEquals(hex("85 11 F1 30 32 07 FF 03 F2"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, true, 3))
         assertArrayEquals(hex("85 11 F1 30 32 07 00 03 F3"), KwpProtocol.buildMr140ActuatorControlRequest(0x32, false, 3))
     }
 
