@@ -7,8 +7,10 @@ import org.junit.Test
 
 class KwpLaboratoryPlanTest {
     @Test
-    fun basePassIncludesKnownGroupsAndDoesNotDuplicateIds() {
-        assertTrue(KwpLaboratoryPlan.baseIds.containsAll(listOf(0x01, 0x40, 0xF0, 0xF1, 0xFB)))
+    fun basePassIncludesStaticRangesAndDefersDynamicIds() {
+        assertTrue(KwpLaboratoryPlan.baseIds.containsAll(listOf(0x01, 0x40, 0xFB)))
+        assertFalse(KwpLaboratoryPlan.baseIds.contains(0xF0))
+        assertFalse(KwpLaboratoryPlan.baseIds.contains(0xF1))
         assertEquals(KwpLaboratoryPlan.baseIds.size, KwpLaboratoryPlan.baseIds.toSet().size)
     }
 
@@ -20,8 +22,9 @@ class KwpLaboratoryPlanTest {
     }
 
     @Test
-    fun combinedPassCoversEveryLocalIdentifierExactlyOnce() {
-        assertEquals((0x01..0xFF).toSet(), KwpLaboratoryPlan.allCandidateIds.toSet())
-        assertEquals(255, KwpLaboratoryPlan.allCandidateIds.size)
+    fun combinedPassCoversEveryNonDeferredIdentifierExactlyOnce() {
+        val expected = (0x01..0xFF).toSet() - setOf(0xF0, 0xF1)
+        assertEquals(expected, KwpLaboratoryPlan.allCandidateIds.toSet())
+        assertEquals(253, KwpLaboratoryPlan.allCandidateIds.size)
     }
 }
