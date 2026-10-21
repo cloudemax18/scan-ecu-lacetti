@@ -248,3 +248,49 @@ Hay archivos residuales de 1 byte llamados `g`, `ddd` y `s` en carpetas del paqu
 3. Ejecutar CI con el código integrado; solo entonces considerar una prueba de solo lectura con adaptador y contacto ON, motor parado, capturando TX/RX íntegro.
 4. Tras esa revisión, añadir la decisión y los SHA/run concretos aquí y en el índice de continuidad.
 
+
+
+## 13. 2026-10-21 — plan de integración segura de 0x2C y nueva ronda multiagente
+
+**SHA base comprobado:** `e0d3ac0dabbc60325c296bb7a5094436ac27df61` (main, consultado antes de abrir la rama documental).  
+**Rama documental:** `docs/continuidad-prompts-2026-10-21`.  
+**Tipo de cambio en esta rama:** documentación y prompts únicamente; no cambia código de producción ni habilita comandos KWP.
+
+### 13.1 Decisión vigente
+
+El paquete Claude v2 es una fuente de reconstrucción estática útil, pero el parche `0001-add-2c-dynamic-block-definitions-and-read-gate.patch` no está listo para aplicarse directamente: define una compuerta aislada que no está conectada al flujo real de `MainActivity.kt`; su aceptación no valida explícitamente el origen ECU en la forma requerida. El parche `0002-fix-mr140-injector-cylinder-byte.patch` es redundante frente al código y pruebas que ya están en main.
+
+**No aplicar ninguno de los parches automáticamente.** La siguiente iteración de código debe producir una propuesta integrada pequeña y revisable, seguida de auditoría independiente y CI. No mezclar UI, actuadores ni adaptación de acelerador en esta iteración.
+
+### 13.2 Requisitos de implementación para la próxima iteración
+
+1. Implementar un estado de sesión real y de un solo propietario para la comunicación KWP; no crear una segunda máquina de estados que pueda divergir del transporte.
+2. Asegurar que las solicitudes y respuestas se serialicen: ninguna respuesta de TesterPresent, barrido u otra consulta puede ser consumida como respuesta a la petición 0x2C. Revisar la condición de carrera ya vista en capturas, donde una respuesta `7E` de TesterPresent puede intercalarse con otra transacción.
+3. Para MR-140, secuencia propuesta: inicio de comunicación aceptado → definición `2C F0` → validación de respuesta positiva `6C F0` → definición `2C F1` → validación `6C F1` → habilitar solo las lecturas dinámicas correspondientes en esa sesión. Si el diseño del EXE justifica una dependencia distinta, documentarla con evidencia y no asumirla.
+4. No asumir que la definición ZF F0 tiene la misma confianza que MR-140: no hay captura física de aceptación `2C F0` de ZF. Mantener ZF F0 bloqueado en producción hasta decisión explícita basada en evidencia.
+5. Validar cada respuesta con el parser real: trama completa, dirección destino del tester, dirección origen ECU esperada para el perfil, checksum, servicio positivo y bloque exacto. Rechazar respuesta vieja, de otra ECU, inesperada, truncada, NRC o checksum incorrecto. No tratar `7E` como `6C`.
+6. La compuerta debe fallar cerrada. Resetearla en desconexión, reconexión, reinicio de sesión, cambio de ECU, pérdida de sincronización, timeout, error I/O, respuesta inválida o fallo de cualquiera de las definiciones. No reutilizar estado de una sesión anterior.
+7. El alcance de esta fase es exclusivamente lectura y definición de bloques. No añadir comandos de actuador, `0x30`, aprendizaje de acelerador, escritura, borrado DTC ni soporte HV-240.
+8. Agregar pruebas deterministas para: origen correcto/incorrecto; destino incorrecto; checksum inválido; respuesta positiva correcta; bloque equivocado; NRC `7F 2C xx`; timeout; trama truncada; respuesta residual `7E`; F0 aceptado y F1 rechazado; reset al cambiar/desconectar ECU; lecturas F0/F1 bloqueadas antes de aceptación.
+9. No reducir ni relajar las pruebas existentes de `IdProbe`, inyectores o KWP. No duplicar la corrección de inyectores del parche 0002.
+10. Antes de proponer merge, ejecutar CI disponible y revisar el SHA exacto probado. Registrar por separado pruebas unitarias, compilación APK debug y artefactos. No llamar a CI “prueba física”.
+
+### 13.3 Puertas de aceptación
+
+- **Gate A — revisión del parche:** cambios acotados, diff completo, rutas, invariantes de seguridad y cobertura de casos negativos.
+- **Gate B — auditoría independiente:** DeepSeek revisa el diff o, si no está disponible, la especificación; reporta defectos y no modifica el código.
+- **Gate C — CI:** pruebas unitarias y `assembleDebug` exitosos sobre el mismo commit de la propuesta. Si CI no se ejecuta, declararlo explícitamente.
+- **Gate D — revisión documental:** bitácora e índice enlazan PR, SHA, CI y pendientes. No afirmar que se integró a main hasta verificar merge.
+- **Gate E — vehículo:** fuera de esta iteración. Solo considerar una prueba de lectura de bajo riesgo cuando la integración esté revisada y el usuario disponga del adaptador; registrar TX/RX completo y condiciones de contacto/motor. No hacer pruebas de actuadores.
+
+### 13.4 Próximos entregables externos
+
+- Claude: propuesta de implementación de producción para compuerta 0x2C y transacciones serializadas, con patch aplicable al main actual; no ejecutar ni afirmar compilación si no dispone del entorno.
+- DeepSeek: matriz de amenazas/casos de prueba y revisión crítica independiente; no reescribir código ni repetir la tarea de Claude.
+- Gemini: investigación de fuentes primarias/documentación técnica para servicio 0x2C, definiciones de bloques y diferencias por ECU/vehículo; no inferir validación física de código EXE.
+- Grok: revisión de UX/estados de bloqueo y advertencias para una fase futura; no tocar Kotlin ni presentar mockups como implementación.
+- ChatGPT/integración: comparar los paquetes recibidos con main, resolver discrepancias, implementar/revisar en rama y PR, verificar CI y actualizar bitácora. Los agentes externos no tienen acceso al repositorio; el usuario descarga y sube manualmente los paquetes.
+
+### 13.5 Estado de ejecución
+
+Al redactar esta entrada, solo se ha preparado el plan y los prompts. No se han aplicado cambios de código 0x2C, no se ha compilado APK por esta tarea, no se han ejecutado JUnit por esta tarea y no se han realizado pruebas con adaptador ni vehículo.
