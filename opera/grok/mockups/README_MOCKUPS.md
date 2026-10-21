@@ -1,36 +1,32 @@
-# CheviExplorer — Mockups UI v1.2
+# CheviExplorer — Mockups UI v1.2.1 + Prompt 4
 
-**Fecha:** 2026-10-17 (pack mockups)  
+**SHA de referencia (main):** `8fdd627370e88acce253d774916b66e36e47b1c2`  
 **Design system:** GROK_UI_SYSTEM.md v1.2  
-**Paleta (código real):** `#0C0C0E` fondo · `#17171B` surface · `#007AFF` accent · `#FFFFFF` / `#A0A0AB` texto · `#1E9E66` success · `#FF9500` warning · `#FF3B30` error (propuesto)
+**Auditoría completa:** `../GROK_UI_AUDIT_PROMPT4.md`
+
+## Aviso
+
+Estos HTML son **referencia de diseño**. No son capturas del APK ni prueba de implementación.
+
+## Paleta (código real)
+
+`#0C0C0E` · `#17171B` · `#007AFF` · `#FFFFFF` · `#A0A0AB` · `#2B2B32`  
+Success/warning alineados a tints actuador (`#1E9E66` / `#FF9500`). Error `#FF3B30` = **propuesto**.
 
 ## Contenido
 
-| Archivo | Pantalla / contenido |
-|---------|----------------------|
-| `01_inicio.html` | Inicio / vehículo · perfil · badge conexión · acciones |
-| `02_conexion_kkl.html` | Flujo de estados USB → puerto → KWP |
-| `03_diagnostico_dtc.html` | DTC vacío (0 códigos) y con código + borrar deshabilitado |
-| `04_datos_en_vivo.html` | Filas ID + hex + “Sin datos confirmados” |
-| `05_laboratorio_kwp.html` | Contadores reales · Detener · resultados |
-| `06_servicio_actuadores.html` | DriverIM MR-140 con advertencias · empty ZF/HV |
-| `07_flujo_navegacion.html` | Mapa de navegación y reglas de flujo |
+| Archivo | Contenido |
+|---------|-----------|
+| index.html | Índice |
+| 01_inicio.html | Inicio; spinner real = MR-140 + ZF; HV-240 no disponible |
+| 02_conexion_kkl.html | Estados USB→KWP + catálogo |
+| 03_diagnostico_dtc.html | DTC por perfil; borrar off |
+| 04_datos_en_vivo.html | Hex + Sin datos confirmados |
+| 05_laboratorio_kwp.html | Base 01–40+FB; F0/F1 aplazados |
+| 06_servicio_actuadores.html | DriverIM MR-140; empty ZF/HV |
+| 07_flujo_navegacion.html | 7 secciones del APK + reglas |
 
-## Cómo verlos
+## APK real (no mockup)
 
-Abrir cada `.html` en un navegador (Chrome / Firefox / Edge).  
-Son mockups de referencia visual alineados con la spec v1.2; **no** son capturas del APK ni pantallas implementadas.
-
-## Notas de diseño reflejadas
-
-- Adaptador detectado ≠ ECU conectada  
-- Baud = ajuste de puerto, no prueba de KWP  
-- Datos sin fórmulas validadas → hex + badge warning  
-- Borrar DTC deshabilitado  
-- Contadores de lab sin inventar categorías que el código no separe  
-- HV-240 / ZF actuadores: bloqueados o empty según spec  
-- Adaptación acelerador: no ejecutable hasta validar rutina completa  
-
-## Relación con el paquete de especificación
-
-Ver también `CheviExplorer_UI_Design_v1.2.zip` (documentos GROK_*.md).
+Secciones: Inicio, Diagnóstico, Datos ECU, En vivo, Pruebas, Registro, Ajustes.  
+Actuadores viven en **Pruebas**. Conexión no es Activity separada.

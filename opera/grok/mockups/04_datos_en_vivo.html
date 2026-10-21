@@ -2,81 +2,111 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CheviExplorer — Datos en vivo</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #1a1a1e; font-family: Roboto, sans-serif; display: flex; justify-content: center; padding: 24px; }
-  .phone { width: 360px; background: #0C0C0E; border-radius: 28px; overflow: hidden; border: 2px solid #2B2B32; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
-  .status-sys { height: 28px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; font-size: 11px; color: #A0A0AB; }
-  .app-bar { padding: 12px 16px; border-bottom: 1px solid #2B2B32; }
-  .app-title { font-size: 18px; font-weight: 700; color: #FFF; }
-  .app-sub { font-size: 12px; color: #1E9E66; margin-top: 2px; }
-  .row {
-    margin: 10px 16px; padding: 12px 14px; background: #17171B;
-    border-radius: 12px; border: 1px solid #2B2B32;
+  :root {
+    --bg: #0C0C0E; --surface: #17171B; --accent: #007AFF;
+    --text: #FFFFFF; --text-sec: #A0A0AB; --border: #2B2B32;
+    --success: #1E9E66; --warning: #FF9500; --error: #FF3B30;
+    --page-bg: #1a1a1e;
   }
-  .row-top { display: flex; justify-content: space-between; align-items: center; }
-  .id { font-family: ui-monospace, monospace; font-size: 14px; color: #007AFF; font-weight: 600; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--page-bg); font-family: Roboto, sans-serif;
+    display: flex; justify-content: center; padding: 16px; color: var(--text);
+  }
+  .phone {
+    width: 100%; max-width: 360px; background: var(--bg);
+    border-radius: 28px; overflow: hidden; border: 2px solid var(--border);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .status-sys { min-height: 28px; display: flex; justify-content: space-between; align-items: center; padding: 4px 16px; font-size: 11px; color: var(--text-sec); }
+  .app-bar { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .app-title { font-size: 18px; font-weight: 700; }
+  .app-sub { font-size: 12px; color: var(--success); margin-top: 2px; }
+  .row {
+    margin: 10px 16px; padding: 12px 14px; background: var(--surface);
+    border-radius: 12px; border: 1px solid var(--border);
+  }
+  .row-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .id { font-family: ui-monospace, monospace; font-size: 14px; color: var(--accent); font-weight: 600; }
   .badge {
     font-size: 10px; padding: 3px 8px; border-radius: 6px;
-    background: rgba(255,149,0,0.18); color: #FF9500; border: 1px dashed rgba(255,149,0,0.5);
+    background: rgba(255,149,0,0.18); color: var(--warning);
+    border: 1px dashed rgba(255,149,0,0.5);
   }
-  .hex { font-family: ui-monospace, monospace; font-size: 12px; color: #FFFFFF; margin-top: 8px; word-break: break-all; line-height: 1.4; }
-  .meta { font-size: 11px; color: #A0A0AB; margin-top: 6px; }
+  .hex {
+    font-family: ui-monospace, monospace; font-size: 12px; color: var(--text);
+    margin-top: 8px; word-break: break-all; line-height: 1.4;
+  }
+  .meta { font-size: 11px; color: var(--text-sec); margin-top: 6px; line-height: 1.35; }
   .actions { padding: 12px 16px; display: flex; gap: 8px; }
-  .btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 13px; font-weight: 600; }
-  .btn-pri { background: #007AFF; color: #FFF; }
-  .btn-sec { background: #17171B; color: #FFF; border: 1px solid #2B2B32; }
-  .note { margin: 0 16px 12px; font-size: 11px; color: #A0A0AB; line-height: 1.4; }
-  .nav { display: flex; border-top: 1px solid #2B2B32; }
-  .nav-item { flex: 1; text-align: center; padding: 10px 4px; font-size: 10px; color: #A0A0AB; }
-  .nav-item.active { color: #007AFF; }
+  .btn {
+    flex: 1; padding: 12px; border-radius: 10px; border: none;
+    font-size: 13px; font-weight: 600; min-height: 48px; cursor: default;
+  }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-pri { background: var(--accent); color: var(--text); }
+  .btn-sec { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .note { margin: 0 16px 12px; font-size: 11px; color: var(--text-sec); line-height: 1.4; }
+  .nav { display: flex; border-top: 1px solid var(--border); }
+  .nav-item { flex: 1; text-align: center; padding: 10px 4px; font-size: 10px; color: var(--text-sec); text-decoration: none; min-height: 48px; }
+  .nav-item.active { color: var(--accent); }
   .nav-icon { font-size: 18px; display: block; }
+  .caption { text-align: center; font-size: 12px; color: var(--text-sec); margin-bottom: 12px; max-width: 360px; margin-left: auto; margin-right: auto; }
+  @media (max-width: 400px) { .phone { border-radius: 16px; } body { padding: 8px; } }
 </style>
 </head>
 <body>
-<div class="phone">
-  <div class="status-sys"><span>9:41</span><span>MR-140</span></div>
-  <div class="app-bar">
-    <div class="app-title">Datos en vivo</div>
-    <div class="app-sub">Solo lectura · IDs 0x21</div>
-  </div>
-  <div class="row">
-    <div class="row-top">
-      <span class="id">21 02</span>
-      <span class="badge">Sin datos confirmados</span>
+<div>
+  <p class="caption">Mockup · bytes hex + Sin datos confirmados · sin formulas validadas</p>
+  <div class="phone" role="main" aria-label="Datos en vivo">
+    <div class="status-sys"><span>9:41</span><span>MR-140</span></div>
+    <div class="app-bar">
+      <div class="app-title">Datos en vivo</div>
+      <div class="app-sub">Solo lectura · IDs 0x21</div>
     </div>
-    <div class="hex">66 FF 30 48 30 33 30 30 38 30 37 31 39 31 67 44 FF FF FF FF</div>
-    <div class="meta">Respuesta bruta · 20 bytes · 09:41:12 · estado: pendiente de validación</div>
-  </div>
-  <div class="row">
-    <div class="row-top">
-      <span class="id">21 03</span>
-      <span class="badge">Sin datos confirmados</span>
+    <div class="row" role="group" aria-label="Identificador 21 02">
+      <div class="row-top">
+        <span class="id">21 02</span>
+        <span class="badge">Sin datos confirmados</span>
+      </div>
+      <div class="hex">66 FF 30 48 30 33 30 30 38 30 37 31 39 31 67 44 FF FF FF FF</div>
+      <div class="meta">1. ID KWP · 2. Respuesta bruta · 3. Sin valor decodificado · 4. Sin unidad · 5. 09:41:12 · 6. pendiente de validacion</div>
     </div>
-    <div class="hex">05 BF 9A 4C</div>
-    <div class="meta">Respuesta bruta · 09:41:12 · sin unidad confirmada</div>
-  </div>
-  <div class="row">
-    <div class="row-top">
-      <span class="id">21 04</span>
-      <span class="badge">Sin datos confirmados</span>
+    <div class="row" role="group" aria-label="Identificador 21 03">
+      <div class="row-top">
+        <span class="id">21 03</span>
+        <span class="badge">Sin datos confirmados</span>
+      </div>
+      <div class="hex">05 BF 9A 4C</div>
+      <div class="meta">Respuesta bruta · 09:41:12 · no etiquetar como sensor</div>
     </div>
-    <div class="hex">00 BA 5B DA</div>
-    <div class="meta">Respuesta bruta · 09:41:13 · no etiquetar como RPM/temp</div>
-  </div>
-  <div class="note">Cada fila: ID + hex + timestamp + estado. Valor decodificado y unidad solo si están validados en vehículo. Favoritos de IDs: opcional/futuro.</div>
-  <div class="actions">
-    <button class="btn btn-pri">Iniciar lectura</button>
-    <button class="btn btn-sec">Detener</button>
-  </div>
-  <div class="nav">
-    <div class="nav-item"><span class="nav-icon">⌂</span>Inicio</div>
-    <div class="nav-item"><span class="nav-icon">⚠</span>DTC</div>
-    <div class="nav-item active"><span class="nav-icon">▤</span>Datos</div>
-    <div class="nav-item"><span class="nav-icon">⚗</span>Lab</div>
-    <div class="nav-item"><span class="nav-icon">⋯</span>Más</div>
+    <div class="row" role="group" aria-label="Identificador 21 04">
+      <div class="row-top">
+        <span class="id">21 04</span>
+        <span class="badge">Sin datos confirmados</span>
+      </div>
+      <div class="hex">00 BA 5B DA</div>
+      <div class="meta">Respuesta bruta · 09:41:13 · estado: pendiente de validacion</div>
+    </div>
+    <div class="note">
+      Favoritos de IDs: opcional/futuro, no requisito de primera integracion.
+      Si la consulta falla: estado error/vacio; no mantener valor antiguo como actual.
+      Ref.: readConfirmedParameterIds, startLiveParameterPolling, stopLiveParameterPolling.
+    </div>
+    <div class="actions">
+      <button type="button" class="btn btn-pri">Iniciar lectura</button>
+      <button type="button" class="btn btn-sec">Detener</button>
+    </div>
+    <nav class="nav" aria-label="Navegacion">
+      <a class="nav-item" href="01_inicio.html"><span class="nav-icon">⌂</span>Inicio</a>
+      <a class="nav-item" href="03_diagnostico_dtc.html"><span class="nav-icon">⚠</span>DTC</a>
+      <a class="nav-item active" href="04_datos_en_vivo.html"><span class="nav-icon">▤</span>Datos</a>
+      <a class="nav-item" href="05_laboratorio_kwp.html"><span class="nav-icon">⚗</span>Lab</a>
+      <a class="nav-item" href="06_servicio_actuadores.html"><span class="nav-icon">⋯</span>Mas</a>
+    </nav>
   </div>
 </div>
 </body>

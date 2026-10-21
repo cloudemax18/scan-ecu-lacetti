@@ -2,111 +2,145 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CheviExplorer — Conexión KKL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CheviExplorer — Conexion KKL · estados</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #1a1a1e; font-family: Roboto, sans-serif; display: flex; justify-content: center; padding: 24px; }
-  .phone { width: 360px; background: #0C0C0E; border-radius: 28px; overflow: hidden; border: 2px solid #2B2B32; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
-  .status-sys { height: 28px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; font-size: 11px; color: #A0A0AB; }
-  .app-bar { padding: 12px 16px; border-bottom: 1px solid #2B2B32; }
-  .app-title { font-size: 18px; font-weight: 700; color: #FFF; }
-  .app-sub { font-size: 12px; color: #A0A0AB; margin-top: 2px; }
-  .steps { padding: 16px; }
-  .step {
-    display: flex; gap: 12px; padding: 12px 0;
-    border-bottom: 1px solid #2B2B32;
+  :root {
+    --bg: #0C0C0E; --surface: #17171B; --accent: #007AFF;
+    --text: #FFFFFF; --text-sec: #A0A0AB; --border: #2B2B32;
+    --success: #1E9E66; --warning: #FF9500; --error: #FF3B30;
+    --page-bg: #1a1a1e;
   }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--page-bg); font-family: Roboto, sans-serif;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;
+    padding: 16px; color: var(--text);
+  }
+  .phone {
+    width: 100%; max-width: 360px; background: var(--bg);
+    border-radius: 28px; overflow: hidden; border: 2px solid var(--border);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .status-sys { min-height: 28px; display: flex; justify-content: space-between; align-items: center; padding: 4px 16px; font-size: 11px; color: var(--text-sec); }
+  .app-bar { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .app-title { font-size: 18px; font-weight: 700; }
+  .app-sub { font-size: 12px; color: var(--text-sec); margin-top: 2px; }
+  .steps { padding: 12px 16px; }
+  .step { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
   .step:last-child { border-bottom: none; }
   .step-icon {
     width: 28px; height: 28px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 14px; flex-shrink: 0;
+    font-size: 13px; flex-shrink: 0; font-weight: 700;
   }
-  .ok { background: #1E9E66; color: #fff; }
-  .run { background: #007AFF; color: #fff; }
-  .wait { background: #2B2B32; color: #A0A0AB; }
-  .err { background: #FF3B30; color: #fff; }
-  .step-body { flex: 1; }
-  .step-title { font-size: 14px; color: #FFF; font-weight: 500; }
-  .step-desc { font-size: 12px; color: #A0A0AB; margin-top: 2px; }
+  .ok { background: var(--success); color: #fff; }
+  .run { background: var(--accent); color: #fff; }
+  .wait { background: var(--border); color: var(--text-sec); }
+  .err { background: var(--error); color: #fff; }
+  .step-title { font-size: 14px; font-weight: 500; }
+  .step-desc { font-size: 12px; color: var(--text-sec); margin-top: 2px; line-height: 1.35; }
   .log {
-    margin: 0 16px 16px; padding: 12px;
-    background: #17171B; border-radius: 12px; border: 1px solid #2B2B32;
-    font-family: ui-monospace, monospace; font-size: 11px; color: #A0A0AB;
-    line-height: 1.5; max-height: 120px; overflow: hidden;
+    margin: 0 16px 12px; padding: 12px; background: var(--surface);
+    border-radius: 12px; border: 1px solid var(--border);
+    font-family: ui-monospace, monospace; font-size: 11px; color: var(--text-sec); line-height: 1.5;
   }
-  .log .tx { color: #007AFF; }
-  .log .rx { color: #1E9E66; }
+  .log .tx { color: var(--accent); }
   .actions { padding: 0 16px 16px; display: flex; gap: 10px; }
-  .btn { flex: 1; padding: 14px; border-radius: 12px; border: none; font-size: 14px; font-weight: 600; }
-  .btn-sec { background: #17171B; color: #FFF; border: 1px solid #2B2B32; }
-  .btn-pri { background: #007AFF; color: #FFF; }
-  .nav { display: flex; border-top: 1px solid #2B2B32; }
-  .nav-item { flex: 1; text-align: center; padding: 10px 4px; font-size: 10px; color: #A0A0AB; }
-  .nav-item.active { color: #007AFF; }
+  .btn {
+    flex: 1; padding: 14px; border-radius: 12px; border: none;
+    font-size: 14px; font-weight: 600; min-height: 48px; cursor: default;
+  }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-sec { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .btn-pri { background: var(--accent); color: var(--text); }
+  .nav { display: flex; border-top: 1px solid var(--border); }
+  .nav-item { flex: 1; text-align: center; padding: 10px 4px; font-size: 10px; color: var(--text-sec); text-decoration: none; min-height: 48px; }
+  .nav-item.active { color: var(--accent); }
   .nav-icon { font-size: 18px; display: block; }
+  .caption { width: 100%; max-width: 360px; text-align: center; font-size: 12px; color: var(--text-sec); }
+  .state-list {
+    width: 100%; max-width: 720px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px; padding: 16px;
+  }
+  .state-list h2 { font-size: 14px; color: var(--accent); margin-bottom: 10px; }
+  .state-list table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .state-list th, .state-list td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .state-list th { color: var(--text-sec); font-weight: 500; }
+  @media (max-width: 400px) { .phone { border-radius: 16px; } body { padding: 8px; } }
 </style>
 </head>
 <body>
-<div class="phone">
-  <div class="status-sys"><span>9:41</span><span>OTG</span></div>
-  <div class="app-bar">
-    <div class="app-title">Conexión KKL</div>
-    <div class="app-sub">Estados diferenciados · adaptador ≠ ECU</div>
-  </div>
-  <div class="steps">
-    <div class="step">
-      <div class="step-icon ok">✓</div>
-      <div class="step-body">
-        <div class="step-title">Permiso USB</div>
-        <div class="step-desc">Concedido</div>
+  <p class="caption">Mockup · inicializacion KWP en curso (adaptador no es ECU identificada)</p>
+  <div class="phone" role="main" aria-label="Conexion KKL">
+    <div class="status-sys"><span>9:41</span><span>USB</span></div>
+    <div class="app-bar">
+      <div class="app-title">Conexion KKL</div>
+      <div class="app-sub">Estados diferenciados · baud no es KWP</div>
+    </div>
+    <div class="steps" role="list">
+      <div class="step" role="listitem">
+        <div class="step-icon ok" aria-label="Completado">✓</div>
+        <div><div class="step-title">Permiso USB</div><div class="step-desc">Concedido</div></div>
+      </div>
+      <div class="step" role="listitem">
+        <div class="step-icon ok" aria-label="Completado">✓</div>
+        <div><div class="step-title">Adaptador detectado</div><div class="step-desc">VID=1A86 PID=7523 · no implica ECU</div></div>
+      </div>
+      <div class="step" role="listitem">
+        <div class="step-icon ok" aria-label="Completado">✓</div>
+        <div><div class="step-title">Puerto serie abierto</div><div class="step-desc">10400 8N1 · ajuste de puerto, no prueba de ECU</div></div>
+      </div>
+      <div class="step" role="listitem">
+        <div class="step-icon run" aria-label="En curso">…</div>
+        <div><div class="step-title">Inicializacion KWP en curso</div><div class="step-desc">StartCommunication · perfil MR-140 (0x11)</div></div>
+      </div>
+      <div class="step" role="listitem">
+        <div class="step-icon wait" aria-label="Pendiente">5</div>
+        <div><div class="step-title">Comunicacion KWP validada</div><div class="step-desc">Pendiente de respuesta positiva + checksum OK</div></div>
+      </div>
+      <div class="step" role="listitem">
+        <div class="step-icon wait" aria-label="Pendiente">6</div>
+        <div><div class="step-title">ECU objetivo identificada</div><div class="step-desc">Solo con evidencia; bytes raw no son mapa decodificado</div></div>
       </div>
     </div>
-    <div class="step">
-      <div class="step-icon ok">✓</div>
-      <div class="step-body">
-        <div class="step-title">Adaptador detectado</div>
-        <div class="step-desc">VID=1A86 PID=7523 · CH340/CH341</div>
-      </div>
+    <div class="log" aria-label="Registro">
+      <div class="tx">TX  81 11 F1 81 04</div>
+      <div>Esperando respuesta… (timeout posible)</div>
     </div>
-    <div class="step">
-      <div class="step-icon ok">✓</div>
-      <div class="step-body">
-        <div class="step-title">Puerto serie abierto</div>
-        <div class="step-desc">10400 baud · 8N1 · ajuste de puerto, no prueba de ECU</div>
-      </div>
+    <div class="actions">
+      <button type="button" class="btn btn-sec">Cancelar</button>
+      <button type="button" class="btn btn-pri">Reintentar</button>
     </div>
-    <div class="step">
-      <div class="step-icon run">…</div>
-      <div class="step-body">
-        <div class="step-title">Inicialización KWP en curso</div>
-        <div class="step-desc">StartCommunication · perfil MR-140</div>
-      </div>
-    </div>
-    <div class="step">
-      <div class="step-icon wait">4</div>
-      <div class="step-body">
-        <div class="step-title">Comunicación KWP validada</div>
-        <div class="step-desc">Pendiente de respuesta con checksum OK</div>
-      </div>
-    </div>
+    <nav class="nav" aria-label="Navegacion">
+      <a class="nav-item" href="01_inicio.html"><span class="nav-icon">⌂</span>Inicio</a>
+      <a class="nav-item active" href="02_conexion_kkl.html"><span class="nav-icon">🔌</span>Conex.</a>
+      <a class="nav-item" href="03_diagnostico_dtc.html"><span class="nav-icon">⚠</span>DTC</a>
+      <a class="nav-item" href="04_datos_en_vivo.html"><span class="nav-icon">▤</span>Datos</a>
+      <a class="nav-item" href="05_laboratorio_kwp.html"><span class="nav-icon">⚗</span>Lab</a>
+    </nav>
   </div>
-  <div class="log">
-    <div class="tx">TX  81 11 F1 81 04</div>
-    <div>Esperando respuesta…</div>
-  </div>
-  <div class="actions">
-    <button class="btn btn-sec">Cancelar</button>
-    <button class="btn btn-pri">Reintentar</button>
-  </div>
-  <div class="nav">
-    <div class="nav-item active"><span class="nav-icon">⌂</span>Inicio</div>
-    <div class="nav-item"><span class="nav-icon">⚠</span>DTC</div>
-    <div class="nav-item"><span class="nav-icon">▤</span>Datos</div>
-    <div class="nav-item"><span class="nav-icon">⚗</span>Lab</div>
-    <div class="nav-item"><span class="nav-icon">⋯</span>Más</div>
-  </div>
-</div>
+  <aside class="state-list" aria-label="Catalogo de estados">
+    <h2>Estados visibles obligatorios (diseno)</h2>
+    <table>
+      <thead><tr><th>Estado</th><th>Indicador</th><th>Texto / accion</th></tr></thead>
+      <tbody>
+        <tr><td>USB no detectado</td><td>off / err</td><td>No se detecta adaptador · comprobar OTG</td></tr>
+        <tr><td>Permiso denegado</td><td>err</td><td>Permiso USB denegado · Reintentar</td></tr>
+        <tr><td>Permiso pendiente</td><td>warn</td><td>Esperando permiso del sistema</td></tr>
+        <tr><td>Adaptador detectado</td><td>accent</td><td>VID/PID · aun sin puerto</td></tr>
+        <tr><td>Puerto abierto</td><td>accent (no verde)</td><td>Baud 8N1 · no es KWP validado</td></tr>
+        <tr><td>Inicializacion KWP</td><td>run</td><td>StartCommunication en curso</td></tr>
+        <tr><td>KWP validado</td><td>success</td><td>Respuesta positiva + checksum</td></tr>
+        <tr><td>Timeout</td><td>err</td><td>Sin respuesta · Reintentar / Desconectar</td></tr>
+        <tr><td>NRC</td><td>warn</td><td>Codigo NRC visible · no contar como positivo</td></tr>
+        <tr><td>Desconexion en operacion</td><td>err</td><td>Desconectado durante operacion · Reconectar</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:var(--text-sec);margin-top:12px;line-height:1.4">
+      Ref.: requestUsbConnection, openSerialPort, initializeSelectedEcu, classifyInitResult.
+      Mockup no es APK implementado/probado. --error #FF3B30 es PROPUESTO.
+    </p>
+  </aside>
 </body>
 </html>

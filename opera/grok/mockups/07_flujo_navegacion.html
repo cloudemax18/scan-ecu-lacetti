@@ -2,98 +2,91 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CheviExplorer — Flujo de navegación</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CheviExplorer — Flujo de navegacion</title>
 <style>
+  :root {
+    --bg: #0C0C0E; --surface: #17171B; --accent: #007AFF;
+    --text: #FFFFFF; --text-sec: #A0A0AB; --border: #2B2B32;
+    --success: #1E9E66; --warning: #FF9500; --page-bg: #121216;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: #121216; font-family: Roboto, sans-serif;
-    color: #FFF; padding: 32px; min-height: 100vh;
+    background: var(--page-bg); font-family: Roboto, sans-serif;
+    color: var(--text); padding: 24px; min-height: 100vh;
   }
   h1 { font-size: 22px; margin-bottom: 8px; }
-  .sub { color: #A0A0AB; font-size: 13px; margin-bottom: 28px; max-width: 720px; line-height: 1.45; }
-  .flow {
-    display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;
-    max-width: 960px;
-  }
-  .node {
-    background: #17171B; border: 1px solid #2B2B32; border-radius: 14px;
-    padding: 14px 16px; min-width: 140px; max-width: 180px;
-  }
-  .node h3 { font-size: 13px; color: #007AFF; margin-bottom: 6px; }
-  .node p { font-size: 11px; color: #A0A0AB; line-height: 1.35; }
-  .node.home { border-color: #007AFF; }
-  .node.warn { border-color: #FF9500; }
-  .arrow {
-    align-self: center; color: #546E7A; font-size: 20px; padding: 0 4px;
-  }
+  .sub { color: var(--text-sec); font-size: 13px; margin-bottom: 24px; max-width: 720px; line-height: 1.45; }
   .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
-  .legend { margin-top: 32px; font-size: 12px; color: #A0A0AB; line-height: 1.6; }
-  .legend code { background: #2B2B32; padding: 1px 6px; border-radius: 4px; color: #FFF; }
-  table { width: 100%; max-width: 720px; border-collapse: collapse; margin-top: 16px; font-size: 12px; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #2B2B32; }
-  th { color: #A0A0AB; font-weight: 500; }
+  .node {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; min-width: 140px; max-width: 200px;
+  }
+  .node h3 { font-size: 13px; color: var(--accent); margin-bottom: 6px; }
+  .node p { font-size: 11px; color: var(--text-sec); line-height: 1.35; }
+  .node.home { border-color: var(--accent); }
+  .node.warn { border-color: var(--warning); }
+  .arrow { color: #546E7A; font-size: 20px; }
+  .links { margin: 16px 0; font-size: 13px; }
+  .links a { color: var(--accent); margin-right: 12px; }
+  table { width: 100%; max-width: 800px; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--text-sec); font-weight: 500; }
+  code { background: var(--border); padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+  @media (max-width: 600px) {
+    body { padding: 16px; }
+    .node { max-width: 100%; width: 100%; }
+  }
 </style>
 </head>
 <body>
-  <h1>CheviExplorer — Flujo de navegación (v1.2)</h1>
+  <h1>CheviExplorer — Flujo de navegacion (mockups v1.2.1)</h1>
   <p class="sub">
-    Arquitectura: una Activity con secciones (<code>makeScreen</code> / <code>showScreen</code>).
-    No se exige bottom navigation de 5 ítems; el mockup lo usa solo como referencia visual.
-    Paleta real del código: #0C0C0E · #17171B · #007AFF.
+    Arquitectura de referencia: una Activity con secciones (<code>makeScreen</code> / <code>showScreen</code>).
+    APK real: 7 secciones (Inicio, Diagnostico/DTC, Datos ECU, En vivo, Pruebas, Registro, Ajustes). Bottom nav de mockups con menos items es solo referencia visual.
+    Paleta codigo: #0C0C0E · #17171B · #007AFF · #FFFFFF · #A0A0AB · #2B2B32.
   </p>
 
-  <div class="row">
-    <div class="node home">
-      <h3>1. Inicio</h3>
-      <p>Perfil ECU · badge conexión · conectar / init · accesos rápidos</p>
-    </div>
-    <span class="arrow">→</span>
-    <div class="node">
-      <h3>2. Conexión KKL</h3>
-      <p>Permiso → detectado → puerto → init KWP → validado / error</p>
-    </div>
-    <span class="arrow">→</span>
-    <div class="node home">
-      <h3>Inicio (conectado)</h3>
-      <p>KWP validado · acciones de diagnóstico habilitadas según perfil</p>
-    </div>
+  <div class="links" aria-label="Enlaces a mockups">
+    <a href="01_inicio.html">01 Inicio</a>
+    <a href="02_conexion_kkl.html">02 Conexion</a>
+    <a href="03_diagnostico_dtc.html">03 DTC</a>
+    <a href="04_datos_en_vivo.html">04 Datos</a>
+    <a href="05_laboratorio_kwp.html">05 Lab</a>
+    <a href="06_servicio_actuadores.html">06 Servicio</a>
+    <a href="index.html">Indice</a>
   </div>
 
   <div class="row">
-    <div class="node">
-      <h3>3. DTC</h3>
-      <p>Leer · lista · borrar deshabilitado · 0 DTC solo si captura del perfil</p>
-    </div>
-    <div class="node">
-      <h3>4. Datos en vivo</h3>
-      <p>ID + hex + badge “Sin datos confirmados” · Detener</p>
-    </div>
-    <div class="node">
-      <h3>5. Laboratorio</h3>
-      <p>Contadores reales · Detener · exportar · DriverIM MR-140</p>
-    </div>
-    <div class="node warn">
-      <h3>6. Servicio</h3>
-      <p>Matriz por procedimiento · ZF/HV bloqueados · adaptación pendiente</p>
-    </div>
-    <div class="node">
-      <h3>7. Registro / Ajustes</h3>
-      <p>Log · exportar · baud · acerca de</p>
-    </div>
+    <div class="node home"><h3>1. Inicio</h3><p>Perfil · badge (puerto ≠ KWP) · conectar / init</p></div>
+    <span class="arrow">→</span>
+    <div class="node"><h3>2. Conexion KKL</h3><p>USB · permiso · puerto · init · validado / timeout / NRC</p></div>
+    <span class="arrow">→</span>
+    <div class="node home"><h3>Inicio conectado</h3><p>KWP validado · acciones segun perfil</p></div>
+  </div>
+  <div class="row">
+    <div class="node"><h3>3. DTC</h3><p>Leer · 0 DTC solo MR-140 captura · borrar off</p></div>
+    <div class="node"><h3>4. Datos</h3><p>ID + hex + Sin datos confirmados</p></div>
+    <div class="node"><h3>5. Lab</h3><p>Contadores IdProbe · Detener cooperativo</p></div>
+    <div class="node warn"><h3>6. Servicio</h3><p>MR-140 DriverIM · ZF/HV bloqueados</p></div>
+    <div class="node"><h3>7. Registro</h3><p>Log · exportar · baud</p></div>
   </div>
 
-  <div class="legend">
-    <strong>Reglas de flujo</strong>
-    <table>
-      <tr><th>Desde</th><th>Hacia</th><th>Condición</th></tr>
-      <tr><td>Inicio</td><td>Conexión</td><td>Conectar / permiso USB</td></tr>
-      <tr><td>Conexión</td><td>Inicio</td><td>Puerto abierto o KWP validado / cancelar</td></tr>
-      <tr><td>Cualquiera</td><td>DTC / Datos / Lab</td><td>Preferible con KWP validado; UI puede mostrar empty si no</td></tr>
-      <tr><td>Lab</td><td>Actuadores</td><td>Solo perfil MR-140 + puerto; resto empty state</td></tr>
-      <tr><td>HV-240 seleccionado</td><td>—</td><td>Operaciones bloqueadas hasta evidencia propia</td></tr>
-    </table>
-    <p style="margin-top:16px">Archivos HTML de este pack: abrir en navegador para vista de referencia implementable (no son capturas del APK).</p>
-  </div>
+  <h2 style="font-size:14px;color:var(--accent);margin-top:24px">Pantallas reales del APK (MainActivity)</h2>
+  <p class="sub">Inicio · Diagnostico · Datos ECU · En vivo · Pruebas (Lab+actuadores) · Registro · Ajustes. Actuadores viven en Pruebas, no en pantalla separada.</p>
+  <h2 style="font-size:14px;color:var(--accent);margin-top:24px">Reglas de flujo</h2>
+  <table>
+    <tr><th>Desde</th><th>Hacia</th><th>Condicion</th></tr>
+    <tr><td>Inicio</td><td>Conexion</td><td>Conectar / permiso USB</td></tr>
+    <tr><td>Conexion</td><td>Inicio</td><td>Puerto abierto, KWP validado, cancelar o error recuperable</td></tr>
+    <tr><td>Cualquiera</td><td>DTC / Datos / Lab</td><td>Preferible con KWP validado; empty si no</td></tr>
+    <tr><td>Lab</td><td>Actuadores</td><td>Solo MR-140 + puerto; ZF/HV empty</td></tr>
+    <tr><td>HV-240 seleccionado</td><td>—</td><td>Operaciones bloqueadas hasta evidencia propia</td></tr>
+  </table>
+
+  <p class="sub" style="margin-top:24px">
+    <strong>Mockup revisado ≠ APK implementado ≠ PROBADO EN DISPOSITIVO.</strong>
+    No se simulan operaciones reales de ECU como funcionales.
+  </p>
 </body>
 </html>
