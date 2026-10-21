@@ -1,10 +1,10 @@
 # CheviExplorer — Bitácora maestra de continuidad e integración
 
-**Última actualización:** 2026-10-20  
+**Última actualización:** 2026-10-21  
 **Repositorio:** https://github.com/cloudemax18/scan-ecu-lacetti  
 **Rama de documentación:** docs/continuidad-integracion-2026-10-20  
-**SHA base registrado:** 8fdd627370e88acce253d774916b66e36e47b1c2  
-**Estado:** revisión documental intermedia; paquete final de Claude pendiente.
+**SHA base registrado:** 1dd53122ed0aab6d88d36f0ba84805e6788d4adc  
+**Estado:** revisión estática de Claude v2 registrada; integración 0x2C pendiente.
 
 > Propósito: permitir que cualquier persona o agente retome el proyecto aunque se pierda esta conversación o una sesión de otro agente. Actualizar fecha, evidencia, SHA y próximos pasos en cada cambio. Esta bitácora no convierte inferencias en hechos probados.
 
@@ -74,14 +74,14 @@ Los registros previos indican que pruebas unitarias, compilación debug y subida
 
 ## 5. Inventario de informes y revisión por agente
 
-### Claude — paquete final pendiente
+### Claude — paquete v2 recibido; integración pendiente
 Ya existen:
 - opera/claud/CLAUDE_ACTUATOR_AND_ADAPTATION.md
 - opera/claud/CLAUDE_EXE_FUNCTION_INVENTORY.md
 - opera/claud/CLAUDE_KWP_SEQUENCES.json
 - opera/claud/CLAUDE_PARAMETER_MAP.csv
 
-Cuando llegue el paquete: verificar lista y estructura ZIP; comparar archivos para detectar duplicados; comprobar procedencia, función/offset EXE, TX/RX, longitud y checksum; separar reconstrucción estática de captura real; actualizar esta bitácora sin sobrescribir el original de forma silenciosa.
+Paquete v2 en `opera/claud/opera_claud_v2/`. Revisión estática anotada en §12. Las 11 verificaciones Python aparecen como OK en `tools/verify_run_log.txt`; JUnit y compilación no se ejecutaron según el propio informe. El parche 0001 añade definiciones pero no las conecta a `MainActivity`; el parche 0002 es redundante con el estado actual de main. No integrar sin cerrar los bloqueantes de §12.
 
 ### DeepSeek
 Archivos:
@@ -184,3 +184,67 @@ Añadir fecha y responsable; SHA base y rama comprobados; rutas y propósito de 
 - Preparada esta bitácora para recuperación y continuidad.
 - No se ejecutaron pruebas físicas en esta revisión.
 - Paquete final de Claude pendiente.
+
+
+## 12. 2026-10-21 — revisión estática del paquete Claude v2
+
+**Base comprobada:** `main` en `1dd53122ed0aab6d88d36f0ba84805e6788d4adc` al iniciar esta revisión.  
+**Paquete:** `opera/claud/opera_claud_v2/` (el changelog y el informe de bloques están en esta subcarpeta, no en la raíz de `opera/claud/`).  
+**Alcance de esta revisión:** lectura de archivos GitHub y comparación estática con `KwpProtocol.kt`, `MainActivity.kt` y `DelphiActuatorProtocolTest.kt`. No se aplicaron parches, no se compiló, no se ejecutaron JUnit ni pruebas con APK/vehículo.
+
+### 12.1 Archivos nuevos revisados
+
+- `opera/claud/opera_claud_v2/CHANGELOG_CLAUDE.md`
+- `opera/claud/opera_claud_v2/CLAUDE_2C_DYNAMIC_BLOCKS.md`
+- `opera/claud/opera_claud_v2/CLAUDE_GAPS_AND_TESTS.md`
+- `opera/claud/opera_claud_v2/CLAUDE_ACTUATOR_AND_ADAPTATION.md`
+- `opera/claud/opera_claud_v2/CLAUDE_EXE_FUNCTION_INVENTORY.md`
+- `opera/claud/opera_claud_v2/CLAUDE_KWP_SEQUENCES.json`
+- `opera/claud/opera_claud_v2/CLAUDE_PARAMETER_MAP.csv`
+- `opera/claud/opera_claud_v2/patches/0001-add-2c-dynamic-block-definitions-and-read-gate.patch`
+- `opera/claud/opera_claud_v2/patches/0002-fix-mr140-injector-cylinder-byte.patch`
+- `opera/claud/opera_claud_v2/tools/verify_kwp_sequences.py` y `verify_run_log.txt`
+
+### 12.2 Hallazgos favorables
+
+1. El informe identifica las tres definiciones estáticas reconstruidas del EXE: MR-140 F0 (163 bytes), MR-140 F1 (175 bytes) y ZF F0 (142 bytes), con checksum aditivo, LEN, entradas y respuesta positiva esperada `6C <bloque>`.
+2. Distingue evidencia del EXE, capturas Android, datos `.cedat`, hipótesis y cuestiones sin resolver. Reconoce que no ha probado las definiciones en el vehículo.
+3. El registro de 11 pruebas de Python muestra éxito para sus verificaciones estáticas. Es evidencia del resultado que el agente reportó en el log, no una ejecución independiente de esta revisión.
+4. El análisis advierte que el JUnit añadido no fue ejecutado y que el parche 0001 no modifica `MainActivity`; por tanto no presenta la compuerta como ya activa en el flujo de la app.
+5. El inventario y las preguntas abiertas conservan HV-240 como no identificado/no autorizado, y no inventan soporte de actuadores o adaptación para ZF.
+
+### 12.3 Bloqueantes antes de integrar
+
+**P0 — La compuerta todavía no está conectada al flujo real.**  
+El parche 0001 añade `DynamicBlockDefinitions.kt` y su test, pero no modifica `MainActivity.kt`, el transporte ni el punto donde se solicitan `21 F0/F1`. La clase `Session` es una compuerta en memoria aislada; mientras ningún flujo de producción la use, no impide que la app real solicite esos IDs. Debe integrarse explícitamente en la sesión de comunicación, ejecutarse `2C F0` y, para MR-140, después `2C F1`, validar cada respuesta y permitir lecturas solo tras aceptación en esa misma sesión. En desconexión, reinicio, cambio de ECU o fallo debe resetearse el estado.
+
+**P0 — La validación de respuesta propuesta no comprueba explícitamente el origen ECU.**  
+`isAcceptedResponse()` valida checksum, payload `6C <bloque>` y bloque esperado, pero no verifica de forma visible la dirección origen en `frame.bytes`. El informe exige origen ECU como criterio. Antes de usarlo como compuerta, la validación debe comprobar dirección, formato/framing y checksum según el parser real, y rechazar respuestas residuales/intercaladas como `7E`.
+
+**P1 — El parche 0002 es redundante respecto al main actual.**  
+El `KwpProtocol.kt` de `main` ya usa `injectorIndex` sin restar uno solo en ON, y `DelphiActuatorProtocolTest.kt` ya comprueba ON/OFF para los cuatro cilindros con bytes 0–3. El parche 0002 parte de una versión anterior y al aplicarlo sobre el main actual puede no aplicar limpiamente o ser innecesario. No aplicarlo; comparar el historial si se necesita trazar su origen. La corrección ya está representada en el código actual, pero sigue siendo reconstrucción estática, no autorización para activar inyectores en el coche.
+
+**P1 — La compuerta de lectura y las definiciones aún no son funcionalidad activa.**  
+El informe de Claude confirma que el parche no toca `MainActivity`; por tanto no se debe afirmar que F0/F1 ya funcionan ni retirar el bloqueo del barrido. La secuencia candidata debe integrarse detrás de una máquina de estados explícita y sin TesterPresent intercalado durante la definición/lectura, conservando el bloqueo si hay timeout, NRC, checksum incorrecto o respuesta inesperada.
+
+**P1 — ZF F0 tiene más incertidumbre que MR-140.**  
+El bloque ZF y su LEN/checksum están reconstruidos estáticamente; no hay captura de una respuesta `2C F0` de ZF, ni del LID 0x06, ni validación de los 41 bytes de datos. Mantenerlo como no verificado; no presentar los parámetros 28–30 como decodificados/confirmados.
+
+**P2 — Limpieza del paquete.**  
+Hay archivos residuales de 1 byte llamados `g`, `ddd` y `s` en carpetas del paquete, además de un `g` en la carpeta `opera_claud_v2`. No afectan al protocolo pero deben identificarse o eliminarse en una limpieza documental revisada, sin borrar archivos a ciegas.
+
+### 12.4 Decisión de integración
+
+- **No aplicar todavía el parche 0001.** Primero diseñar una integración pequeña que conecte las definiciones a la transacción real, añada comprobación de dirección de origen y haga obligatoria la compuerta para cualquier lectura F0/F1.
+- **No aplicar el parche 0002** porque el código y los tests actuales ya contienen esa corrección.
+- Mantener el barrido automático F0/F1 bloqueado hasta que la integración pase revisión y CI.
+- No habilitar actuadores ni adaptación de acelerador; no realizar pruebas físicas como parte de esta revisión.
+- Antes de integrar, ejecutar en CI `./gradlew testDebugUnitTest` y `./gradlew assembleDebug`; revisar que no haya una carrera con TesterPresent y que el estado aceptado se borre en cada nueva sesión.
+
+### 12.5 Próximos pasos
+
+1. Diseñar y revisar la integración de `DynamicBlockDefinitions` con la transacción serial real y el estado de sesión; no modificar la UI de actuadores.
+2. Añadir tests de dirección origen correcta/incorrecta, NRC `7F 2C xx`, checksum inválido, respuesta `7E` inesperada, timeout, fallo de F1 después de F0 y reset en desconexión/cambio de ECU.
+3. Ejecutar CI con el código integrado; solo entonces considerar una prueba de solo lectura con adaptador y contacto ON, motor parado, capturando TX/RX íntegro.
+4. Tras esa revisión, añadir la decisión y los SHA/run concretos aquí y en el índice de continuidad.
+
