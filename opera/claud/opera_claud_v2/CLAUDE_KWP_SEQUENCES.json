@@ -1,0 +1,1297 @@
+{
+ "meta": {
+  "generado": "2026-10-17",
+  "fuente": "CheviExplorer1.8.exe / dumps1.8/main.pas + Graf.pas",
+  "nota": "SRC=F1; checksum = suma mod 256; \"chk\" calculado en tx. read count = bytes que pide ReadFile (incluye eco).",
+  "version": 2,
+  "fecha": "2026-10-20",
+  "tipo": "ANALISIS ESTATICO. Nada de este archivo se ha probado en el vehiculo ni con el APK.",
+  "verificacion": "opera/claud/tools/verify_kwp_sequences.py (11 pruebas, OK al generar; ver tools/verify_run_log.txt)",
+  "nota_repo": "Se contrasto con el snapshot scan-ecu-lacetti-main.zip del 2026-10-17; no se pudo leer el repo vigente ni opera/claud/ existente."
+ },
+ "secuencias": [
+  {
+   "id": "PORT_OPEN",
+   "ecu": "MR-140 y ZF",
+   "descripcion": "Apertura/configuracion del puerto COM",
+   "precondiciones": [
+    "Selector ECU elegido (0x12 MR-140 / 0x22 ZF)"
+   ],
+   "tx": null,
+   "configuracion": {
+    "baud": 10400,
+    "baud_selector_0x31": 9600,
+    "bytesize": 8,
+    "paridad": "ninguna",
+    "stopbits": 1,
+    "purge": "PurgeComm(0x0F) antes de cada trama",
+    "SetupComm": "0x200/0x200",
+    "COMMTIMEOUTS": {
+     "ReadIntervalTimeout": 1500,
+     "ReadTotalTimeoutMultiplier": 15,
+     "ReadTotalTimeoutConstant": 15,
+     "Write*": 0
+    }
+   },
+   "rx_esperada": null,
+   "nrc": [],
+   "timeout": null,
+   "pasos_salida": [
+    "CloseHandle en Disconnect"
+   ],
+   "referencia_exe": "main.pas TForm1.PortInit L623-911 (DCB: 0x4E2903 baud 0x28A0=10400; 0x4E290A/0E/12 paridad=0 bytesize=8 stopbits=0; timeouts 0x4E2927-0x4E294C)",
+   "evidencia_captura": "Capturas: \"Puerto abierto: Ch34xSerialDriver, 10400 baud, 8N1\" (Android, no prueba del EXE)",
+   "confianza": "CONFIRMADO_EXE"
+  },
+  {
+   "id": "FAST_INIT",
+   "ecu": "MR-140 y ZF",
+   "descripcion": "Pulso de inicio rapido por break de linea K",
+   "precondiciones": [
+    "Puerto abierto",
+    "Sleep(300 ms) previo (0x4E42DC)"
+   ],
+   "secuencia": [
+    "ClearCommBreak (linea alta)",
+    "Sleep(T)",
+    "SetCommBreak (linea baja)",
+    "Sleep(T)",
+    "ClearCommBreak (linea alta)",
+    "Sleep(T)",
+    "enviar StartCommunication"
+   ],
+   "T_ms": {
+    "defecto": 24,
+    "con_casilla_Altinit_marcada": 21,
+    "etiqueta_casilla": "TOptionsForm.Altinit = \"Альтернативная инициализация ЭБУ\" (Options.dfm)",
+    "reintentos": "3 intentos por valor de T; T sube hasta 25 (limite T<26)"
+   },
+   "tx": null,
+   "rx_esperada": null,
+   "nrc": [],
+   "timeout": null,
+   "pasos_salida": [
+    "Si agota intentos: mensaje \"ECU no responde\" y Disconnect"
+   ],
+   "referencia_exe": "main.pas TForm1.Start L1248-3256 (0x4E42B6-0x4E42D4 elige T; bucle Clear/Set/Clear con Sleep(T)); L1491-1667 de la lista condensada",
+   "evidencia_captura": "no hay captura del pulso (la app Android no lo emite: \"El controlador no admite purgeHwBuffers()\", init candidata no validada)",
+   "confianza": "CONFIRMADO_EXE (temporizacion); NO_VERIFICADO en vehiculo desde Android"
+  },
+  {
+   "id": "START_COMM_MR140",
+   "ecu": "MR-140",
+   "descripcion": "StartCommunication",
+   "precondiciones": [
+    "FAST_INIT"
+   ],
+   "tx": "81 11 F1 81 04",
+   "rx_esperada": {
+    "eco": "81 11 F1 81 04",
+    "respuesta": "83 F1 11 C1 EF 8F C4",
+    "validacion_exe": "RX[2]==SRC (eco), RX[7]==DST (origen respuesta), RX[8]==0xC1 o RX[9]==0xC1",
+    "si_falla": "reintento / aumento de T"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 12,
+    "timeout_total_ms": 195,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [
+    "MenuItem_Stop"
+   ],
+   "referencia_exe": "main.pas Start (compara 0x4F6DFA vs [4F6DA9]; 0x4F6DFF vs [4F6DA8]; 0x4F6E00/0x4F6E01 vs 0xC1) L1668-1700 de la lista condensada",
+   "evidencia_captura": "Capturas/cheviexplorer-captura-1792215134799.txt: TX 81 11 F1 81 04 -> eco + RX 83 F1 11 C1 EF 8F C4 (checksum OK)",
+   "confianza": "CONFIRMADO_VEHICULO (captura Android) / CONFIRMADO_EXE (validacion)",
+   "nota_bytes_leidos": "read count = 0x0C (5 bytes de eco + 7 de respuesta)"
+  },
+  {
+   "id": "START_COMM_ZF",
+   "ecu": "ZF 4HP16",
+   "descripcion": "StartCommunication",
+   "precondiciones": [
+    "FAST_INIT"
+   ],
+   "tx": "81 18 F1 81 0B",
+   "rx_esperada": {
+    "eco": "81 18 F1 81 0B",
+    "respuesta": "83 F1 18 C1 EF 8F CB",
+    "validacion_exe": "RX[2]==SRC (eco), RX[7]==DST (origen respuesta), RX[8]==0xC1 o RX[9]==0xC1",
+    "si_falla": "reintento / aumento de T"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 12,
+    "timeout_total_ms": 195,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [
+    "MenuItem_Stop"
+   ],
+   "referencia_exe": "main.pas Start (compara 0x4F6DFA vs [4F6DA9]; 0x4F6DFF vs [4F6DA8]; 0x4F6E00/0x4F6E01 vs 0xC1) L1668-1700 de la lista condensada",
+   "evidencia_captura": "Capturas/cheviexplorer-captura-1792215134799.txt: TX 81 18 F1 81 0B -> eco + RX 83 F1 18 C1 EF 8F CB (checksum OK)",
+   "confianza": "CONFIRMADO_VEHICULO (captura Android) / CONFIRMADO_EXE (validacion)",
+   "nota_bytes_leidos": "read count = 0x0C (5 bytes de eco + 7 de respuesta)"
+  },
+  {
+   "id": "DEFINE_F0_MR140",
+   "ecu": "MR-140",
+   "descripcion": "2C: define bloque dinamico F0 (26 entradas, 29 bytes de datos)",
+   "precondiciones": [
+    "START_COMM_MR140 aceptada",
+    "sin esta definicion no hay evidencia de que 21 F0 funcione: Android recibe 7F 21 31 (capturas)"
+   ],
+   "tx": "80 11 F1 9E 2C F0 02 01 01 00 0B 01 02 02 01 00 0D 01 02 03 01 00 0E 01 02 04 01 00 0F 01 02 05 01 00 11 01 02 06 02 11 AC 01 02 08 01 00 04 01 02 09 01 11 92 01 02 0A 02 00 0C 01 02 0C 02 12 E3 01 02 0E 01 11 41 01 02 0F 01 11 43 01 02 10 01 11 45 01 02 11 01 11 46 01 02 12 01 00 07 01 02 13 01 11 4E 01 02 14 01 11 55 01 02 15 01 11 01 01 02 16 01 11 70 01 02 17 01 11 4B 01 02 18 01 11 72 01 02 19 01 11 90 01 02 1A 01 00 05 01 02 1B 01 00 06 01 02 1C 01 11 9D 01 02 1D 01 11 9E 01 80",
+   "tx_longitud": 163,
+   "estructura": "80 11 F1 9E | 2C F0 | 26 x [02 pos tam idHi idLo 01]",
+   "rx_esperada": {
+    "positiva": "<fmt> F1 11 6C F0 ...",
+    "validacion_exe": "RX[166]==0x6C y RX[167]==0xF0 (buffer con eco de 163 bytes; VA 0x4F6E9E/0x4F6E9F, cmp en 0x4E4EFB/0x4E4F04)",
+    "si_falla": "llamada a 0x4E9784 (procedimiento sin nombre en el volcado) y salida de Start"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 255,
+    "timeout_total_ms": 3840,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [
+    "Tras validar 6C F0 el EXE envia DEFINE_F1_MR140"
+   ],
+   "referencia_exe": "main.pas Start rama selector 0x12 (0x4E4A67-0x4E5423); llamada WriteReadComm 0x4E4EF6 (L2438); frame completo reconstruido en defs2c",
+   "evidencia_captura": "NINGUNA captura contiene esta trama (la app Android nunca la envia). Indirecta: .cedat muestra 21 F0 -> 9F F1 11 61 F0 + 29 bytes + chk (237/237 OK) que coincide con el tamano total de la definicion (29)",
+   "confianza": "CONFIRMADO_EXE (bytes); respuesta del ECU NO_VERIFICADO en Android",
+   "nota_orden": "el EXE envia F0 y F1 seguidas y valida despues de cada llamada; read count 0xFF",
+   "entradas": [
+    {
+     "pos": 1,
+     "size": 1,
+     "cid": "000B"
+    },
+    {
+     "pos": 2,
+     "size": 1,
+     "cid": "000D"
+    },
+    {
+     "pos": 3,
+     "size": 1,
+     "cid": "000E"
+    },
+    {
+     "pos": 4,
+     "size": 1,
+     "cid": "000F"
+    },
+    {
+     "pos": 5,
+     "size": 1,
+     "cid": "0011"
+    },
+    {
+     "pos": 6,
+     "size": 2,
+     "cid": "11AC"
+    },
+    {
+     "pos": 8,
+     "size": 1,
+     "cid": "0004"
+    },
+    {
+     "pos": 9,
+     "size": 1,
+     "cid": "1192"
+    },
+    {
+     "pos": 10,
+     "size": 2,
+     "cid": "000C"
+    },
+    {
+     "pos": 12,
+     "size": 2,
+     "cid": "12E3"
+    },
+    {
+     "pos": 14,
+     "size": 1,
+     "cid": "1141"
+    },
+    {
+     "pos": 15,
+     "size": 1,
+     "cid": "1143"
+    },
+    {
+     "pos": 16,
+     "size": 1,
+     "cid": "1145"
+    },
+    {
+     "pos": 17,
+     "size": 1,
+     "cid": "1146"
+    },
+    {
+     "pos": 18,
+     "size": 1,
+     "cid": "0007"
+    },
+    {
+     "pos": 19,
+     "size": 1,
+     "cid": "114E"
+    },
+    {
+     "pos": 20,
+     "size": 1,
+     "cid": "1155"
+    },
+    {
+     "pos": 21,
+     "size": 1,
+     "cid": "1101"
+    },
+    {
+     "pos": 22,
+     "size": 1,
+     "cid": "1170"
+    },
+    {
+     "pos": 23,
+     "size": 1,
+     "cid": "114B"
+    },
+    {
+     "pos": 24,
+     "size": 1,
+     "cid": "1172"
+    },
+    {
+     "pos": 25,
+     "size": 1,
+     "cid": "1190"
+    },
+    {
+     "pos": 26,
+     "size": 1,
+     "cid": "0005"
+    },
+    {
+     "pos": 27,
+     "size": 1,
+     "cid": "0006"
+    },
+    {
+     "pos": 28,
+     "size": 1,
+     "cid": "119D"
+    },
+    {
+     "pos": 29,
+     "size": 1,
+     "cid": "119E"
+    }
+   ],
+   "cuerpo_hex_sin_checksum": "80 11 F1 9E 2C F0 02 01 01 00 0B 01 02 02 01 00 0D 01 02 03 01 00 0E 01 02 04 01 00 0F 01 02 05 01 00 11 01 02 06 02 11 AC 01 02 08 01 00 04 01 02 09 01 11 92 01 02 0A 02 00 0C 01 02 0C 02 12 E3 01 02 0E 01 11 41 01 02 0F 01 11 43 01 02 10 01 11 45 01 02 11 01 11 46 01 02 12 01 00 07 01 02 13 01 11 4E 01 02 14 01 11 55 01 02 15 01 11 01 01 02 16 01 11 70 01 02 17 01 11 4B 01 02 18 01 11 72 01 02 19 01 11 90 01 02 1A 01 00 05 01 02 1B 01 00 06 01 02 1C 01 11 9D 01 02 1D 01 11 9E 01",
+   "checksum_calculado": "80",
+   "total_datos_bloque": 29,
+   "respuesta_lectura_posterior": {
+    "formato": "0x9F",
+    "longitud_total": 35,
+    "read_count_exe": 41
+   },
+   "criterios_aceptacion": [
+    "Trama con checksum valido (suma mod 256) y origen = ECU (0x11) destino F1",
+    "payload empieza por 6C F0",
+    "es la validacion literal del EXE: RX[166]==0x6C y RX[167]==0xF0 (indices sobre el buffer RX con eco)"
+   ],
+   "criterios_rechazo": [
+    "NRC 7F 2C xx (registrar xx; el EXE no lo interpreta: aborta)",
+    "payload distinto de 6C F0 (incluye 7E de Tester Present intercalado)",
+    "checksum invalido o sin respuesta dentro del timeout",
+    "En el EXE cualquier rechazo llama a 0x4E9784 y sale de Start; la app NO debe pedir 21 F0/F1 en esa sesion"
+   ],
+   "precondicion_para_leer": "No enviar 21 F0 hasta que esta definicion sea aceptada en la sesion actual (DynamicBlockDefinitions.Session.canRead).",
+   "nota_tester_present": "Cancelar/omitir el TP mientras dura la secuencia (la trama sola tarda ~157 ms a 10400 baud)",
+   "evidencia_vehiculo": "NINGUNA: ninguna captura contiene 2C. Indirecto: .cedat del EXE con F0/F1 validos y tamanos iguales."
+  },
+  {
+   "id": "DEFINE_F1_MR140",
+   "ecu": "MR-140",
+   "descripcion": "2C: define bloque dinamico F1 (28 entradas, 37 bytes de datos)",
+   "precondiciones": [
+    "DEFINE_F0_MR140"
+   ],
+   "tx": "80 11 F1 AA 2C F1 02 01 01 11 5E 01 02 02 02 11 A1 01 02 04 01 11 A6 01 02 05 02 11 93 01 02 07 01 11 76 01 02 08 01 11 00 01 02 09 01 11 04 01 02 0A 01 11 02 01 02 0B 01 11 03 01 02 0C 01 11 A0 01 02 0D 01 16 16 01 02 0E 01 11 6F 01 02 0F 01 12 E2 01 02 10 01 11 44 01 02 11 01 12 00 01 02 12 02 12 01 01 02 14 02 12 02 01 02 16 02 12 03 01 02 18 02 12 04 01 02 1A 01 11 A3 01 02 1B 01 12 ED 01 02 1C 02 12 1A 01 02 1E 01 11 9B 01 02 1F 02 11 BB 01 02 21 01 11 71 01 02 22 02 11 C1 01 02 24 01 11 BD 01 02 25 01 12 F0 01 95",
+   "tx_longitud": 175,
+   "estructura": "80 11 F1 AA | 2C F1 | 28 x [02 pos tam idHi idLo 01]",
+   "rx_esperada": {
+    "positiva": "<fmt> F1 11 6C F1 ...",
+    "validacion_exe": "RX[178]==0x6C y RX[179]==0xF1 (VA 0x4F6EAA/0x4F6EAB; cmp 0x4E5401/0x4E540A)",
+    "si_falla": "0x4E9784 y salida"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 255,
+    "timeout_total_ms": 3840,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "main.pas Start 0x4E53FC (L2633)",
+   "evidencia_captura": "NINGUNA (ver DEFINE_F0_MR140); .cedat: 21 F1 -> A7 F1 11 61 F1 + 37 bytes + chk (237/237 OK)",
+   "confianza": "CONFIRMADO_EXE (bytes)",
+   "entradas": [
+    {
+     "pos": 1,
+     "size": 1,
+     "cid": "115E"
+    },
+    {
+     "pos": 2,
+     "size": 2,
+     "cid": "11A1"
+    },
+    {
+     "pos": 4,
+     "size": 1,
+     "cid": "11A6"
+    },
+    {
+     "pos": 5,
+     "size": 2,
+     "cid": "1193"
+    },
+    {
+     "pos": 7,
+     "size": 1,
+     "cid": "1176"
+    },
+    {
+     "pos": 8,
+     "size": 1,
+     "cid": "1100"
+    },
+    {
+     "pos": 9,
+     "size": 1,
+     "cid": "1104"
+    },
+    {
+     "pos": 10,
+     "size": 1,
+     "cid": "1102"
+    },
+    {
+     "pos": 11,
+     "size": 1,
+     "cid": "1103"
+    },
+    {
+     "pos": 12,
+     "size": 1,
+     "cid": "11A0"
+    },
+    {
+     "pos": 13,
+     "size": 1,
+     "cid": "1616"
+    },
+    {
+     "pos": 14,
+     "size": 1,
+     "cid": "116F"
+    },
+    {
+     "pos": 15,
+     "size": 1,
+     "cid": "12E2"
+    },
+    {
+     "pos": 16,
+     "size": 1,
+     "cid": "1144"
+    },
+    {
+     "pos": 17,
+     "size": 1,
+     "cid": "1200"
+    },
+    {
+     "pos": 18,
+     "size": 2,
+     "cid": "1201"
+    },
+    {
+     "pos": 20,
+     "size": 2,
+     "cid": "1202"
+    },
+    {
+     "pos": 22,
+     "size": 2,
+     "cid": "1203"
+    },
+    {
+     "pos": 24,
+     "size": 2,
+     "cid": "1204"
+    },
+    {
+     "pos": 26,
+     "size": 1,
+     "cid": "11A3"
+    },
+    {
+     "pos": 27,
+     "size": 1,
+     "cid": "12ED"
+    },
+    {
+     "pos": 28,
+     "size": 2,
+     "cid": "121A"
+    },
+    {
+     "pos": 30,
+     "size": 1,
+     "cid": "119B"
+    },
+    {
+     "pos": 31,
+     "size": 2,
+     "cid": "11BB"
+    },
+    {
+     "pos": 33,
+     "size": 1,
+     "cid": "1171"
+    },
+    {
+     "pos": 34,
+     "size": 2,
+     "cid": "11C1"
+    },
+    {
+     "pos": 36,
+     "size": 1,
+     "cid": "11BD"
+    },
+    {
+     "pos": 37,
+     "size": 1,
+     "cid": "12F0"
+    }
+   ],
+   "cuerpo_hex_sin_checksum": "80 11 F1 AA 2C F1 02 01 01 11 5E 01 02 02 02 11 A1 01 02 04 01 11 A6 01 02 05 02 11 93 01 02 07 01 11 76 01 02 08 01 11 00 01 02 09 01 11 04 01 02 0A 01 11 02 01 02 0B 01 11 03 01 02 0C 01 11 A0 01 02 0D 01 16 16 01 02 0E 01 11 6F 01 02 0F 01 12 E2 01 02 10 01 11 44 01 02 11 01 12 00 01 02 12 02 12 01 01 02 14 02 12 02 01 02 16 02 12 03 01 02 18 02 12 04 01 02 1A 01 11 A3 01 02 1B 01 12 ED 01 02 1C 02 12 1A 01 02 1E 01 11 9B 01 02 1F 02 11 BB 01 02 21 01 11 71 01 02 22 02 11 C1 01 02 24 01 11 BD 01 02 25 01 12 F0 01",
+   "checksum_calculado": "95",
+   "total_datos_bloque": 37,
+   "respuesta_lectura_posterior": {
+    "formato": "0xA7",
+    "longitud_total": 43,
+    "read_count_exe": 49
+   },
+   "criterios_aceptacion": [
+    "Trama con checksum valido (suma mod 256) y origen = ECU (0x11) destino F1",
+    "payload empieza por 6C F1",
+    "es la validacion literal del EXE: RX[178]==0x6C y RX[179]==0xF1 (indices sobre el buffer RX con eco)"
+   ],
+   "criterios_rechazo": [
+    "NRC 7F 2C xx (registrar xx; el EXE no lo interpreta: aborta)",
+    "payload distinto de 6C F1 (incluye 7E de Tester Present intercalado)",
+    "checksum invalido o sin respuesta dentro del timeout",
+    "En el EXE cualquier rechazo llama a 0x4E9784 y sale de Start; la app NO debe pedir 21 F0/F1 en esa sesion"
+   ],
+   "precondicion_para_leer": "No enviar 21 F1 hasta que esta definicion sea aceptada en la sesion actual (DynamicBlockDefinitions.Session.canRead).",
+   "nota_tester_present": "Cancelar/omitir el TP mientras dura la secuencia (la trama sola tarda ~168 ms a 10400 baud)",
+   "evidencia_vehiculo": "NINGUNA: ninguna captura contiene 2C. Indirecto: .cedat del EXE con F0/F1 validos y tamanos iguales."
+  },
+  {
+   "id": "DEFINE_F0_ZF",
+   "ecu": "ZF 4HP16",
+   "descripcion": "2C: define F0 por local-id (27 entradas, 41 bytes). Fuentes: LID 01,02,03,04,06",
+   "precondiciones": [
+    "START_COMM_ZF4HP16"
+   ],
+   "tx": "80 18 F1 89 2C F0 01 01 01 01 01 01 02 01 01 02 01 03 01 01 03 01 04 01 02 01 01 05 02 02 02 01 07 01 02 04 01 08 02 03 01 01 0A 02 03 03 01 0C 02 03 05 01 0E 02 03 07 01 10 01 03 09 01 11 01 03 0A 01 12 02 03 0B 01 14 01 03 0D 01 15 01 03 0E 01 16 01 04 01 01 17 02 04 02 01 19 02 04 04 01 1B 02 04 06 01 1D 02 04 08 01 1F 02 04 0A 01 21 02 04 0C 01 23 02 04 0E 01 25 02 04 10 01 27 01 06 01 01 28 01 06 03 01 29 01 06 04 8F",
+   "tx_longitud": 142,
+   "estructura": "80 18 F1 89 | 2C F0 | 27 x [01 pos tam LID off]",
+   "rx_esperada": {
+    "positiva": "<fmt> F1 18 6C F0",
+    "validacion_exe": "RX[145]==0x6C y RX[146]==0xF0 (VA 0x4F6E89/0x4F6E8A; cmp 0x4E5ACF/0x4E5AD8)",
+    "si_falla": "0x4E9784 y salida"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 255,
+    "timeout_total_ms": 3840,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "main.pas Start rama selector 0x22 (0x4E5800-0x4E5AF1), llamada L2947",
+   "evidencia_captura": "NINGUNA con 2C. Capturas Android: 21 F0 -> 7F 21 22 (conditionsNotCorrect) y 21 F1/FB -> 7F 21 12; LID 01,02,03,04,11 positivos; LID 06 no probado",
+   "confianza": "CONFIRMADO_EXE (bytes); efecto en vehiculo NO_VERIFICADO",
+   "entradas": [
+    {
+     "pos": 1,
+     "size": 1,
+     "lid": "01",
+     "loff": 1
+    },
+    {
+     "pos": 2,
+     "size": 1,
+     "lid": "01",
+     "loff": 2
+    },
+    {
+     "pos": 3,
+     "size": 1,
+     "lid": "01",
+     "loff": 3
+    },
+    {
+     "pos": 4,
+     "size": 1,
+     "lid": "02",
+     "loff": 1
+    },
+    {
+     "pos": 5,
+     "size": 2,
+     "lid": "02",
+     "loff": 2
+    },
+    {
+     "pos": 7,
+     "size": 1,
+     "lid": "02",
+     "loff": 4
+    },
+    {
+     "pos": 8,
+     "size": 2,
+     "lid": "03",
+     "loff": 1
+    },
+    {
+     "pos": 10,
+     "size": 2,
+     "lid": "03",
+     "loff": 3
+    },
+    {
+     "pos": 12,
+     "size": 2,
+     "lid": "03",
+     "loff": 5
+    },
+    {
+     "pos": 14,
+     "size": 2,
+     "lid": "03",
+     "loff": 7
+    },
+    {
+     "pos": 16,
+     "size": 1,
+     "lid": "03",
+     "loff": 9
+    },
+    {
+     "pos": 17,
+     "size": 1,
+     "lid": "03",
+     "loff": 10
+    },
+    {
+     "pos": 18,
+     "size": 2,
+     "lid": "03",
+     "loff": 11
+    },
+    {
+     "pos": 20,
+     "size": 1,
+     "lid": "03",
+     "loff": 13
+    },
+    {
+     "pos": 21,
+     "size": 1,
+     "lid": "03",
+     "loff": 14
+    },
+    {
+     "pos": 22,
+     "size": 1,
+     "lid": "04",
+     "loff": 1
+    },
+    {
+     "pos": 23,
+     "size": 2,
+     "lid": "04",
+     "loff": 2
+    },
+    {
+     "pos": 25,
+     "size": 2,
+     "lid": "04",
+     "loff": 4
+    },
+    {
+     "pos": 27,
+     "size": 2,
+     "lid": "04",
+     "loff": 6
+    },
+    {
+     "pos": 29,
+     "size": 2,
+     "lid": "04",
+     "loff": 8
+    },
+    {
+     "pos": 31,
+     "size": 2,
+     "lid": "04",
+     "loff": 10
+    },
+    {
+     "pos": 33,
+     "size": 2,
+     "lid": "04",
+     "loff": 12
+    },
+    {
+     "pos": 35,
+     "size": 2,
+     "lid": "04",
+     "loff": 14
+    },
+    {
+     "pos": 37,
+     "size": 2,
+     "lid": "04",
+     "loff": 16
+    },
+    {
+     "pos": 39,
+     "size": 1,
+     "lid": "06",
+     "loff": 1
+    },
+    {
+     "pos": 40,
+     "size": 1,
+     "lid": "06",
+     "loff": 3
+    },
+    {
+     "pos": 41,
+     "size": 1,
+     "lid": "06",
+     "loff": 4
+    }
+   ],
+   "cuerpo_hex_sin_checksum": "80 18 F1 89 2C F0 01 01 01 01 01 01 02 01 01 02 01 03 01 01 03 01 04 01 02 01 01 05 02 02 02 01 07 01 02 04 01 08 02 03 01 01 0A 02 03 03 01 0C 02 03 05 01 0E 02 03 07 01 10 01 03 09 01 11 01 03 0A 01 12 02 03 0B 01 14 01 03 0D 01 15 01 03 0E 01 16 01 04 01 01 17 02 04 02 01 19 02 04 04 01 1B 02 04 06 01 1D 02 04 08 01 1F 02 04 0A 01 21 02 04 0C 01 23 02 04 0E 01 25 02 04 10 01 27 01 06 01 01 28 01 06 03 01 29 01 06 04",
+   "checksum_calculado": "8F",
+   "total_datos_bloque": 41,
+   "respuesta_lectura_posterior": {
+    "formato": "0xAB",
+    "longitud_total": 47,
+    "read_count_exe": 53
+   },
+   "criterios_aceptacion": [
+    "Trama con checksum valido (suma mod 256) y origen = ECU (0x18) destino F1",
+    "payload empieza por 6C F0",
+    "es la validacion literal del EXE: RX[145]==0x6C y RX[146]==0xF0 (indices sobre el buffer RX con eco)"
+   ],
+   "criterios_rechazo": [
+    "NRC 7F 2C xx (registrar xx; el EXE no lo interpreta: aborta)",
+    "payload distinto de 6C F0 (incluye 7E de Tester Present intercalado)",
+    "checksum invalido o sin respuesta dentro del timeout",
+    "En el EXE cualquier rechazo llama a 0x4E9784 y sale de Start; la app NO debe pedir 21 F0/F1 en esa sesion"
+   ],
+   "precondicion_para_leer": "No enviar 21 F0 hasta que esta definicion sea aceptada en la sesion actual (DynamicBlockDefinitions.Session.canRead).",
+   "nota_tester_present": "Cancelar/omitir el TP mientras dura la secuencia (la trama sola tarda ~137 ms a 10400 baud)",
+   "evidencia_vehiculo": "NINGUNA: ninguna captura contiene 2C. Indirecto: .cedat del EXE con F0/F1 validos y tamanos iguales."
+  },
+  {
+   "id": "READ_F0_MR140",
+   "ecu": "MR-140",
+   "descripcion": "21 F0: lectura del bloque dinamico F0 (grupo 1 de la tabla)",
+   "precondiciones": [
+    "DEFINE_F0_MR140"
+   ],
+   "tx": "82 11 F1 21 F0 95",
+   "rx_esperada": {
+    "eco_bytes": 6,
+    "respuesta": "9F F1 11 61 F0 <29 bytes> chk (35 bytes)",
+    "payload_idx": "dato = offset_tabla - 11 (0-based tras 61 F0)"
+   },
+   "nrc": [
+    "7F 21 31 en Android sin definicion previa (captura 1792215134799 lineas 93-142)"
+   ],
+   "timeout": {
+    "bytes_a_leer": 41,
+    "timeout_total_ms": 630,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "main.pas TimerParamTimer L12443-13036 (rama sel 0x12 @0x4E63E7, ecx=0x29) + VspomRaschetParam L13036-13341",
+   "evidencia_captura": "archivos/2610161732 MR-140.cedat: 237 pares TX 82 11 F1 21 F0 95 / RX 9F F1 11 61 F0 ... con checksum valido",
+   "confianza": "CONFIRMADO_VEHICULO (.cedat del EXE) para trama y longitud",
+   "precondicion_bloqueante": "Habilitar solo tras aceptar la definicion 2C correspondiente en la sesion (no hay captura que pruebe que el bloque exista sin ella)."
+  },
+  {
+   "id": "READ_F1_MR140",
+   "ecu": "MR-140",
+   "descripcion": "21 F1: lectura del bloque dinamico F1 (grupo 2)",
+   "precondiciones": [
+    "DEFINE_F1_MR140",
+    "el EXE alterna F0 y F1 por ciclo (maquina de estados [4F6DAC])"
+   ],
+   "tx": "82 11 F1 21 F1 96",
+   "rx_esperada": {
+    "eco_bytes": 6,
+    "respuesta": "A7 F1 11 61 F1 <37 bytes> chk (43 bytes)"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 49,
+    "timeout_total_ms": 750,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "main.pas TimerParamTimer rama 0x12 (ecx=0x31)",
+   "evidencia_captura": ".cedat: 237 pares validos",
+   "confianza": "CONFIRMADO_VEHICULO (.cedat)",
+   "precondicion_bloqueante": "Habilitar solo tras aceptar la definicion 2C correspondiente en la sesion (no hay captura que pruebe que el bloque exista sin ella)."
+  },
+  {
+   "id": "READ_F0_ZF",
+   "ecu": "ZF 4HP16",
+   "descripcion": "21 F0 tras definicion 2C (un solo bloque)",
+   "precondiciones": [
+    "DEFINE_F0_ZF"
+   ],
+   "tx": "82 18 F1 21 F0 9C",
+   "rx_esperada": {
+    "eco_bytes": 6,
+    "respuesta": "AB F1 18 61 F0 <41 bytes> chk (47 bytes calculado desde la definicion)"
+   },
+   "nrc": [
+    "7F 21 22 observado en Android sin definicion"
+   ],
+   "timeout": {
+    "bytes_a_leer": 53,
+    "timeout_total_ms": 810,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "main.pas TimerParamTimer rama sel 0x22 @0x4E65CD (ecx=0x35)",
+   "evidencia_captura": "sin captura del EXE para ZF",
+   "confianza": "CONFIRMADO_EXE; respuesta NO_VERIFICADO",
+   "precondicion_bloqueante": "Habilitar solo tras aceptar la definicion 2C correspondiente en la sesion (no hay captura que pruebe que el bloque exista sin ella)."
+  },
+  {
+   "id": "LID_01_ZF",
+   "ecu": "ZF 4HP16",
+   "descripcion": "21 01 lectura directa (sondeo Android)",
+   "precondiciones": [
+    "START_COMM_ZF4HP16"
+   ],
+   "tx": "82 18 F1 21 01 AD",
+   "rx_esperada": {
+    "respuesta": "61 01 + 3 bytes"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 15,
+    "timeout_total_ms": 240,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "LIDs 01-04 usados por la definicion 2C ZF; LID 11 NO aparece en la definicion",
+   "evidencia_captura": "captura 1792215134799 lineas 258-300: positivo, checksum OK",
+   "confianza": "CONFIRMADO_VEHICULO (lectura); semantica NO_VERIFICADO"
+  },
+  {
+   "id": "LID_02_ZF",
+   "ecu": "ZF 4HP16",
+   "descripcion": "21 02 lectura directa (sondeo Android)",
+   "precondiciones": [
+    "START_COMM_ZF4HP16"
+   ],
+   "tx": "82 18 F1 21 02 AE",
+   "rx_esperada": {
+    "respuesta": "61 02 + 4 bytes"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 16,
+    "timeout_total_ms": 255,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "LIDs 01-04 usados por la definicion 2C ZF; LID 11 NO aparece en la definicion",
+   "evidencia_captura": "captura 1792215134799 lineas 258-300: positivo, checksum OK",
+   "confianza": "CONFIRMADO_VEHICULO (lectura); semantica NO_VERIFICADO"
+  },
+  {
+   "id": "LID_03_ZF",
+   "ecu": "ZF 4HP16",
+   "descripcion": "21 03 lectura directa (sondeo Android)",
+   "precondiciones": [
+    "START_COMM_ZF4HP16"
+   ],
+   "tx": "82 18 F1 21 03 AF",
+   "rx_esperada": {
+    "respuesta": "61 03 + 15 bytes"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 27,
+    "timeout_total_ms": 420,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "LIDs 01-04 usados por la definicion 2C ZF; LID 11 NO aparece en la definicion",
+   "evidencia_captura": "captura 1792215134799 lineas 258-300: positivo, checksum OK",
+   "confianza": "CONFIRMADO_VEHICULO (lectura); semantica NO_VERIFICADO"
+  },
+  {
+   "id": "LID_04_ZF",
+   "ecu": "ZF 4HP16",
+   "descripcion": "21 04 lectura directa (sondeo Android)",
+   "precondiciones": [
+    "START_COMM_ZF4HP16"
+   ],
+   "tx": "82 18 F1 21 04 B0",
+   "rx_esperada": {
+    "respuesta": "61 04 + 17 bytes"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 29,
+    "timeout_total_ms": 450,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "LIDs 01-04 usados por la definicion 2C ZF; LID 11 NO aparece en la definicion",
+   "evidencia_captura": "captura 1792215134799 lineas 258-300: positivo, checksum OK",
+   "confianza": "CONFIRMADO_VEHICULO (lectura); semantica NO_VERIFICADO"
+  },
+  {
+   "id": "LID_11_ZF",
+   "ecu": "ZF 4HP16",
+   "descripcion": "21 11 lectura directa (sondeo Android)",
+   "precondiciones": [
+    "START_COMM_ZF4HP16"
+   ],
+   "tx": "82 18 F1 21 11 BD",
+   "rx_esperada": {
+    "respuesta": "61 11 + 21 bytes"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 33,
+    "timeout_total_ms": 510,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "LID 11 no referenciado por la definicion 2C ZF en el EXE",
+   "evidencia_captura": "captura 1792215134799 lineas 258-300: positivo, checksum OK",
+   "confianza": "CONFIRMADO_VEHICULO (lectura); semantica NO_VERIFICADO"
+  },
+  {
+   "id": "TESTER_PRESENT",
+   "ecu": "MR-140 y ZF",
+   "descripcion": "3E periodico (TimerTesterPresentTimer)",
+   "precondiciones": [
+    "sesion abierta; selector != 0x31"
+   ],
+   "tx": {
+    "MR-140": "81 11 F1 3E C1",
+    "ZF": "81 18 F1 3E C8"
+   },
+   "rx_esperada": {
+    "MR-140": "81 F1 11 7E 01",
+    "ZF": "81 F1 18 7E 08"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 18,
+    "timeout_total_ms": 285,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "main.pas TimerTesterPresentTimer L3415-3459; WriteReadComm reinicia el timer (Enabled False->True) en cada transaccion (L911-1087)",
+   "evidencia_captura": "1792215134799: TX 81 11 F1 3E C1 / RX 81 F1 11 7E 01 (checksum OK)",
+   "confianza": "CONFIRMADO_EXE + CONFIRMADO_VEHICULO",
+   "nota": "El EXE usa ecx=4 (5 bytes) y lee 0x12 bytes. En captura Android el TP intercalado con una consulta DTC pendiente dejo la respuesta 7E en lugar del DTC (ver GAPS)."
+  },
+  {
+   "id": "IDENT_1A80",
+   "ecu": "MR-140 y ZF",
+   "descripcion": "Identificacion de ECU",
+   "precondiciones": [
+    "sesion abierta; para sel 0x11/0x13 antes se llama SecurityAccess (no aplica a 0x12/0x22)"
+   ],
+   "tx": {
+    "MR-140": "82 11 F1 1A 80 1E",
+    "ZF": "82 18 F1 1A 80 25"
+   },
+   "rx_esperada": {
+    "formato": "80 F1 DST LEN 5A 80 <datos> chk (longitud extendida)",
+    "validacion_exe": "RX[9] (byte de longitud) == 0x50 (MR-140) / 0x76 (ZF)",
+    "ZF_capturado": "LEN=0x76 (118) - coincide"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 255,
+    "timeout_total_ms": 3840,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "main.pas Button_ECUIdentClick L3554-4372 (despacho 0x4EA1B6; frame L3740; validacion 0x4EA2EF..0x4EA37C)",
+   "evidencia_captura": "ZF: captura 1792215134799 lineas 223-229, respuesta 118 bytes con checksum 0xAD OK. MR-140: sin respuesta capturada",
+   "confianza": "CONFIRMADO_EXE; ZF CONFIRMADO_VEHICULO; MR-140 NO_VERIFICADO"
+  },
+  {
+   "id": "DTC_READ",
+   "ecu": "MR-140 y ZF",
+   "descripcion": "Lectura de DTC",
+   "precondiciones": [
+    "sesion abierta"
+   ],
+   "tx": {
+    "MR-140": "84 11 F1 19 DA FF 00 78",
+    "ZF": "84 18 F1 18 00 00 00 A5"
+   },
+   "rx_esperada": {
+    "MR-140": "<fmt> F1 11 59 <n> + n x 4 bytes [cod_hi cod_lo estado ?]",
+    "ZF": "85 F1 18 58 01 07 03 68 chk (n=1; entradas de 3 bytes)",
+    "validacion_exe": "RX[SID]==SID_peticion|0x40; n=RX[tras SID]; offset entrada i = (RX[0]&0xF)+9+(i-1)*4 (MR-140) o *3 (ZF) sobre el buffer con eco",
+    "letra": "2 bits altos del primer byte: 4 prefijos (strings 0x4EB63C/48/54/60)",
+    "estado": "byte +2: 3 textos: Сохр./Текущая/Непост."
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 255,
+    "timeout_total_ms": 3840,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "main.pas Button_DTCClick L4931-6245 (tabla 0x4EAA10: 0x12->0x4EAAC0 L5142; 0x22->0x4EAB4A L5182; parseo 0x4EAD2A-0x4EB05B)",
+   "evidencia_captura": "ZF: 1792215134799 L194-206: respuesta 58 01 07 03 68 OK. MR-140: la respuesta 7E (TP) reemplazo la respuesta DTC en 3 capturas; sin respuesta 59 capturada",
+   "confianza": "CONFIRMADO_EXE; ZF CONFIRMADO_VEHICULO; MR-140 NO_VERIFICADO"
+  },
+  {
+   "id": "DTC_CLEAR",
+   "ecu": "MR-140 y ZF",
+   "descripcion": "Borrado de DTC (rama por defecto del EXE)",
+   "precondiciones": [
+    "sesion abierta"
+   ],
+   "tx": {
+    "MR-140": "83 11 F1 14 FF 00 98",
+    "ZF": "83 18 F1 14 FF 00 9F"
+   },
+   "rx_esperada": {
+    "positiva": "<fmt> F1 DST 54 ...",
+    "validacion_exe": "bucle de lectura con timeout 2000 ms (cmp 0x7D0 en 0x4EB853) y comparaciones con bytes del buffer; detalle no cerrado"
+   },
+   "nrc": [],
+   "timeout": null,
+   "pasos_salida": [],
+   "referencia_exe": "main.pas Button_ClearDTCClick L6401-6789 (rama por defecto 0x4EB7F9 -> trama 0x4EB835; 4 variantes por selector)",
+   "evidencia_captura": "ninguna",
+   "confianza": "CONFIRMADO_EXE (trama); respuesta NO_VERIFICADO; el menu ZF no se verifico habilitado para borrar",
+   "nota": "El Android actual no implementa el borrado de DTC."
+  },
+  {
+   "id": "ECU_RESET_MR140",
+   "ecu": "MR-140",
+   "descripcion": "Reinicio de ECU / borrado de aprendizajes (Button_Sbros)",
+   "precondiciones": [
+    "MessageBox de confirmacion (Yes=6)",
+    "menu habilitado solo para MR-140 (N_MR140Click) - ZF lo deshabilita"
+   ],
+   "tx": "82 11 F1 11 01 96",
+   "rx_esperada": {
+    "positiva": "RX[9]==0x51 (respuesta 51)"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 12,
+    "timeout_total_ms": 195,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [
+    "Si RX[9]!=0x51: mensaje \"Сброс не выполнен\"; si OK: \"Сброс выполнен успешно\""
+   ],
+   "referencia_exe": "main.pas Button_SbrosClick L14793-14948 (rama no-Sirius L14867-14901; trama 0x4ED578; check 0x4ED5CA-0x4ED5DA)",
+   "evidencia_captura": "ninguna",
+   "confianza": "CONFIRMADO_EXE; NO_VERIFICADO en vehiculo",
+   "nota": "Rama Sirius 0x11/0x13 usa SecurityAccess + 83 DST F1 30 50 04 (no aplica a MR-140/ZF)."
+  },
+  {
+   "id": "THROTTLE_ADAPT_MR140",
+   "ecu": "MR-140",
+   "descripcion": "Aprendizaje de acelerador / rutina de adaptacion (Button_Obuchenie)",
+   "precondiciones": [
+    "MessageBox de advertencia (freno de mano, A/C apagado, selector en P/N, motor listo)",
+    "F0 definido (DEFINE_F0_MR140)",
+    "el motor debe estar funcionando: RPM(ID9) >= 500"
+   ],
+   "tx": "84 11 F1 30 2C 07 FF E8",
+   "rx_esperada": {
+    "positiva": "RX[11]==0x70 (respuesta 70 2C ...)",
+    "si_falla": "Disconnect inmediato"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 16,
+    "timeout_total_ms": 255,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "bucle": {
+    "lectura": "VspomRaschetParam(BL=F0, readcount=0x29, params 1..max) cada ~100 ms (Sleep 0x64 + ProcessMessages)",
+    "condicion_exito": "ID9(RPM)>4300 y creciente respecto a 2 muestras antes y ID1(MAP)>80 kPa, dos muestras acumuladas; luego RPM<2000",
+    "cancelacion": "[4F721E]==1 (bandera de cancelacion del formulario de progreso)"
+   },
+   "pasos_salida": [
+    "MessageBox \"Обучение закончено...\" (soltar pedal, apagar contacto 10 s, encender, borrar errores)",
+    "MenuItem_Stop (81 11 F1 82 05)"
+   ],
+   "referencia_exe": "main.pas Button_ObuchenieClick L14950-15290; constantes 0x4EDACC=500.0 0x4EDB70=4300.0 0x4EDB74=80.0 0x4EDB78=2000.0",
+   "evidencia_captura": "ninguna",
+   "confianza": "CONFIRMADO_EXE; NO_VERIFICADO en vehiculo",
+   "abortar": "El EXE solo cancela el bucle con el boton Cancelar (bandera VA 0x4F721E) y no envia ningun comando de cancelacion al ECU; fin de aprendizaje: no determinado.",
+   "autorizacion_fisica": "NO AUTORIZADA. Requiere F0 funcional (DEFINE_F0_MR140 aceptada) y prueba supervisada."
+  },
+  {
+   "id": "ACTUATOR_STATUS",
+   "ecu": "MR-140",
+   "descripcion": "30 ID 01: consulta de estado de actuador (TForm1.Driver)",
+   "precondiciones": [
+    "panel de actuadores abierto; ID en [4F6DA4]"
+   ],
+   "tx_plantilla": "83 11 F1 30 <ID> 01 chk",
+   "ejemplos": {
+    "0x15": "83 11 F1 30 15 01 CB",
+    "0x13": "83 11 F1 30 13 01 C9",
+    "0x14": "83 11 F1 30 14 01 CA",
+    "0x10": "83 11 F1 30 10 01 C6",
+    "0x12": "83 11 F1 30 12 01 C8",
+    "0x37": "83 11 F1 30 37 01 ED",
+    "0x18": "83 11 F1 30 18 01 CE",
+    "0x40": "83 11 F1 30 40 01 F6",
+    "0x32": "83 11 F1 30 32 01 E8"
+   },
+   "rx_esperada": {
+    "positiva": "RX[10]==0x70; estado = RX[13] (00=apagado, otro=encendido)",
+    "espera_previa": "100 ms (GetTickCount+ProcessMessages) antes de enviar"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 15,
+    "timeout_total_ms": 240,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "main.pas TForm1.Driver L16344-16510",
+   "evidencia_captura": "ninguna",
+   "confianza": "CONFIRMADO_EXE"
+  },
+  {
+   "id": "ACTUATOR_ON_OFF",
+   "ecu": "MR-140",
+   "descripcion": "30 ID 07 FF/00 (shortTermAdjustment); inyector 0x32 anade byte de cilindro",
+   "precondiciones": [
+    "Sleep(100) previo; combo CaseIM con item 0 = \"-\" y items 1..12 (ItemIndex 1..12)"
+   ],
+   "tx_plantilla": {
+    "ON": "84 11 F1 30 <ID> 07 FF chk",
+    "OFF": "84 11 F1 30 <ID> 07 00 chk",
+    "INJ_ON": "85 11 F1 30 32 07 FF <ItemIndex-1> chk",
+    "INJ_OFF": "85 11 F1 30 32 07 00 <ItemIndex-1> chk"
+   },
+   "mapa_itemindex_a_id": {
+    "1-4": "0x32 (cilindro = ItemIndex-1 = 0..3)",
+    "5": "0x15",
+    "6": "0x13",
+    "7": "0x14",
+    "8": "0x10",
+    "9": "0x12",
+    "10": "0x37",
+    "11": "0x18",
+    "12": "0x40"
+   },
+   "rx_esperada": {
+    "ON": "RX[+0xE] / RX[+0xF] decide texto de estado",
+    "nota": "detalle de interpretacion en test_ONClick L6939-6982"
+   },
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 16,
+    "timeout_total_ms": 255,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [
+    "Al cerrar el panel (TGrafForm.FormClose L5071) o DriveIMClick: 83 11 F1 30 <ID> 00 chk (liberar control)"
+   ],
+   "referencia_exe": "Graf.pas test_ONClick L6747-6990, test_OFFClick L6535-6746, CaseIMSelect L6195-6535 (tabla 0x4DE6AC), FormClose L5071",
+   "evidencia_captura": "ninguna",
+   "confianza": "CONFIRMADO_EXE; NO_VERIFICADO en vehiculo",
+   "inyectores_trama_correcta_segun_exe": {
+    "inyector_1": {
+     "ItemIndex_EXE": 1,
+     "byte_cilindro": "00",
+     "ON": "85 11 F1 30 32 07 FF 00 EF",
+     "OFF": "85 11 F1 30 32 07 00 00 F0"
+    },
+    "inyector_2": {
+     "ItemIndex_EXE": 2,
+     "byte_cilindro": "01",
+     "ON": "85 11 F1 30 32 07 FF 01 F0",
+     "OFF": "85 11 F1 30 32 07 00 01 F1"
+    },
+    "inyector_3": {
+     "ItemIndex_EXE": 3,
+     "byte_cilindro": "02",
+     "ON": "85 11 F1 30 32 07 FF 02 F1",
+     "OFF": "85 11 F1 30 32 07 00 02 F2"
+    },
+    "inyector_4": {
+     "ItemIndex_EXE": 4,
+     "byte_cilindro": "03",
+     "ON": "85 11 F1 30 32 07 FF 03 F2",
+     "OFF": "85 11 F1 30 32 07 00 03 F3"
+    }
+   },
+   "android_snapshot_2026-10-17": {
+    "ON": "injectorIndex-1 (inyector 1 -> FF, 2 -> 00, 3 -> 01, 4 -> 02)",
+    "OFF": "injectorIndex (00..03, coincide con el EXE)",
+    "parche": "patches/0002-fix-mr140-injector-cylinder-byte.patch"
+   },
+   "precondiciones_en_exe": "Ninguna comprobacion de contacto/motor/velocidad en el codigo; solo Sleep(100 ms) y que se haya elegido un ID. Condiciones de seguridad adicionales: no determinadas.",
+   "respuesta_esperada": {
+    "positiva": "SID 0x70 (RX[10] tras eco de 7 u 8 bytes segun trama; Driver() lo usa para consulta de estado)",
+    "estado": "ON compara RX[14] y RX[15] con 0 para elegir el texto del panel; semantica de esos bytes no determinada"
+   },
+   "abortar": [
+    "OFF: 84 11 F1 30 <ID> 07 00 (inyector: 85 ... 07 00 <cil>)",
+    "Devolver control: 83 11 F1 30 <ID> 00 (FormClose / DriveIMClick del EXE)",
+    "No hay temporizador de apagado automatico en el EXE"
+   ],
+   "autorizacion_fisica": "NO AUTORIZADA. Reconstruir el EXE no prueba que sea seguro ni que el ECU responda; requiere prueba supervisada."
+  },
+  {
+   "id": "ACTUATOR_RELEASE",
+   "ecu": "MR-140",
+   "descripcion": "30 ID 00 (devolver control)",
+   "precondiciones": [
+    "actuador seleccionado [4F5888]"
+   ],
+   "tx_plantilla": "83 11 F1 30 <ID> 00 chk",
+   "rx_esperada": null,
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 15,
+    "timeout_total_ms": 240,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [],
+   "referencia_exe": "Graf.pas FormClose L5083-5113; DriveIMClick L6150-6179; CaseIMSelect (solo sel 0x14)",
+   "evidencia_captura": "ninguna",
+   "confianza": "CONFIRMADO_EXE"
+  },
+  {
+   "id": "STOP_COMM",
+   "ecu": "MR-140 y ZF",
+   "descripcion": "StopCommunication",
+   "precondiciones": [
+    "Sleep(100 ms)"
+   ],
+   "tx": {
+    "MR-140": "81 11 F1 82 05",
+    "ZF": "81 18 F1 82 0C"
+   },
+   "rx_esperada": null,
+   "nrc": [],
+   "timeout": {
+    "bytes_a_leer": 12,
+    "timeout_total_ms": 195,
+    "timeout_entre_bytes_ms": 1500,
+    "nota": "COMMTIMEOUTS fijado en PortInit (VA 0x4F6D68): ReadInterval=1500, ReadTotalMultiplier=15, ReadTotalConstant=15; ReadFile pide exactamente bytes_a_leer (eco incluido)"
+   },
+   "pasos_salida": [
+    "Disconnect (CloseHandle)"
+   ],
+   "referencia_exe": "main.pas MenuItem_StopClick L4372-4931 (trama 0x4EC181)",
+   "evidencia_captura": "ninguna",
+   "confianza": "CONFIRMADO_EXE"
+  },
+  {
+   "id": "SECURITY_ACCESS_NO_APLICA",
+   "ecu": "MR-140 y ZF",
+   "descripcion": "27 01/27 02 solo para selectores 0x11 y 0x13",
+   "tx": null,
+   "rx_esperada": null,
+   "nrc": [],
+   "timeout": null,
+   "pasos_salida": [],
+   "referencia_exe": "Button_ECUIdentClick 0x4EA145-0x4EA162 y Button_SbrosClick 0x4ED4B3: SecurityAccess solo si sel-0x11 in {0,2}",
+   "evidencia_captura": "-",
+   "confianza": "CONFIRMADO_EXE"
+  },
+  {
+   "id": "HV240_NO_DETERMINADO",
+   "ecu": "HV-240",
+   "descripcion": "El EXE no tiene un selector HV-240 propio: la lista ecus_soportadas.json trae \"MR-140\" (selector 0x12). No se reutiliza ninguna secuencia MR-140 para HV-240.",
+   "tx": null,
+   "rx_esperada": null,
+   "nrc": [],
+   "timeout": null,
+   "pasos_salida": [],
+   "referencia_exe": "archivos/cloude/ecus_soportadas.json; docs/investigacion-protocolos-y-actuadores.md (menciona MR-140/HV-240 en la ayuda del programa, sin protocolo propio)",
+   "evidencia_captura": "Ninguna captura identifica el tipo de ECU (la respuesta 1A 80 del motor nunca se capturo).",
+   "confianza": "NO_VERIFICADO"
+  }
+ ],
+ "preguntas_no_resueltas": [
+  "Acepta el MR-140 del coche las tramas 2C F0 / 2C F1 y devuelve 6C F0 / 6C F1? (sin captura)",
+  "Acepta la TCU ZF la trama 2C F0 y que devuelve el LID 06? (sin captura)",
+  "Respuesta MR-140 a 1A 80 (byte de longitud esperado 0x50) y a 19 DA FF 00 sin Tester Present intercalado",
+  "Que representan en el ECU los identificadores comunes de las entradas 2C (solo se conocen los nombres que el EXE asigna a cada offset)",
+  "Los IDs 69-71 son siempre 0 en MR-140? (analisis estatico: si; no observado)",
+  "Respuesta completa del borrado de DTC y condiciones de aceptacion del EXE",
+  "Fin de aprendizaje de acelerador: existe comando de cierre en el ECU? (el EXE no envia ninguno)"
+ ]
+}
