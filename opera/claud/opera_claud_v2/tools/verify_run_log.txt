@@ -1,0 +1,18 @@
+test_01_define_frames_lengths_and_header (__main__.T.test_01_define_frames_lengths_and_header) ... ok
+test_02_define_frames_checksum (__main__.T.test_02_define_frames_checksum) ... ok
+test_03_entries_contiguous_and_totals (__main__.T.test_03_entries_contiguous_and_totals) ... ok
+test_04_table_matches_repo_json (__main__.T.test_04_table_matches_repo_json) ... ok
+test_05_offsets_map_to_block_entries (__main__.T.test_05_offsets_map_to_block_entries)
+offset de la tabla -> pos = offset-10 -> inicio de entrada del bloque 2C con el tamano del modo. ... ok
+test_06_standard_frames_checksum (__main__.T.test_06_standard_frames_checksum) ... ok
+test_07_cedat_frames (__main__.T.test_07_cedat_frames) ... ok
+test_08_android_mr140_matches_exe_offsets_and_modes (__main__.T.test_08_android_mr140_matches_exe_offsets_and_modes) ... ok
+test_09_ids_67_71_constants (__main__.T.test_09_ids_67_71_constants) ... ok
+test_10_adaptation_thresholds (__main__.T.test_10_adaptation_thresholds) ... ok
+test_11_kotlin_definition_tables_match_exe_frames (__main__.T.test_11_kotlin_definition_tables_match_exe_frames)
+Si DynamicBlockDefinitions.kt existe (parche 0001 aplicado), reconstruye los bytes como lo hace Kotlin y compara con el EXE. ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.021s
+
+OK
