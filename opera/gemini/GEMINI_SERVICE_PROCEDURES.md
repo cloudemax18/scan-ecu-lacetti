@@ -1,44 +1,39 @@
-# Procedimientos Oficiales de Servicio y Diagnóstico
-**Vehículo:** Chevrolet Lacetti 1.8 LDA (2008) | **ECU:** Delphi MR-140 | **AT:** ZF 4HP16
+# Procedimientos Oficiales de Servicio, Diagnóstico y Seguridad
+**Proyecto:** CheviExplorer (`scan-ecu-lacetti`)  
+**Vehículo:** Chevrolet Lacetti 1.8 LDA (2008) | **ECU:** Delphi MR-140 | **AT:** ZF 4HP16  
 
 ---
 
-## 1. Procedimiento de Aprendizaje / Reseteo de Valores Adaptativos del Acelerador (Idle Learn Routine)
-
-### Aplicabilidad y Alcance
-* **Aplica exactamente:** Chevrolet Lacetti 1.8L LDA 2008 con ECU Delphi MR-140.
-* **Nota técnica:** Aplica si la unidad cuenta con cuerpo de aceleración electrónico (Drive-by-Wire / ETC) o tras realizar limpieza/reemplazo del cuerpo de mariposa / IAC en la versión de mariposa mecánica.
-
-### Precondiciones Requeridas
-1. Voltaje de la batería: **≥ 12.4 V** (motor apagado).
-2. Temperatura del refrigerante del motor (ECT): **≥ 80 °C** (alcanzar temperatura normal de trabajo).
-3. Temperatura del aire de admisión (IAT): **≥ 10 °C**.
-4. Apagar todos los consumidores eléctricos auxiliares (luces, aire acondicionado, desempañador térmico, equipo de audio).
-5. Transmisión en posición **P** (Park) o **N** (Neutral).
-
-### Secuencia Oficial de Aprendizaje Manual (Sin Herramienta de Diagnóstico)
-1. Girar la llave a posición **ON** (Ignición habilitada, motor apagado) durante **5 segundos**.
-2. Girar la llave a posición **OFF** durante **5 segundos**.
-3. Girar la llave a posición **ON** durante **5 segundos**.
-4. Encender el motor y dejarlo funcionar en ralentí en posición **P/N** durante **3 minutos** (hasta alcanzar > 80 °C de refrigerante).
-5. Encender el aire acondicionado durante **10 segundos** (si está equipado) y luego apagarlo durante **10 segundos**.
-6. Girar la llave a posición **OFF** durante al menos **10 segundos** para guardar los datos aprendidos en la EEPROM de la ECU.
-
-### Secuencia Oficial con Diagnóstico KWP2000 / Scanner
-1. Conectar la interfaz K-Line al Pin 7 del conector DLC OBD-II.
-2. Establecer sesión de diagnóstico KWP2000 (*Fast Init* a 10.4 kbps).
-3. Enviar solicitud de rutina de servicio `RoutineControl (Service 31h)` con el ID de rutina de reinicio adaptativo de ralentí (*Idle Adaptation Reset*).
-4. Ejecutar el ciclo de apagado y guardado en memoria EEPROM (Key OFF durante al menos 30 segundos).
+## 1. Procedimiento OEM de Aprendizaje del Ralentí (Idle Learn Routine)
+* **Fuente OEM:** GM Daewoo J200 Service Manual, Section 1B-24.
+* **Nivel de Evidencia:** `FUENTE_OEM_DIRECTA`
+* **Precondiciones Obligatorias:**
+  1. Voltaje de batería entre $12.5\text{ V}$ y $14.5\text{ V}$.
+  2. Temperatura del refrigerante del motor (ECT) $> 85^\circ\text{C}$ (Motor a temperatura normal de operación).
+  3. Temperatura del aire de admisión (IAT) $> 10^\circ\text{C}$.
+  4. Transmisión en posición **P** (Park) o **N** (Neutral).
+  5. Consumidores eléctricos auxiliares completamente apagados (A/C, desempañador, luces, ventilación de cabina).
+* **Secuencia Paso a Paso:**
+  1. Girar la llave de encendido a posición **ON** (Key-ON, Motor OFF) durante **5 segundos**.
+  2. Girar a posición **OFF** (Key-OFF) durante **5 segundos**.
+  3. Girar a posición **ON** durante **5 segundos**.
+  4. Arrancar el motor y dejarlo funcionar en ralentí constante en posición **P/N** durante **3 minutos** continuos.
+  5. Encender el sistema de Aire Acondicionado (A/C) en velocidad baja durante **10 segundos** (si el vehículo cuenta con A/C).
+  6. Apagar el Aire Acondicionado durante **10 segundos**.
+  7. Girar la llave a posición **OFF** durante al menos **10 segundos** para permitir que la ECU guarde los valores adaptativos de posición mínima de mariposa en la EEPROM.
 
 ---
 
-## 2. Lectura y Limpieza de DTCs (Diagnostic Trouble Codes)
-
-### Precondiciones
-* Ignición en posición **ON** (Motor encendido o apagado según el criterio del fallo a evaluar).
-
-### Procedimiento KWP2000
-1. **Lectura de DTCs:** Enviar servicio KWP `ReadDiagnosticTroubleCodesByStatus (Service 18h)` o `ReadDTC (Service 13h)`.
-2. **Interpretación:** Retorna estructura de 2 bytes por DTC según la codificación SAE J2012 / GM Daewoo.
-3. **Borrado de DTCs:** Enviar servicio KWP `ClearDiagnosticInformation (Service 14h)`.
-4. *Advertencia:* El borrado borra los parámetros adaptativos de combustible a corto plazo y reinicia los monitores de emisiones.
+## 2. Protocolos de Diagnóstico y Control KWP2000 (MR-140 / ZF 4HP16)
+* **Nivel de Evidencia:** `EVIDENCIA_DE_REPOSITORIO` / `ESTANDAR_TECNICO`
+* **Precondiciones de Seguridad para Actuadores (Servicio `0x30` / `0x31`):**
+  * **RPM del Motor = 0** (Motor Apagado para pruebas críticas de inyectores/bombas).
+  * **Velocidad del Vehículo = 0 km/h**.
+  * **Tensión de Batería > 12.0 V**.
+* **Secuencia de Comunicación:**
+  1. **Fast Init:** Pulso bajo (25ms) + Pulso alto (25ms) en Pin 7 a 10,400 bps.
+  2. **Inicio de Sesión:** Petición `StartDiagnosticSession (Service 10h)` con modo `81h` (Estándar) u `85h` (Extendida) dirigida al nodo `0x11` (ECM) o `0x18` (TCM).
+  3. **Prueba de Actuadores (Input/Output Control - Service 0x30):**
+     * Trama de activación: `[Header] 0x30 [Actuator_ID] [Control_Option 0x07] [State] [CS]`
+     * Trama de devolución de control: `[Header] 0x30 [Actuator_ID] [Control_Option 0x00] [CS]`
+  4. **Cierre de Sesión:** Envío de `StopDiagnosticSession (Service 82h)` antes de desconectar el enlace físico.

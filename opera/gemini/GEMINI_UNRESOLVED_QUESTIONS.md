@@ -1,19 +1,25 @@
-# Preguntas Pendientes y Brechas Documentales
-**Vehículo:** Chevrolet Lacetti 1.8 LDA (2008) | **Sistemas:** Delphi MR-140 & ZF 4HP16
+# Registro de Preguntas Sin Resolver y Brechas Documentales
+**Proyecto:** CheviExplorer (`scan-ecu-lacetti`)  
 
 ---
 
-## 1. Identificadores Propietarios de Actuadores (Service 30h / 31h)
-* **Pregunta:** ¿Cuáles son los IDs exactos de actuador (Input/Output Control) soportados por el firmware de la MR-140 para pruebas directas (p. ej. inyectores individuales, relé de la bomba de combustible, solenoide de purga EVAP, válvula IAC)?
-* **Nivel actual:** Desconocido / Genérico. Las librerías genéricas KWP2000 enumeran rangos genéricos que no garantizan compatibilidad con la calibración exacta del Lacetti 1.8 2008.
-* **Próximo paso documental:** Realizar un dump de traza de comunicación (bus log) de una herramienta oficial GM (Tech-2 o GDS) durante una sesión activa de actuadores en una MR-140.
+### UQ-001: Mapeo RAM de PIDs en Módulo TCM ZF 4HP16
+* **Qué falta:** Tabla exacta de PIDs estándar (Servicio `0x21`) para la lectura de la temperatura del aceite ATF y estados de solenoides en la TCM ZF 4HP16 bajo firmware de exportación J200.
+* **Por qué importa:** Solicitar PIDs incompatibles a la TCM provoca bloqueos de bus o respuestas basura interpretadas como fallas de comunicación.
+* **Riesgo de asumir una respuesta:** Mostrar datos falsos de temperatura ATF que deriven en un diagnóstico erróneo de sobrecalentamiento.
+* **Evidencia necesaria para cerrarla:** Log de traza KWP2000 de una herramienta oficial Scan-100 o GM Tech-2 ejecutando datos en vivo sobre la TCM ZF 4HP16.
+* **Agente responsable del siguiente paso:** `DeepSeek` / Investigador de Trazas de Bus.
 
-## 2. PIDs de Datos en Vivo (Service 22h / Service 21h)
-* **Pregunta:** ¿Cuáles son los offset de memoria RAM y PIDs propietarios utilizados por Delphi en la MR-140 para solicitar datos dinámicos avanzados (avance de encendido real, integración de sonda lambda, estado del interruptor P/N de la caja ZF 4HP16)?
-* **Nivel actual:** Parcialmente documentado mediante PIDs estándar OBD-II (Mode 01), pero pendiente de verificación para los bloques de datos propietarios KWP.
-* **Próximo paso documental:** Consultar o extraer archivos de definición de parámetros de diagnóstico (`*.ecm` / base de datos Tech-2 GM Daewoo) específicos para el binario del motor LDA 1.8L.
+### UQ-002: Pinout Físico K-Line de la TCM ZF 4HP16 (Mercado CIS vs. EU)
+* **Qué falta:** Confirmación de si en todos los Lacetti 1.8 AT 2008 la TCM está en el Pin 7 o si existen variantes con la línea K de la TCM aislada en el Pin 12.
+* **Por qué importa:** Una interfaz configurada únicamente para Pin 7 no podrá conectar con la transmisión en vehículos con arnés alternativo.
+* **Riesgo de asumir una respuesta:** Imposibilidad de conectar con la transmisión automática en modelos específicos de importación.
+* **Evidencia necesaria para cerrarla:** Comprobación de continuidad física entre el Pin 28 de la TCM y el Pin 7 / Pin 12 del DLC en vehículos de mercado ruso/asiático.
+* **Agente responsable del siguiente paso:** Usuario / Pruebas de campo con hardware.
 
-## 3. Direccionamiento Físico del Bus K-Line para la TCM ZF 4HP16
-* **Pregunta:** ¿La unidad de control de la transmisión automática (TCM ZF 4HP16) responde en la misma dirección lógica K-Line (`Target Address`) que la ECU Delphi MR-140, o requiere un selector de pin/dirección de nodo separada en el conector DLC?
-* **Nivel actual:** Requiere confirmación de diagrama de cableado (Pinout del DLC J1962 en J200).
-* **Próximo paso documental:** Verificar en la sección 8A del manual J200 si la línea K de la TCM va puenteada al Pin 7 del DLC o si utiliza un pin independiente (p. ej. Pin 12 u 8).
+### UQ-003: Sub-funciones de Seguridad en Servicio `0x27` para Flasheo de MR-140
+* **Qué falta:** Algoritmo Seed/Key implementado por Delphi para desbloquear la escritura de la memoria Flash del procesador MC68F375.
+* **Por qué importa:** Requerido estrictamente si el software busca realizar reprogramación de mapas de combustible o calibración de EEPROM.
+* **Riesgo de asumir una respuesta:** Bloqueo permanente (*bricking*) de la unidad de control Delphi MR-140.
+* **Evidencia necesaria para cerrarla:** Desensamblado del módulo de seguridad de la librería de diagnóstico Tech-2 de GM Daewoo.
+* **Agente responsable del siguiente paso:** `Claude` / Ingeniero de Reversa.
