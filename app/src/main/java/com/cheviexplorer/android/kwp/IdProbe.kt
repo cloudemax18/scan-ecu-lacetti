@@ -5,8 +5,11 @@ import kotlinx.coroutines.delay
 data class ResultadoId(val id: Int, val estado: String, val datos: ByteArray?)
 
 object IdProbe {
-    /** IDs exploratorios; no constituyen un mapa confirmado de parámetros de ECU. */
-    val IDS = listOf(0x01, 0x02, 0x03, 0x04, 0x11, 0x20, 0xF0, 0xF1, 0xFB)
+    /**
+     * Exploratory IDs only. F0/F1 are intentionally excluded until their
+     * ECU-specific dynamic blocks have been defined and validated with service 0x2C.
+     */
+    val IDS = listOf(0x01, 0x02, 0x03, 0x04, 0x11, 0x20, 0xFB)
 
     suspend fun sondear(bus: KwpBus, ids: List<Int> = IDS): List<ResultadoId> {
         val resultados = ArrayList<ResultadoId>()
