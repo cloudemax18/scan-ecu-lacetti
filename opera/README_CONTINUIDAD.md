@@ -16,3 +16,10 @@ No reemplazar silenciosamente informes históricos. Añadir estado actual fechad
 
 ## Limitación
 Este estado refleja la revisión estática de Claude v2 del 2026-10-21. Antes de ejecutar nuevos cambios, verificar SHA actual de main, PR y jobs/artefactos de CI.
+
+
+## Siguiente fase (2026-10-21)
+- La revisión de Claude v2 está registrada en la bitácora maestra, §12–13.
+- Decisión: no aplicar directamente ninguno de los parches Claude v2. El gate 0x2C debe integrarse al flujo real, validar dirección ECU y serializar transacciones; F0/F1 permanecen fuera del barrido automático.
+- Prompts multiagente para la fase siguiente: [PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-21.md](PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-21.md).
+- La nueva ronda es propuesta de código + auditoría independiente + investigación de fuentes + revisión UX. No se han ejecutado pruebas de vehículo ni se ha habilitado ninguna operación de actuador.
