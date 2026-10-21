@@ -1,0 +1,13 @@
+ID_prueba,Precondiciones,Pasos,Entrada_TX,RX_esperada,Resultado_observado,Criterio_pass_fail
+UT-CHK-01,Ninguna (unidad),Llamar a checksum() con array conocido,,,Pendiente,CS calculado == CS esperado (p.ej. 0x83 0x11 0xF1 0x30 0x15 0x01 -> 0xCB)
+UT-CHK-02,Ninguna (unidad),Construir trama con trama() y verificar CS,,,Pendiente,La trama generada debe terminar con el CS correcto
+UT-NRC-01,Ninguna (unidad),Simular respuesta 7F 21 31 (sin CS) y pasarla a IdProbe,,,Pendiente,IdProbe debe devolver ResultadoId con estado "NRC 0x31" sin lanzar excepción
+UT-NRC-02,Ninguna (unidad),Simular respuesta 7F 21 31 CS y pasarla a IdProbe,,,Pendiente,IdProbe debe extraer NRC 0x31 correctamente
+UT-POS-01,Ninguna (unidad),Simular respuesta positiva 96 F1 11 61 02 66 ... y pasarla a IdProbe,,,Pendiente,IdProbe debe devolver estado "respuesta positiva" y payload con los bytes de datos
+UT-CS-01,Ninguna (unidad),Simular respuesta con checksum incorrecto y pasarla a KwpProtocol.findResponse,,,Pendiente,findResponse debe devolver null o marcar valid=false
+FT-STR-01,Vehículo Lacetti 1.8 2008, contacto ON, motor apagado, KKL conectado,Enviar inicio de comunicación a MR-140,81 11 F1 81 04,83 F1 11 C1 EF 8F C4,Registrar TX/RX y CS,Respuesta positiva con CS válido y claves EF 8F
+FT-TP-01,Vehículo en contacto ON,Enviar Tester Present a MR-140,3E C1,7E 01,Registrar,Respuesta positiva con CS válido
+FT-DTC-01,Vehículo en contacto ON,Leer DTC de MR-140,19 DA FF 00,59 00,Registrar,Respuesta positiva (SID 0x59) con CS válido
+FT-ID21-01,Vehículo en contacto ON,Leer ID 0x02 de MR-140,82 11 F1 21 02 A7,96 F1 11 61 02 66 ... (según captura),Registrar,Respuesta positiva (SID 0x61) con ID 0x02 y CS válido
+FT-ACT-01,Vehículo inmóvil, freno de mano, selector P, contacto ON,Enviar comando de estado al relé A/C (ID 0x15),83 11 F1 30 15 01 CB,Respuesta positiva 0x70 o NRC,Registrar,Si es positiva, el actuador debe conmutar (verificar audiblemente); si es NRC, registrar código
+FT-ACT-02,Mismas precondiciones que FT-ACT-01,Activar relé A/C (ID 0x15) con subfunción 0x07,84 11 F1 30 15 07 FF D1,Respuesta positiva o NRC,Registrar,Si es positiva, el relé debe activarse; si es NRC, registrar código y no reintentar sin analizar

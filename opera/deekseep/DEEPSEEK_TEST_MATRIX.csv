@@ -1,0 +1,13 @@
+ID_prueba,Precondiciones,Pasos,Entrada_TX,RX_esperada,Resultado_observado,Criterio_pass_fail
+UT-CHK-01,Unidad,Llamar checksum() con array conocido,,,Pendiente,CS calculado == CS esperado
+UT-CHK-02,Unidad,Construir trama() y verificar CS,,,Pendiente,Trama termina con CS correcto
+UT-NRC-01,Unidad,Respuesta 7F 21 31 sin CS a IdProbe,,,Pendiente,Sin excepcion; estado NRC 0x31
+UT-NRC-02,Unidad,Respuesta 7F 21 31 CS a IdProbe,,,Pendiente,NRC 0x31 extraido
+UT-POS-01,Unidad,Respuesta positiva a IdProbe,,,Pendiente,payload correcto
+UT-CS-01,Unidad,Respuesta con CS invalido a KwpProtocol.findResponse,,,Pendiente,Devuelve null o valid=false
+FT-STR-01,Contacto ON motor OFF KKL,Inicio comunicacion MR-140,81 11 F1 81 04,83 F1 11 C1 EF 8F C4,Registrar,Positiva con CS valido
+FT-TP-01,Contacto ON,Tester Present,3E C1,7E 01,Registrar,Positiva con CS valido
+FT-DTC-01,Contacto ON,Leer DTC,19 DA FF 00,59 00,Registrar,Positiva con CS valido
+FT-ID21-01,Contacto ON,Leer ID 0x02,82 11 F1 21 02 A7,96 F1 11 61 02 66 ...,Registrar,Positiva con ID 0x02
+FT-ACT-01,Vehiculo inmóvil P freno mano,Estado rele A/C,83 11 F1 30 15 01 CB,0x70 o NRC,Registrar,Verificar conmutacion audible o registrar NRC
+FT-ACT-02,Mismas,Activar rele A/C,84 11 F1 30 15 07 FF D1,0x70 o NRC,Registrar,Rele activa o registrar NRC
