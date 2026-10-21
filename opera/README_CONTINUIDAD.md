@@ -15,4 +15,4 @@ Leer primero [INTEGRACION_BITACORA_CONTINUIDAD.md](INTEGRACION_BITACORA_CONTINUI
 No reemplazar silenciosamente informes históricos. Añadir estado actual fechado y actualizar la bitácora maestra. Cada paquete externo debe conservar rutas destino, incluir ZIP descargable e informe Markdown. Los agentes no deben afirmar que subieron archivos al repo; el usuario hace la subida manual.
 
 ## Limitación
-Este estado refleja la revisión estática de Claude v2 del 2026-10-21. Antes de ejecutar nuevos cambios, verificar SHA actual de main, PR y jobs/artefactos de CI. Antes de ejecutar nuevos cambios, verificar SHA actual de main, PR y jobs/artefactos de CI.
+Este estado refleja la revisión estática de Claude v2 del 2026-10-21. Antes de ejecutar nuevos cambios, verificar SHA actual de main, PR y jobs/artefactos de CI.
