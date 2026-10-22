@@ -29,3 +29,11 @@ Este estado refleja la revisión estática de Claude v2 del 2026-10-21. Antes de
 - Registro original: [cheviexplorer-captura-1792610672651.md](../archivos/Capturas/cheviexplorer-captura-1792610672651.md).
 - Análisis técnico: [ANALISIS_cheviexplorer-captura-1792610672651.md](../archivos/Capturas/ANALISIS_cheviexplorer-captura-1792610672651.md).
 - Hallazgo principal: revisar serialización de TesterPresent y otras solicitudes, respuestas residuales `RX 00), y no decodificar IDs 02–04 sin mapa validado. La captura no demuestra soporte `0x2C` ni funciones ZF adicionales.
+
+
+## Estado actualizado — entrega Claude v3 (2026-10-22)
+- Leer §15 de [la bitácora maestra](INTEGRACION_BITACORA_CONTINUIDAD.md) antes de aplicar cambios.
+- Claude v3 añadió componentes propuestos, pero **no integró** la compuerta 0x2C en `MainActivity.kt`/`KwpBus.kt`. No aplicar el parche 0003 por separado: depende de `DynamicBlockDefinitions` y el validador presupone un contrato de eco que debe reconciliarse con el transporte real.
+- F0/F1 siguen fuera del barrido automático; ZF F0, actuadores, adaptación y HV-240 siguen bloqueados.
+- La CI del commit de subida `e593e23068b4046919a5775e24f7bb4291ce28bb` estaba en curso durante la revisión; comprobar el resultado en [Actions #254](https://github.com/cloudemax18/scan-ecu-lacetti/actions/runs/39728318911).
+- Prompts para la siguiente ronda: [PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-22.md](PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-22.md).
