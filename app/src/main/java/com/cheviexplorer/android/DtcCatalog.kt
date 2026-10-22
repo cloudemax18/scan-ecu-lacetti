@@ -5,7 +5,7 @@ import org.json.JSONArray
 
 /**
  * Spanish DTC lookup translated from the repository catalog.
- * The JSON retains descripcion_ru for audit/comparison; the app displays descripcion_es.
+ * Production DTC assets contain Spanish descriptions only; original-language source data stays in research archives.
  */
 internal object DtcCatalog {
     @Volatile private var cached: Map<String, String?>? = null
