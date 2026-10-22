@@ -1,1898 +1,1582 @@
 [
  {
-  "grupo": "num",
   "codigo": "1",
-  "descripcion_ru": "Высокое сопротивление цепи срабатывания подушки безопасности водителя",
-  "offset": "0xc9ec4"
+  "grupo": "num",
+  "descripcion_es": "Resistencia alta en el circuito de despliegue del airbag del conductor"
  },
  {
-  "grupo": "num",
   "codigo": "2",
-  "descripcion_ru": "Низкое сопротивление цепи срабатывания подушки безопасности водителя",
-  "offset": "0xc9f20"
+  "grupo": "num",
+  "descripcion_es": "Resistencia baja en el circuito de despliegue del airbag del conductor"
  },
  {
-  "grupo": "num",
   "codigo": "3",
-  "descripcion_ru": "Цепь срабатывания подушки безопасности водителя закорочена на массу",
-  "offset": "0xc9f7c"
+  "grupo": "num",
+  "descripcion_es": "Circuito de despliegue del airbag del conductor en cortocircuito a masa"
  },
  {
-  "grupo": "num",
   "codigo": "4",
-  "descripcion_ru": "Цепь срабатывания подушки безопасности водителя закорочена на напряжение питания",
-  "offset": "0xc9fd4"
+  "grupo": "num",
+  "descripcion_es": "Circuito de despliegue del airbag del conductor en cortocircuito a tensión de alimentación"
  },
  {
-  "grupo": "num",
   "codigo": "5",
-  "descripcion_ru": "Высокое сопротивление цепи срабатывания подушки безопасности пассажира",
-  "offset": "0xca03c"
+  "grupo": "num",
+  "descripcion_es": "Resistencia alta en el circuito de despliegue del airbag del pasajero"
  },
  {
-  "grupo": "num",
   "codigo": "6",
-  "descripcion_ru": "Низкое сопротивление цепи срабатывания подушки безопасности пассажира",
-  "offset": "0xca098"
+  "grupo": "num",
+  "descripcion_es": "Resistencia baja en el circuito de despliegue del airbag del pasajero"
  },
  {
-  "grupo": "num",
   "codigo": "7",
-  "descripcion_ru": "Цепь срабатывания подушки безопасности пассажира закорочена на массу",
-  "offset": "0xca0f4"
+  "grupo": "num",
+  "descripcion_es": "Circuito de despliegue del airbag del pasajero en cortocircuito a masa"
  },
  {
-  "grupo": "num",
   "codigo": "8",
-  "descripcion_ru": "Цепь срабатывания подушки безопасности пассажира закорочена на напряжение питания",
-  "offset": "0xca150"
+  "grupo": "num",
+  "descripcion_es": "Circuito de despliegue del airbag del pasajero en cortocircuito a tensión de alimentación"
  },
  {
-  "grupo": "num",
   "codigo": "9",
-  "descripcion_ru": "Высокое сопротивление цепи срабатывания натяжителя ремня безопасности водителя",
-  "offset": "0xca1b8"
+  "grupo": "num",
+  "descripcion_es": "Resistencia alta en el circuito de activación del pretensor del cinturón del conductor"
  },
  {
-  "grupo": "num",
   "codigo": "10",
-  "descripcion_ru": "Низкое сопротивление цепи срабатывания натяжителя ремня безопасности водителя",
-  "offset": "0xca21c"
+  "grupo": "num",
+  "descripcion_es": "Resistencia baja en el circuito de activación del pretensor del cinturón del conductor"
  },
  {
-  "grupo": "num",
   "codigo": "11",
-  "descripcion_ru": "Цепь срабатывания натяжителя ремня безопасности водителя закорочена на массу",
-  "offset": "0xca280"
+  "grupo": "num",
+  "descripcion_es": "Circuito de activación del pretensor del cinturón del conductor en cortocircuito a masa"
  },
  {
-  "grupo": "num",
   "codigo": "12",
-  "descripcion_ru": "Цепь срабатывания натяжителя ремня безопасности водителя закорочена на напряжение питания",
-  "offset": "0xca2e4"
+  "grupo": "num",
+  "descripcion_es": "Circuito de activación del pretensor del cinturón del conductor en cortocircuito a tensión de alimentación"
  },
  {
-  "grupo": "num",
   "codigo": "13",
-  "descripcion_ru": "Высокое сопротивление цепи срабатывания натяжителя ремня безопасности пассажира",
-  "offset": "0xca354"
+  "grupo": "num",
+  "descripcion_es": "Resistencia alta en el circuito de activación del pretensor del cinturón del pasajero"
  },
  {
-  "grupo": "num",
   "codigo": "14",
-  "descripcion_ru": "Низкое сопротивление цепи срабатывания натяжителя ремня безопасности пассажира",
-  "offset": "0xca3b8"
+  "grupo": "num",
+  "descripcion_es": "Resistencia baja en el circuito de activación del pretensor del cinturón del pasajero"
  },
  {
-  "grupo": "num",
   "codigo": "15",
-  "descripcion_ru": "Цепь срабатывания натяжителя ремня безопасности пассажира закорочена на массу",
-  "offset": "0xca41c"
+  "grupo": "num",
+  "descripcion_es": "Circuito de activación del pretensor del cinturón del pasajero en cortocircuito a masa"
  },
  {
-  "grupo": "num",
   "codigo": "16",
-  "descripcion_ru": "Цепь срабатывания натяжителя ремня безопасности пассажира закорочена на напряжение питания",
-  "offset": "0xca480"
+  "grupo": "num",
+  "descripcion_es": "Circuito de activación del pretensor del cinturón del pasajero en cortocircuito a tensión de alimentación"
  },
  {
-  "grupo": "num",
   "codigo": "23",
-  "descripcion_ru": "Высокое напряжение аккумуляторной батареи",
-  "offset": "0xca4f0"
+  "grupo": "num",
+  "descripcion_es": "Tensión alta de la batería"
  },
  {
-  "grupo": "num",
   "codigo": "24",
-  "descripcion_ru": "Низкое напряжение борт сети",
-  "offset": "0xca530"
+  "grupo": "num",
+  "descripcion_es": "Tensión baja de la red de a bordo"
  },
  {
-  "grupo": "num",
   "codigo": "25",
-  "descripcion_ru": "Неисправность контрольной лампы подушки безопасности",
-  "offset": "0xca560"
+  "grupo": "num",
+  "descripcion_es": "Fallo de la luz testigo del airbag"
  },
  {
-  "grupo": "num",
   "codigo": "31",
-  "descripcion_ru": "Внутренняя неисправность модуля датчиков и диагностики (SDM)",
-  "offset": "0xca5ac"
+  "grupo": "num",
+  "descripcion_es": "Fallo interno del módulo de sensores y diagnóstico (SDM)"
  },
  {
-  "grupo": "num",
   "codigo": "32",
-  "descripcion_ru": "Запись о срабатывании подушки безопасности при лобовом столкновении",
-  "offset": "0xca600"
+  "grupo": "num",
+  "descripcion_es": "Registro de despliegue del airbag en colisión frontal"
  },
  {
-  "grupo": "num",
   "codigo": "33",
-  "descripcion_ru": "Запись о срабатывании боковой подушки безопасности водителя при боковом столкновении",
-  "offset": "0xca658"
+  "grupo": "num",
+  "descripcion_es": "Registro de despliegue del airbag lateral del conductor en colisión lateral"
  },
  {
-  "grupo": "num",
   "codigo": "34",
-  "descripcion_ru": "Запись о срабатывании боковой подушки безопасности пассажира при боковом столкновении",
-  "offset": "0xca6c4"
+  "grupo": "num",
+  "descripcion_es": "Registro de despliegue del airbag lateral del pasajero en colisión lateral"
  },
  {
-  "grupo": "num",
   "codigo": "35",
-  "descripcion_ru": "Запись о срабатывании натяжителя ремня безопасности",
-  "offset": "0xca730"
+  "grupo": "num",
+  "descripcion_es": "Registro de activación del pretensor del cinturón"
  },
  {
-  "grupo": "num",
   "codigo": "38",
-  "descripcion_ru": "Счетчик срабатываний боковых подушек безопасности и натяжителей ремней безопасности свыше 5",
-  "offset": "0xca778"
+  "grupo": "num",
+  "descripcion_es": "Contador de despliegues de airbags laterales y pretensores superior a 5"
  },
  {
-  "grupo": "num",
   "codigo": "52",
-  "descripcion_ru": "Высокое сопротивление цепи срабатывания боковой подушки безопасности водителя",
-  "offset": "0xca7e8"
+  "grupo": "num",
+  "descripcion_es": "Resistencia alta en el circuito de despliegue del airbag lateral del conductor"
  },
  {
-  "grupo": "num",
   "codigo": "53",
-  "descripcion_ru": "Низкое сопротивление цепи срабатывания боковой подушки безопасности водителя",
-  "offset": "0xca84c"
+  "grupo": "num",
+  "descripcion_es": "Resistencia baja en el circuito de despliegue del airbag lateral del conductor"
  },
  {
-  "grupo": "num",
   "codigo": "54",
-  "descripcion_ru": "Цепь срабатывания боковой подушки безопасности водителя закорочена на массу",
-  "offset": "0xca8b0"
+  "grupo": "num",
+  "descripcion_es": "Circuito de despliegue del airbag lateral del conductor en cortocircuito a masa"
  },
  {
-  "grupo": "num",
   "codigo": "55",
-  "descripcion_ru": "Цепь срабатывания боковой подушки безопасности водителя закорочена на напряжение питания",
-  "offset": "0xca910"
+  "grupo": "num",
+  "descripcion_es": "Circuito de despliegue del airbag lateral del conductor en cortocircuito a tensión de alimentación"
  },
  {
-  "grupo": "num",
   "codigo": "56",
-  "descripcion_ru": "Высокое сопротивление цепи срабатывания боковой подушки безопасности пассажира",
-  "offset": "0xca980"
+  "grupo": "num",
+  "descripcion_es": "Resistencia alta en el circuito de despliegue del airbag lateral del pasajero"
  },
  {
-  "grupo": "num",
   "codigo": "57",
-  "descripcion_ru": "Низкое сопротивление цепи срабатывания боковой подушки безопасности пассажира",
-  "offset": "0xca9e4"
+  "grupo": "num",
+  "descripcion_es": "Resistencia baja en el circuito de despliegue del airbag lateral del pasajero"
  },
  {
-  "grupo": "num",
   "codigo": "58",
-  "descripcion_ru": "Цепь срабатывания боковой подушки безопасности пассажира закорочена на массу",
-  "offset": "0xcaa48"
+  "grupo": "num",
+  "descripcion_es": "Circuito de despliegue del airbag lateral del pasajero en cortocircuito a masa"
  },
  {
-  "grupo": "num",
   "codigo": "59",
-  "descripcion_ru": null,
-  "offset": "0xcaaac"
+  "grupo": "num",
+  "descripcion_es": null
  },
  {
-  "grupo": "num",
   "codigo": "80",
-  "descripcion_ru": "Цепь датчика боковой подушки безопасности водителя закорочена на напряжение питания",
-  "offset": "0xcaab8"
+  "grupo": "num",
+  "descripcion_es": "Circuito del sensor del airbag lateral del conductor en cortocircuito a tensión de alimentación"
  },
  {
-  "grupo": "num",
   "codigo": "81",
-  "descripcion_ru": "Цепь датчика боковой подушки безопасности водителя закорочена на массу",
-  "offset": "0xcab20"
+  "grupo": "num",
+  "descripcion_es": "Circuito del sensor del airbag lateral del conductor en cortocircuito a masa"
  },
  {
-  "grupo": "num",
   "codigo": "82",
-  "descripcion_ru": "Ошибка передачи данных датчика боковой подушки безопасности водителя",
-  "offset": "0xcab7c"
+  "grupo": "num",
+  "descripcion_es": "Error de transmisión de datos del sensor del airbag lateral del conductor"
  },
  {
-  "grupo": "num",
   "codigo": "83",
-  "descripcion_ru": "Неисправность датчика боковой подушки безопасности водителя",
-  "offset": "0xcabd8"
+  "grupo": "num",
+  "descripcion_es": "Fallo del sensor del airbag lateral del conductor"
  },
  {
-  "grupo": "num",
   "codigo": "84",
-  "descripcion_ru": "Цепь датчика боковой подушки безопасности пассажира закорочена на напряжение питания",
-  "offset": "0xcac28"
+  "grupo": "num",
+  "descripcion_es": "Circuito del sensor del airbag lateral del pasajero en cortocircuito a tensión de alimentación"
  },
  {
-  "grupo": "num",
   "codigo": "85",
-  "descripcion_ru": "Цепь датчика боковой подушки безопасности пассажира закорочена на массу",
-  "offset": "0xcac94"
+  "grupo": "num",
+  "descripcion_es": "Circuito del sensor del airbag lateral del pasajero en cortocircuito a masa"
  },
  {
-  "grupo": "num",
   "codigo": "86",
-  "descripcion_ru": "Ошибка передачи данных датчика боковой подушки безопасности пассажира",
-  "offset": "0xcacf0"
- },
- {
   "grupo": "num",
+  "descripcion_es": "Error de transmisión de datos del sensor del airbag lateral del pasajero"
+ },
+ {
   "codigo": "87",
-  "descripcion_ru": "Неисправность датчика боковой подушки безопасности пассажира",
-  "offset": "0xcad4c"
+  "grupo": "num",
+  "descripcion_es": "Fallo del sensor del airbag lateral del pasajero"
  },
  {
-  "grupo": "B",
   "codigo": "B1101",
-  "descripcion_ru": "Слишком высокое напряжение аккумуляторной батареи",
-  "offset": "0xcadac"
+  "grupo": "B",
+  "descripcion_es": "Tensión de la batería demasiado alta"
  },
  {
-  "grupo": "B",
   "codigo": "B1102",
-  "descripcion_ru": "Слишком низкое напряжение аккумуляторной батареи",
-  "offset": "0xcadf8"
+  "grupo": "B",
+  "descripcion_es": "Tensión de la batería demasiado baja"
  },
  {
-  "grupo": "B",
   "codigo": "B1103",
-  "descripcion_ru": "Слишком низкое напряжение связи",
-  "offset": "0xcae44"
+  "grupo": "B",
+  "descripcion_es": "Tensión de comunicación demasiado baja"
  },
  {
-  "grupo": "B",
   "codigo": "B1346",
-  "descripcion_ru": "Высокое сопротивление передней подушки безопасности водителя",
-  "offset": "0xcae7c"
+  "grupo": "B",
+  "descripcion_es": "Resistencia alta del airbag frontal del conductor"
  },
  {
-  "grupo": "B",
   "codigo": "B1347",
-  "descripcion_ru": "Низкое сопротивление передней подушки безопасности водителя",
-  "offset": "0xcaed4"
+  "grupo": "B",
+  "descripcion_es": "Resistencia baja del airbag frontal del conductor"
  },
  {
-  "grupo": "B",
   "codigo": "B1348",
-  "descripcion_ru": "Замыкание передней подушки безопасности водителя на массу",
-  "offset": "0xcaf28"
+  "grupo": "B",
+  "descripcion_es": "Airbag frontal del conductor en cortocircuito a masa"
  },
  {
-  "grupo": "B",
   "codigo": "B1349",
-  "descripcion_ru": "Замыкание передней подушки безопасности водителя на напряжение аккумулятора",
-  "offset": "0xcaf7c"
+  "grupo": "B",
+  "descripcion_es": "Airbag frontal del conductor en cortocircuito a tensión de batería"
  },
  {
-  "grupo": "B",
   "codigo": "B1352",
-  "descripcion_ru": "Низкое сопротивление передней подушки безопасности пассажира",
-  "offset": "0xcafe0"
+  "grupo": "B",
+  "descripcion_es": "Resistencia baja del airbag frontal del pasajero"
  },
  {
-  "grupo": "B",
   "codigo": "B1353",
-  "descripcion_ru": "Высокое сопротивление передней подушки безопасности пассажира",
-  "offset": "0xcb038"
+  "grupo": "B",
+  "descripcion_es": "Resistencia alta del airbag frontal del pasajero"
  },
  {
-  "grupo": "B",
   "codigo": "B1354",
-  "descripcion_ru": "Замыкание передней подушки безопасности пассажира на массу",
-  "offset": "0xcb090"
+  "grupo": "B",
+  "descripcion_es": "Airbag frontal del pasajero en cortocircuito a masa"
  },
  {
-  "grupo": "B",
   "codigo": "B1355",
-  "descripcion_ru": "Замыкание передней подушки безопасности пассажира на напряжение аккумулятора",
-  "offset": "0xcb0e4"
+  "grupo": "B",
+  "descripcion_es": "Airbag frontal del pasajero en cortocircuito a tensión de batería"
  },
  {
-  "grupo": "B",
   "codigo": "B1361",
-  "descripcion_ru": "Высокое сопротивление натяжителя ремня безопасности водителя",
-  "offset": "0xcb14c"
+  "grupo": "B",
+  "descripcion_es": "Resistencia alta del pretensor del cinturón del conductor"
  },
  {
-  "grupo": "B",
   "codigo": "B1362",
-  "descripcion_ru": "Низкое сопротивление натяжителя ремня безопасности водителя",
-  "offset": "0xcb1a4"
+  "grupo": "B",
+  "descripcion_es": "Resistencia baja del pretensor del cinturón del conductor"
  },
  {
-  "grupo": "B",
   "codigo": "B1363",
-  "descripcion_ru": "Замыкание натяжителя ремня безопасности водителя на массу",
-  "offset": "0xcb1f8"
+  "grupo": "B",
+  "descripcion_es": "Pretensor del cinturón del conductor en cortocircuito a masa"
  },
  {
-  "grupo": "B",
   "codigo": "B1364",
-  "descripcion_ru": "Замыкание натяжителя ремня безопасности водителя на напряжение аккумулятора",
-  "offset": "0xcb24c"
+  "grupo": "B",
+  "descripcion_es": "Pretensor del cinturón del conductor en cortocircuito a tensión de batería"
  },
  {
-  "grupo": "B",
   "codigo": "B1367",
-  "descripcion_ru": "Высокое сопротивление натяжителя ремня безопасности пассажира",
-  "offset": "0xcb2b0"
+  "grupo": "B",
+  "descripcion_es": "Resistencia alta del pretensor del cinturón del pasajero"
  },
  {
-  "grupo": "B",
   "codigo": "B1368",
-  "descripcion_ru": "Низкое сопротивление натяжителя ремня безопасности пассажира",
-  "offset": "0xcb308"
+  "grupo": "B",
+  "descripcion_es": "Resistencia baja del pretensor del cinturón del pasajero"
  },
  {
-  "grupo": "B",
   "codigo": "B1369",
-  "descripcion_ru": "Замыкание натяжителя ремня безопасности пассажира на массу",
-  "offset": "0xcb360"
+  "grupo": "B",
+  "descripcion_es": "Pretensor del cinturón del pasajero en cortocircuito a masa"
  },
  {
-  "grupo": "B",
   "codigo": "B1370",
-  "descripcion_ru": "Замыкание натяжителя ремня безопасности пассажира на напряжение аккумулятора",
-  "offset": "0xcb3b4"
+  "grupo": "B",
+  "descripcion_es": "Pretensor del cinturón del pasajero en cortocircuito a tensión de batería"
  },
  {
-  "grupo": "B",
   "codigo": "B1378",
-  "descripcion_ru": "Высокое сопротивление боковой подушки безопасности водителя",
-  "offset": "0xcb41c"
+  "grupo": "B",
+  "descripcion_es": "Resistencia alta del airbag lateral del conductor"
  },
  {
-  "grupo": "B",
   "codigo": "B1379",
-  "descripcion_ru": "Низкое сопротивление боковой подушки безопасности водителя",
-  "offset": "0xcb470"
+  "grupo": "B",
+  "descripcion_es": "Resistencia baja del airbag lateral del conductor"
  },
  {
-  "grupo": "B",
   "codigo": "B1380",
-  "descripcion_ru": "Замыкание боковой подушки безопасности водителя на массу",
-  "offset": "0xcb4c4"
+  "grupo": "B",
+  "descripcion_es": "Airbag lateral del conductor en cortocircuito a masa"
  },
  {
-  "grupo": "B",
   "codigo": "B1381",
-  "descripcion_ru": "Замыкание боковой подушки безопасности водителя на напряжение аккумулятора",
-  "offset": "0xcb518"
+  "grupo": "B",
+  "descripcion_es": "Airbag lateral del conductor en cortocircuito a tensión de batería"
  },
  {
-  "grupo": "B",
   "codigo": "B1382",
-  "descripcion_ru": "Высокое сопротивление боковой подушки безопасности пассажира",
-  "offset": "0xcb57c"
+  "grupo": "B",
+  "descripcion_es": "Resistencia alta del airbag lateral del pasajero"
  },
  {
-  "grupo": "B",
   "codigo": "B1383",
-  "descripcion_ru": "Низкое сопротивление боковой подушки безопасности пассажира",
-  "offset": "0xcb5d4"
+  "grupo": "B",
+  "descripcion_es": "Resistencia baja del airbag lateral del pasajero"
  },
  {
-  "grupo": "B",
   "codigo": "B1384",
-  "descripcion_ru": "Замыкание боковой подушки безопасности пассажира на массу",
-  "offset": "0xcb628"
+  "grupo": "B",
+  "descripcion_es": "Airbag lateral del pasajero en cortocircuito a masa"
  },
  {
-  "grupo": "B",
   "codigo": "B1385",
-  "descripcion_ru": "Замыкание боковой подушки безопасности пассажира на напряжение аккумулятора",
-  "offset": "0xcb67c"
+  "grupo": "B",
+  "descripcion_es": "Airbag lateral del pasajero en cortocircuito a tensión de batería"
  },
  {
-  "grupo": "B",
   "codigo": "B1395",
-  "descripcion_ru": "Нарушение соединений в цепи пусковых контуров",
-  "offset": "0xcb6e0"
+  "grupo": "B",
+  "descripcion_es": "Fallo de conexión en el circuito de los iniciadores"
  },
  {
-  "grupo": "B",
   "codigo": "B1400",
-  "descripcion_ru": null,
-  "offset": "0xcb728"
+  "grupo": "B",
+  "descripcion_es": null
  },
  {
-  "grupo": "B",
   "codigo": "B1401",
-  "descripcion_ru": "Замыкание датчика боковой подушки безопасности водителя на массу или утечка",
-  "offset": "0xcb738"
+  "grupo": "B",
+  "descripcion_es": "Sensor del airbag lateral del conductor en cortocircuito a masa o con fuga"
  },
  {
-  "grupo": "B",
   "codigo": "B1402",
-  "descripcion_ru": "Замыкание датчика боковой подушки безопасности водителя на напряжение аккумулятора или разрыв цепи",
-  "offset": "0xcb79c"
+  "grupo": "B",
+  "descripcion_es": "Sensor del airbag lateral del conductor en cortocircuito a tensión de batería o circuito abierto"
  },
  {
-  "grupo": "B",
   "codigo": "B1403",
-  "descripcion_ru": null,
-  "offset": "0xcb818"
+  "grupo": "B",
+  "descripcion_es": null
  },
  {
-  "grupo": "B",
   "codigo": "B1404",
-  "descripcion_ru": "Замыкание датчика боковой подушки безопасности пассажира на массу или утечка",
-  "offset": "0xcb828"
+  "grupo": "B",
+  "descripcion_es": "Sensor del airbag lateral del pasajero en cortocircuito a masa o con fuga"
  },
  {
-  "grupo": "B",
   "codigo": "B1405",
-  "descripcion_ru": "Замыкание датчика боковой подушки безопасности пассажира на напряжение аккумулятора или разрыв цепи",
-  "offset": "0xcb890"
+  "grupo": "B",
+  "descripcion_es": "Sensor del airbag lateral del pasajero en cortocircuito a tensión de batería o circuito abierto"
  },
  {
-  "grupo": "B",
   "codigo": "B1409",
-  "descripcion_ru": "Нарушение передачи данных датчика боковой подушки безопасности водителя",
-  "offset": "0xcb90c"
+  "grupo": "B",
+  "descripcion_es": "Fallo en la transmisión de datos del sensor del airbag lateral del conductor"
  },
  {
-  "grupo": "B",
   "codigo": "B1410",
-  "descripcion_ru": "Нарушение передачи данных датчика боковой подушки безопасности пассажира",
-  "offset": "0xcb96c"
+  "grupo": "B",
+  "descripcion_es": "Fallo en la transmisión de datos del sensor del airbag lateral del pasajero"
  },
  {
-  "grupo": "B",
   "codigo": "B1414",
-  "descripcion_ru": "Несоответствие идентификатора датчика боковой подушки безопасности водителя",
-  "offset": "0xcb9d0"
+  "grupo": "B",
+  "descripcion_es": "Identificador del sensor del airbag lateral del conductor no coincide"
  },
  {
-  "grupo": "B",
   "codigo": "B1415",
-  "descripcion_ru": "Несоответствие идентификатора датчика боковой подушки безопасности пассажира",
-  "offset": "0xcba34"
+  "grupo": "B",
+  "descripcion_es": "Identificador del sensor del airbag lateral del pasajero no coincide"
  },
  {
-  "grupo": "B",
   "codigo": "B1451",
-  "descripcion_ru": "Неисправность цепи выключателя ручного отключения",
-  "offset": "0xcba9c"
+  "grupo": "B",
+  "descripcion_es": "Fallo en el circuito del interruptor de desactivación manual"
  },
  {
-  "grupo": "B",
   "codigo": "B1453",
-  "descripcion_ru": "Ошибочный сигнал скорости автомобиля (замыкание на массу)",
-  "offset": "0xcbae8"
+  "grupo": "B",
+  "descripcion_es": "Señal errónea de velocidad del vehículo (cortocircuito a masa)"
  },
  {
-  "grupo": "B",
   "codigo": "B1620",
-  "descripcion_ru": "Внутренняя неисправность модуля SDM",
-  "offset": "0xcbb3c"
+  "grupo": "B",
+  "descripcion_es": "Fallo interno del módulo SDM"
  },
  {
-  "grupo": "B",
   "codigo": "B1650",
-  "descripcion_ru": "Зарегистрировано столкновение передней подушкой безопасности",
-  "offset": "0xcbb78"
+  "grupo": "B",
+  "descripcion_es": "Colisión registrada por el airbag frontal"
  },
  {
-  "grupo": "B",
   "codigo": "B1651",
-  "descripcion_ru": "Зарегистрировано столкновение боковой подушкой безопасности водителя",
-  "offset": "0xcbbd0"
+  "grupo": "B",
+  "descripcion_es": "Colisión registrada por el airbag lateral del conductor"
  },
  {
-  "grupo": "B",
   "codigo": "B1652",
-  "descripcion_ru": "Зарегистрировано столкновение боковой подушкой безопасности пассажира",
-  "offset": "0xcbc30"
+  "grupo": "B",
+  "descripcion_es": "Colisión registrada por el airbag lateral del pasajero"
  },
  {
-  "grupo": "B",
   "codigo": "B1657",
-  "descripcion_ru": "Зарегистрировано столкновение натяжителем ремня безопасности",
-  "offset": "0xcbc90"
+  "grupo": "B",
+  "descripcion_es": "Colisión registrada por el pretensor del cinturón"
  },
  {
-  "grupo": "B",
   "codigo": "B2500",
-  "descripcion_ru": null,
-  "offset": "0xcbce8"
- },
- {
   "grupo": "B",
+  "descripcion_es": null
+ },
+ {
   "codigo": "B2502",
-  "descripcion_ru": "Неисправность индикатора отключения (\"OFF\") подушки безопасности пассажира",
-  "offset": "0xcbcf8"
+  "grupo": "B",
+  "descripcion_es": "Fallo del indicador de desactivación (\"OFF\") del airbag del pasajero"
  },
  {
-  "grupo": "P",
   "codigo": "P0016",
-  "descripcion_ru": "Рассинхронизация положений коленчатого и распределительного валов",
-  "offset": "0xcbd68"
+  "grupo": "P",
+  "descripcion_es": "Desincronización de las posiciones del cigüeñal y del árbol de levas"
  },
  {
-  "grupo": "P",
   "codigo": "P0030",
-  "descripcion_ru": "Неисправность в цепи нагревателя 1-го датчика кислорода",
-  "offset": "0xcbdc4"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del calefactor del sensor de oxígeno 1"
  },
  {
-  "grupo": "P",
   "codigo": "P0036",
-  "descripcion_ru": "Неисправность в цепи нагревателя 2-го датчика кислорода",
-  "offset": "0xcbe14"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del calefactor del sensor de oxígeno 2"
  },
  {
-  "grupo": "P",
   "codigo": "P0106",
-  "descripcion_ru": "Неисправность датчика абсолютного давления в коллекторе",
-  "offset": "0xcbe64"
+  "grupo": "P",
+  "descripcion_es": "Fallo del sensor de presión absoluta del colector"
  },
  {
-  "grupo": "P",
   "codigo": "P0107",
-  "descripcion_ru": "Датчик абсолютного давления в коллекторе, низкий уровень сигнала",
-  "offset": "0xcbeb4"
+  "grupo": "P",
+  "descripcion_es": "Sensor de presión absoluta del colector, señal baja"
  },
  {
-  "grupo": "P",
   "codigo": "P0108",
-  "descripcion_ru": "Датчик абсолютного давления в коллекторе, высокий уровень сигнала",
-  "offset": "0xcbf10"
+  "grupo": "P",
+  "descripcion_es": "Sensor de presión absoluta del colector, señal alta"
  },
  {
-  "grupo": "P",
   "codigo": "P0112",
-  "descripcion_ru": "Датчик температуры впускного воздуха, низкий уровень сигнала",
-  "offset": "0xcbf6c"
+  "grupo": "P",
+  "descripcion_es": "Sensor de temperatura del aire de admisión, señal baja"
  },
  {
-  "grupo": "P",
   "codigo": "P0113",
-  "descripcion_ru": "Датчик температуры впускного воздуха, высокий уровень сигнала",
-  "offset": "0xcbfc4"
+  "grupo": "P",
+  "descripcion_es": "Sensor de temperatura del aire de admisión, señal alta"
  },
  {
-  "grupo": "P",
   "codigo": "P0117",
-  "descripcion_ru": "Датчик температуры охлаждающей жидкости, низкий уровень сигнала",
-  "offset": "0xcc01c"
+  "grupo": "P",
+  "descripcion_es": "Sensor de temperatura del refrigerante, señal baja"
  },
  {
-  "grupo": "P",
   "codigo": "P0118",
-  "descripcion_ru": "Датчик температуры охлаждающей жидкости, высокий уровень сигнала",
-  "offset": "0xcc074"
+  "grupo": "P",
+  "descripcion_es": "Sensor de temperatura del refrigerante, señal alta"
  },
  {
-  "grupo": "P",
   "codigo": "P0122",
-  "descripcion_ru": "Датчик положения дроссельной заслонки, низкий уровень сигнала",
-  "offset": "0xcc0d0"
+  "grupo": "P",
+  "descripcion_es": "Sensor de posición de la mariposa, señal baja"
  },
  {
-  "grupo": "P",
   "codigo": "P0123",
-  "descripcion_ru": "Датчик положения дроссельной заслонки, высокий уровень сигнала",
-  "offset": "0xcc128"
+  "grupo": "P",
+  "descripcion_es": "Sensor de posición de la mariposa, señal alta"
  },
  {
-  "grupo": "P",
   "codigo": "P0131",
-  "descripcion_ru": "Низкий уровень сигнала 1-го датчика кислорода",
-  "offset": "0xcc180"
+  "grupo": "P",
+  "descripcion_es": "Señal baja del sensor de oxígeno 1"
  },
  {
-  "grupo": "P",
   "codigo": "P0132",
-  "descripcion_ru": "Высокий уровень сигнала 1-го датчика кислорода",
-  "offset": "0xcc1c8"
+  "grupo": "P",
+  "descripcion_es": "Señal alta del sensor de oxígeno 1"
  },
  {
-  "grupo": "P",
   "codigo": "P0133",
-  "descripcion_ru": "Замедленный отклик 1-го датчика кислорода",
-  "offset": "0xcc210"
+  "grupo": "P",
+  "descripcion_es": "Respuesta lenta del sensor de oxígeno 1"
  },
  {
-  "grupo": "P",
   "codigo": "P0134",
-  "descripcion_ru": "Обрыв в сигнальной цепи 1-го датчика кислорода",
-  "offset": "0xcc254"
+  "grupo": "P",
+  "descripcion_es": "Circuito abierto en la señal del sensor de oxígeno 1"
  },
  {
-  "grupo": "P",
   "codigo": "P0135",
-  "descripcion_ru": "Обрыв в цепи нагревателя 1-го датчика кислорода",
-  "offset": "0xcc29c"
+  "grupo": "P",
+  "descripcion_es": "Circuito abierto en el calefactor del sensor de oxígeno 1"
  },
  {
-  "grupo": "P",
   "codigo": "P0137",
-  "descripcion_ru": "Низкий уровень сигнала 2-го датчика кислорода",
-  "offset": "0xcc2e4"
+  "grupo": "P",
+  "descripcion_es": "Señal baja del sensor de oxígeno 2"
  },
  {
-  "grupo": "P",
   "codigo": "P0138",
-  "descripcion_ru": "Высокий уровень сигнала 2-го датчика кислорода",
-  "offset": "0xcc32c"
+  "grupo": "P",
+  "descripcion_es": "Señal alta del sensor de oxígeno 2"
  },
  {
-  "grupo": "P",
   "codigo": "P0139",
-  "descripcion_ru": "Низкая работоспособность 2-го датчика кислорода",
-  "offset": "0xcc374"
+  "grupo": "P",
+  "descripcion_es": "Bajo rendimiento del sensor de oxígeno 2"
  },
  {
-  "grupo": "P",
   "codigo": "P0140",
-  "descripcion_ru": "Обрыв в сигнальной цепи 2-го датчика кислорода",
-  "offset": "0xcc3bc"
+  "grupo": "P",
+  "descripcion_es": "Circuito abierto en la señal del sensor de oxígeno 2"
  },
  {
-  "grupo": "P",
   "codigo": "P0141",
-  "descripcion_ru": null,
-  "offset": "0xcc404"
+  "grupo": "P",
+  "descripcion_es": null
  },
  {
-  "grupo": "P",
   "codigo": "P0171",
-  "descripcion_ru": "Система корректировки топливоподачи, смесь слишком бедная",
-  "offset": "0xcc414"
+  "grupo": "P",
+  "descripcion_es": "Sistema de corrección de combustible, mezcla demasiado pobre"
  },
  {
-  "grupo": "P",
   "codigo": "P0172",
-  "descripcion_ru": "Система корректировки топливоподачи, смесь слишком богатая",
-  "offset": "0xcc468"
+  "grupo": "P",
+  "descripcion_es": "Sistema de corrección de combustible, mezcla demasiado rica"
  },
  {
-  "grupo": "P",
   "codigo": "P0201",
-  "descripcion_ru": "Неисправность цепи форсунки 1-го цилиндра",
-  "offset": "0xcc4bc"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del inyector del cilindro 1"
  },
  {
-  "grupo": "P",
   "codigo": "P0202",
-  "descripcion_ru": "Неисправность цепи форсунки 2-го цилиндра",
-  "offset": "0xcc500"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del inyector del cilindro 2"
  },
  {
-  "grupo": "P",
   "codigo": "P0203",
-  "descripcion_ru": "Неисправность цепи форсунки 3-го цилиндра",
-  "offset": "0xcc544"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del inyector del cilindro 3"
  },
  {
-  "grupo": "P",
   "codigo": "P0204",
-  "descripcion_ru": "Неисправность цепи форсунки 4-го цилиндра",
-  "offset": "0xcc588"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del inyector del cilindro 4"
  },
  {
-  "grupo": "P",
   "codigo": "P0222",
-  "descripcion_ru": "Привод регулятора холостого хода дроссельной заслонки, низкое напряжение в цепи",
-  "offset": "0xcc5cc"
+  "grupo": "P",
+  "descripcion_es": "Actuador de ralentí de la mariposa, tensión baja en el circuito"
  },
  {
-  "grupo": "P",
   "codigo": "P0223",
-  "descripcion_ru": "Привод регулятора холостого хода дроссельной заслонки, высокое напряжение в цепи",
-  "offset": "0xcc634"
+  "grupo": "P",
+  "descripcion_es": "Actuador de ralentí de la mariposa, tensión alta en el circuito"
  },
  {
-  "grupo": "P",
   "codigo": "P0261",
-  "descripcion_ru": "Форсунка 1-го цилиндра, низкий уровень сигнала цепи управления",
-  "offset": "0xcc6a0"
+  "grupo": "P",
+  "descripcion_es": "Inyector del cilindro 1, señal baja en el circuito de control"
  },
  {
-  "grupo": "P",
   "codigo": "P0262",
-  "descripcion_ru": "Форсунка 1-го цилиндра, высокий уровень сигнала цепи управления",
-  "offset": "0xcc6f8"
+  "grupo": "P",
+  "descripcion_es": "Inyector del cilindro 1, señal alta en el circuito de control"
  },
  {
-  "grupo": "P",
   "codigo": "P0264",
-  "descripcion_ru": "Форсунка 2-го цилиндра, низкий уровень сигнала цепи управления",
-  "offset": "0xcc750"
+  "grupo": "P",
+  "descripcion_es": "Inyector del cilindro 2, señal baja en el circuito de control"
  },
  {
-  "grupo": "P",
   "codigo": "P0265",
-  "descripcion_ru": "Форсунка 2-го цилиндра, высокий уровень сигнала цепи управления",
-  "offset": "0xcc7a8"
+  "grupo": "P",
+  "descripcion_es": "Inyector del cilindro 2, señal alta en el circuito de control"
  },
  {
-  "grupo": "P",
   "codigo": "P0267",
-  "descripcion_ru": "Форсунка 3-го цилиндра, низкий уровень сигнала цепи управления",
-  "offset": "0xcc800"
+  "grupo": "P",
+  "descripcion_es": "Inyector del cilindro 3, señal baja en el circuito de control"
  },
  {
-  "grupo": "P",
   "codigo": "P0268",
-  "descripcion_ru": "Форсунка 3-го цилиндра, высокий уровень сигнала цепи управления",
-  "offset": "0xcc858"
+  "grupo": "P",
+  "descripcion_es": "Inyector del cilindro 3, señal alta en el circuito de control"
  },
  {
-  "grupo": "P",
   "codigo": "P0270",
-  "descripcion_ru": "Форсунка 4-го цилиндра, низкий уровень сигнала цепи управления",
-  "offset": "0xcc8b0"
+  "grupo": "P",
+  "descripcion_es": "Inyector del cilindro 4, señal baja en el circuito de control"
  },
  {
-  "grupo": "P",
   "codigo": "P0271",
-  "descripcion_ru": "Форсунка 4-го цилиндра, высокий уровень сигнала цепи управления",
-  "offset": "0xcc908"
+  "grupo": "P",
+  "descripcion_es": "Inyector del cilindro 4, señal alta en el circuito de control"
  },
  {
-  "grupo": "P",
   "codigo": "P0300",
-  "descripcion_ru": "Обнаружены множественные пропуски воспламенения",
-  "offset": "0xcc960"
+  "grupo": "P",
+  "descripcion_es": "Se detectan fallos de encendido múltiples"
  },
  {
-  "grupo": "P",
   "codigo": "P0301",
-  "descripcion_ru": "Обнаружены пропуски воспламенения в 1 цилиндре",
-  "offset": "0xcc9a8"
+  "grupo": "P",
+  "descripcion_es": "Se detectan fallos de encendido en el cilindro 1"
  },
  {
-  "grupo": "P",
   "codigo": "P0302",
-  "descripcion_ru": "Обнаружены пропуски воспламенения во 2 цилиндре",
-  "offset": "0xcc9f0"
+  "grupo": "P",
+  "descripcion_es": "Se detectan fallos de encendido en el cilindro 2"
  },
  {
-  "grupo": "P",
   "codigo": "P0303",
-  "descripcion_ru": "Обнаружены пропуски воспламенения в 3 цилиндре",
-  "offset": "0xcca38"
+  "grupo": "P",
+  "descripcion_es": "Se detectan fallos de encendido en el cilindro 3"
  },
  {
-  "grupo": "P",
   "codigo": "P0304",
-  "descripcion_ru": "Обнаружены пропуски воспламенения в 4 цилиндре",
-  "offset": "0xcca80"
+  "grupo": "P",
+  "descripcion_es": "Se detectan fallos de encendido en el cilindro 4"
  },
  {
-  "grupo": "P",
   "codigo": "P0315",
-  "descripcion_ru": "Ошибка системы изменения УОЗ",
-  "offset": "0xccac8"
+  "grupo": "P",
+  "descripcion_es": "Error del sistema de variación del avance de encendido"
  },
  {
-  "grupo": "P",
   "codigo": "P0317",
-  "descripcion_ru": "Нет сигнала датчика неровной дороги",
-  "offset": "0xccb00"
+  "grupo": "P",
+  "descripcion_es": "Sin señal del sensor de carretera irregular"
  },
  {
-  "grupo": "P",
   "codigo": "P0324",
-  "descripcion_ru": "Неисправность модуля датчика детонации",
-  "offset": "0xccb3c"
+  "grupo": "P",
+  "descripcion_es": "Fallo del módulo del sensor de detonación"
  },
  {
-  "grupo": "P",
   "codigo": "P0325",
-  "descripcion_ru": "Неисправность цепи датчика детонации",
-  "offset": "0xccb7c"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del sensor de detonación"
  },
  {
-  "grupo": "P",
   "codigo": "P0327",
-  "descripcion_ru": "Низкий уровень сигнала датчика детонации",
-  "offset": "0xccbbc"
+  "grupo": "P",
+  "descripcion_es": "Señal baja del sensor de detonación"
  },
  {
-  "grupo": "P",
   "codigo": "P0328",
-  "descripcion_ru": "Высокий уровень сигнала датчика детонации",
-  "offset": "0xccc00"
+  "grupo": "P",
+  "descripcion_es": "Señal alta del sensor de detonación"
  },
  {
-  "grupo": "P",
   "codigo": "P0335",
-  "descripcion_ru": "Нет сигнала датчика положения коленчатого вала",
-  "offset": "0xccc44"
+  "grupo": "P",
+  "descripcion_es": "Sin señal del sensor de posición del cigüeñal"
  },
  {
-  "grupo": "P",
   "codigo": "P0336",
-  "descripcion_ru": "Датчик положения коленчатого вала - выход за допустимые пределы",
-  "offset": "0xccc8c"
+  "grupo": "P",
+  "descripcion_es": "Sensor de posición del cigüeñal fuera de los límites admisibles"
  },
  {
-  "grupo": "P",
   "codigo": "P0337",
-  "descripcion_ru": "Датчик положения коленчатого вала - замыкание на массу",
-  "offset": "0xccce4"
+  "grupo": "P",
+  "descripcion_es": "Sensor de posición del cigüeñal en cortocircuito a masa"
  },
  {
-  "grupo": "P",
   "codigo": "P0340",
-  "descripcion_ru": "Неисправность цепи датчика положения распределительного вала",
-  "offset": "0xccd34"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del sensor de posición del árbol de levas"
  },
  {
-  "grupo": "P",
   "codigo": "P0341",
-  "descripcion_ru": "Датчик положения распределительного вала-выход сигнала из допустимого диапазона",
-  "offset": "0xccd8c"
+  "grupo": "P",
+  "descripcion_es": "Sensor de posición del árbol de levas, señal fuera del rango admisible"
  },
  {
-  "grupo": "P",
   "codigo": "P0342",
-  "descripcion_ru": "Датчик положения распределительного вала-низкий уровень",
-  "offset": "0xccdf4"
+  "grupo": "P",
+  "descripcion_es": "Sensor de posición del árbol de levas, nivel bajo"
  },
  {
-  "grupo": "P",
   "codigo": "P0351",
-  "descripcion_ru": "Неисправность цепи 1 (1,4) управления зажиганием",
-  "offset": "0xcce44"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito 1 (1,4) de control del encendido"
  },
  {
-  "grupo": "P",
   "codigo": "P0352",
-  "descripcion_ru": "Неисправность цепи 2 (2,3) управления зажиганием",
-  "offset": "0xcce90"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito 2 (2,3) de control del encendido"
  },
  {
-  "grupo": "P",
   "codigo": "P0400",
-  "descripcion_ru": "Рециркуляция отработавших газов,выход за пределы регулирования",
-  "offset": "0xccedc"
+  "grupo": "P",
+  "descripcion_es": "Recirculación de gases de escape (EGR), fuera de los límites de regulación"
  },
  {
-  "grupo": "P",
   "codigo": "P0401",
-  "descripcion_ru": "Заблокирован клапан рециркуляции отработавших газов (недостаточный расход)",
-  "offset": "0xccf34"
+  "grupo": "P",
+  "descripcion_es": "Válvula EGR bloqueada (caudal insuficiente)"
  },
  {
-  "grupo": "P",
   "codigo": "P0402",
-  "descripcion_ru": "Заблокирован клапан рециркуляции отработавших газов (избыточный расход)",
-  "offset": "0xccf98"
+  "grupo": "P",
+  "descripcion_es": "Válvula EGR bloqueada (caudal excesivo)"
  },
  {
-  "grupo": "P",
   "codigo": "P0403",
-  "descripcion_ru": "Неисправность цепи датчика системы рециркуляции отработанных газов",
-  "offset": "0xccff8"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del sensor del sistema EGR"
  },
  {
-  "grupo": "P",
   "codigo": "P0404",
-  "descripcion_ru": "Неисправность датчика системы рециркуляции отработанных газов",
-  "offset": "0xcd054"
+  "grupo": "P",
+  "descripcion_es": "Fallo del sensor del sistema EGR"
  },
  {
-  "grupo": "P",
   "codigo": "P0405",
-  "descripcion_ru": "Низкий уровень сигнала датчика системы рециркуляции отработавших газов",
-  "offset": "0xcd0ac"
+  "grupo": "P",
+  "descripcion_es": "Señal baja del sensor del sistema EGR"
  },
  {
-  "grupo": "P",
   "codigo": "P0406",
-  "descripcion_ru": "Высокий уровень сигнала датчика системы рециркуляции отработавших газов",
-  "offset": "0xcd10c"
+  "grupo": "P",
+  "descripcion_es": "Señal alta del sensor del sistema EGR"
  },
  {
-  "grupo": "P",
   "codigo": "P0420",
-  "descripcion_ru": "Низкая эффективность работы нейтрализатора",
-  "offset": "0xcd16c"
+  "grupo": "P",
+  "descripcion_es": "Baja eficiencia del catalizador"
  },
  {
-  "grupo": "P",
   "codigo": "P042E",
-  "descripcion_ru": null,
-  "offset": "0xcd1b0"
+  "grupo": "P",
+  "descripcion_es": null
  },
  {
-  "grupo": "P",
   "codigo": "P0443",
-  "descripcion_ru": "Неисправность цепи управления клапаном продувки адсорбера",
-  "offset": "0xcd1c0"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito de control de la válvula de purga del canister"
  },
  {
-  "grupo": "P",
   "codigo": "P0444",
-  "descripcion_ru": "Отсутствует сигнал цепи клапана продувки адсорбера",
-  "offset": "0xcd214"
+  "grupo": "P",
+  "descripcion_es": "Sin señal en el circuito de la válvula de purga del canister"
  },
  {
-  "grupo": "P",
   "codigo": "P0445",
-  "descripcion_ru": "Неисправность цепи клапана продувки адсорбера",
-  "offset": "0xcd260"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito de la válvula de purga del canister"
  },
  {
-  "grupo": "P",
   "codigo": "P0461",
-  "descripcion_ru": "Неисправность датчика уровня топлива",
-  "offset": "0xcd2a8"
+  "grupo": "P",
+  "descripcion_es": "Fallo del sensor de nivel de combustible"
  },
  {
-  "grupo": "P",
   "codigo": "P0462",
-  "descripcion_ru": "Датчик уровня топлива, низкое напряжение",
-  "offset": "0xcd2e8"
+  "grupo": "P",
+  "descripcion_es": "Sensor de nivel de combustible, tensión baja"
  },
  {
-  "grupo": "P",
   "codigo": "P0463",
-  "descripcion_ru": "Датчик уровня топлива, высокое напряжение",
-  "offset": "0xcd32c"
+  "grupo": "P",
+  "descripcion_es": "Sensor de nivel de combustible, tensión alta"
  },
  {
-  "grupo": "P",
   "codigo": "P0480",
-  "descripcion_ru": "Неисправность цепи управления реле низких оборотов вентилятора системы охлаждения",
-  "offset": "0xcd370"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito de control del relé de baja velocidad del ventilador de refrigeración"
  },
  {
-  "grupo": "P",
   "codigo": "P0481",
-  "descripcion_ru": "Высокий уровень сигнала реле высоких оборотов вентилятора системы охлаждения",
-  "offset": "0xcd3dc"
+  "grupo": "P",
+  "descripcion_es": "Señal alta del relé de alta velocidad del ventilador de refrigeración"
  },
  {
-  "grupo": "P",
   "codigo": "P0501",
-  "descripcion_ru": "Нет сигнала датчика скорости автомобиля",
-  "offset": "0xcd444"
+  "grupo": "P",
+  "descripcion_es": "Sin señal del sensor de velocidad del vehículo"
  },
  {
-  "grupo": "P",
   "codigo": "P0502",
-  "descripcion_ru": "Низкий уровень в цепи сигнала датчика скорости автомобиля",
-  "offset": "0xcd484"
+  "grupo": "P",
+  "descripcion_es": "Nivel bajo en el circuito de señal del sensor de velocidad del vehículo"
  },
  {
-  "grupo": "P",
   "codigo": "P0506",
-  "descripcion_ru": "Низкие обороты холостого хода",
-  "offset": "0xcd4d8"
+  "grupo": "P",
+  "descripcion_es": "Régimen de ralentí bajo"
  },
  {
-  "grupo": "P",
   "codigo": "P0507",
-  "descripcion_ru": "Высокие обороты холостого хода",
-  "offset": "0xcd510"
+  "grupo": "P",
+  "descripcion_es": "Régimen de ralentí alto"
  },
  {
-  "grupo": "P",
   "codigo": "P0510",
-  "descripcion_ru": "Неисправность цепи переключателя положения дроссельной заслонки",
-  "offset": "0xcd548"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del interruptor de posición de la mariposa"
  },
  {
-  "grupo": "P",
   "codigo": "P0532",
-  "descripcion_ru": "Низкий уровень в цепи сигнала датчика давления в системе кондиционирования",
-  "offset": "0xcd5a0"
+  "grupo": "P",
+  "descripcion_es": "Nivel bajo en el circuito de señal del sensor de presión del sistema de aire acondicionado"
  },
  {
-  "grupo": "P",
   "codigo": "P0533",
-  "descripcion_ru": "Высокий уровень в цепи сигнала датчика давления в системе кондиционирования",
-  "offset": "0xcd604"
+  "grupo": "P",
+  "descripcion_es": "Nivel alto en el circuito de señal del sensor de presión del sistema de aire acondicionado"
  },
  {
-  "grupo": "P",
   "codigo": "P0562",
-  "descripcion_ru": "Низкое напряжение питания системы",
-  "offset": "0xcd668"
+  "grupo": "P",
+  "descripcion_es": "Tensión de alimentación del sistema baja"
  },
  {
-  "grupo": "P",
   "codigo": "P0563",
-  "descripcion_ru": "Высокое напряжение питания системы",
-  "offset": "0xcd6a4"
+  "grupo": "P",
+  "descripcion_es": "Tensión de alimentación del sistema alta"
  },
  {
-  "grupo": "P",
   "codigo": "P0601",
-  "descripcion_ru": "Ошибка контрольной суммы ПЗУ",
-  "offset": "0xcd6e0"
+  "grupo": "P",
+  "descripcion_es": "Error de suma de verificación de la ROM"
  },
  {
-  "grupo": "P",
   "codigo": "P0602",
-  "descripcion_ru": "Нет программы в контроллере",
-  "offset": "0xcd718"
+  "grupo": "P",
+  "descripcion_es": "No hay programa en la unidad de control"
  },
  {
-  "grupo": "P",
   "codigo": "P0603",
-  "descripcion_ru": "Ошибка ПЗУ контроллера",
-  "offset": "0xcd74c"
+  "grupo": "P",
+  "descripcion_es": "Error de la ROM de la unidad de control"
  },
  {
-  "grupo": "P",
   "codigo": "P0604",
-  "descripcion_ru": "Ошибка ОЗУ контроллера",
-  "offset": "0xcd77c"
+  "grupo": "P",
+  "descripcion_es": "Error de la RAM de la unidad de control"
  },
  {
-  "grupo": "P",
   "codigo": "P0605",
-  "descripcion_ru": "Ошибка записи контроллера",
-  "offset": "0xcd7ac"
+  "grupo": "P",
+  "descripcion_es": "Error de escritura de la unidad de control"
  },
  {
-  "grupo": "P",
   "codigo": "P0606",
-  "descripcion_ru": "Недостаточное быстродействие контроллера",
-  "offset": "0xcd7e0"
+  "grupo": "P",
+  "descripcion_es": "Velocidad de procesamiento insuficiente de la unidad de control"
  },
  {
-  "grupo": "P",
   "codigo": "P0628",
-  "descripcion_ru": "Низкое напряжение в цепи реле бензонасоса",
-  "offset": "0xcd824"
+  "grupo": "P",
+  "descripcion_es": "Tensión baja en el circuito del relé de la bomba de combustible"
  },
  {
-  "grupo": "P",
   "codigo": "P0629",
-  "descripcion_ru": "Высокое напряжение в цепи реле бензонасоса",
-  "offset": "0xcd868"
+  "grupo": "P",
+  "descripcion_es": "Tensión alta en el circuito del relé de la bomba de combustible"
  },
  {
-  "grupo": "P",
   "codigo": "P0646",
-  "descripcion_ru": "Низкое напряжение в цепи реле компрессора кондиционера",
-  "offset": "0xcd8ac"
+  "grupo": "P",
+  "descripcion_es": "Tensión baja en el circuito del relé del compresor del aire acondicionado"
  },
  {
-  "grupo": "P",
   "codigo": "P0647",
-  "descripcion_ru": "Высокое напряжение в цепи реле компрессора кондиционера",
-  "offset": "0xcd8fc"
+  "grupo": "P",
+  "descripcion_es": "Tensión alta en el circuito del relé del compresor del aire acondicionado"
  },
  {
-  "grupo": "P",
   "codigo": "P0650",
-  "descripcion_ru": "Низкое напряжение в цепи лампы индикации неисправности",
-  "offset": "0xcd94c"
+  "grupo": "P",
+  "descripcion_es": "Tensión baja en el circuito de la luz de avería"
  },
  {
-  "grupo": "P",
   "codigo": "P0656",
-  "descripcion_ru": "Неисправность в цепи выходного сигнала уровня топлива",
-  "offset": "0xcd99c"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito de la señal de salida del nivel de combustible"
  },
  {
-  "grupo": "P",
   "codigo": "P0660",
-  "descripcion_ru": "Неисправность цепи соленоида заслонки переменной длины впускного коллектора",
-  "offset": "0xcd9ec"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del solenoide de la trampilla de longitud variable del colector de admisión"
  },
  {
-  "grupo": "P",
   "codigo": "P0661",
-  "descripcion_ru": "Низкое напряжение в цепи соленоида заслонки переменной длины впускного коллектора",
-  "offset": "0xcda50"
+  "grupo": "P",
+  "descripcion_es": "Tensión baja en el circuito del solenoide de la trampilla de longitud variable del colector de admisión"
  },
  {
-  "grupo": "P",
   "codigo": "P0662",
-  "descripcion_ru": "Высокое напряжение в цепи соленоида заслонки переменной длины впускного коллектора",
-  "offset": "0xcdabc"
+  "grupo": "P",
+  "descripcion_es": "Tensión alta en el circuito del solenoide de la trampilla de longitud variable del colector de admisión"
  },
  {
-  "grupo": "P",
   "codigo": "P0703",
-  "descripcion_ru": "Неисправность в цепи датчика тормоза",
-  "offset": "0xcdb28"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del sensor de freno"
  },
  {
-  "grupo": "P",
   "codigo": "P0705",
-  "descripcion_ru": "Нет сигнала в цепи датчика переключения режимов",
-  "offset": "0xcdb68"
+  "grupo": "P",
+  "descripcion_es": "Sin señal en el circuito del sensor de selección de modo"
  },
  {
-  "grupo": "P",
   "codigo": "P0706",
-  "descripcion_ru": "Короткое замыкание в цепи датчика переключения режимов",
-  "offset": "0xcdbb0"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito en el circuito del sensor de selección de modo"
  },
  {
-  "grupo": "P",
   "codigo": "P0710",
-  "descripcion_ru": "Неисправность в цепи датчика температуры трансмиссионной жидкости",
-  "offset": "0xcdc00"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del sensor de temperatura del fluido de la transmisión"
  },
  {
-  "grupo": "P",
   "codigo": "P0711",
-  "descripcion_ru": "Температура трансмиссионной жидкости не соответствует режиму работы",
-  "offset": "0xcdc5c"
+  "grupo": "P",
+  "descripcion_es": "La temperatura del fluido de la transmisión no corresponde al modo de funcionamiento"
  },
  {
-  "grupo": "P",
   "codigo": "P0712",
-  "descripcion_ru": "Низкий уровень сигнала в цепи датчика температуры трансмиссионной жидкости",
-  "offset": "0xcdcb8"
+  "grupo": "P",
+  "descripcion_es": "Señal baja en el circuito del sensor de temperatura del fluido de la transmisión"
  },
  {
-  "grupo": "P",
   "codigo": "P0713",
-  "descripcion_ru": "Высокий уровень сигнала в цепи датчика температуры трансмиссионной жидкости",
-  "offset": "0xcdd1c"
+  "grupo": "P",
+  "descripcion_es": "Señal alta en el circuito del sensor de temperatura del fluido de la transmisión"
  },
  {
-  "grupo": "P",
   "codigo": "P0715",
-  "descripcion_ru": "Неисправность в цепи датчика входной частоты вращения",
-  "offset": "0xcdd80"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del sensor de velocidad de entrada"
  },
  {
-  "grupo": "P",
   "codigo": "P0716",
-  "descripcion_ru": "Сигнал датчика входной частоты вращения вне допустимого диапазона",
-  "offset": "0xcddd0"
+  "grupo": "P",
+  "descripcion_es": "Señal del sensor de velocidad de entrada fuera del rango admisible"
  },
  {
-  "grupo": "P",
   "codigo": "P0717",
-  "descripcion_ru": "Отсутствует  сигнал датчика входной частоты вращения",
-  "offset": "0xcde2c"
+  "grupo": "P",
+  "descripcion_es": "Sin señal del sensor de velocidad de entrada"
  },
  {
-  "grupo": "P",
   "codigo": "P0720",
-  "descripcion_ru": "Неисправность в цепи датчика выходной частоты вращения",
-  "offset": "0xcde7c"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del sensor de velocidad de salida"
  },
  {
-  "grupo": "P",
   "codigo": "P0721",
-  "descripcion_ru": "Сигнал датчика выходной частоты вращения вне допустимого диапазона",
-  "offset": "0xcdecc"
+  "grupo": "P",
+  "descripcion_es": "Señal del sensor de velocidad de salida fuera del rango admisible"
  },
  {
-  "grupo": "P",
   "codigo": "P0722",
-  "descripcion_ru": "Отсутствует сигнал в цепи датчика выходной частоты вращения",
-  "offset": "0xcdf28"
+  "grupo": "P",
+  "descripcion_es": "Sin señal en el circuito del sensor de velocidad de salida"
  },
  {
-  "grupo": "P",
   "codigo": "P0725",
-  "descripcion_ru": "Неисправность в цепи датчика частоты вращения коленчатого вала",
-  "offset": "0xcdf7c"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del sensor de régimen del cigüeñal"
  },
  {
-  "grupo": "P",
   "codigo": "P0726",
-  "descripcion_ru": "Сигнал датчика частоты вращения коленчатого вала вне допустимого диапазона",
-  "offset": "0xcdfd4"
+  "grupo": "P",
+  "descripcion_es": "Señal del sensor de régimen del cigüeñal fuera del rango admisible"
  },
  {
-  "grupo": "P",
   "codigo": "P0727",
-  "descripcion_ru": "Отсутствует сигнал в цепи датчика частоты вращения коленчатого вала",
-  "offset": "0xce038"
+  "grupo": "P",
+  "descripcion_es": "Sin señal en el circuito del sensor de régimen del cigüeñal"
  },
  {
-  "grupo": "P",
   "codigo": "P0731",
-  "descripcion_ru": "Неправильное передаточное отношение 1 передачи",
-  "offset": "0xce094"
+  "grupo": "P",
+  "descripcion_es": "Relación de transmisión incorrecta en 1.ª marcha"
  },
  {
-  "grupo": "P",
   "codigo": "P0732",
-  "descripcion_ru": "Неправильное передаточное отношение 2 передачи",
-  "offset": "0xce0dc"
+  "grupo": "P",
+  "descripcion_es": "Relación de transmisión incorrecta en 2.ª marcha"
  },
  {
-  "grupo": "P",
   "codigo": "P0733",
-  "descripcion_ru": "Неправильное передаточное отношение 3 передачи",
-  "offset": "0xce124"
+  "grupo": "P",
+  "descripcion_es": "Relación de transmisión incorrecta en 3.ª marcha"
  },
  {
-  "grupo": "P",
   "codigo": "P0734",
-  "descripcion_ru": "Неправильное передаточное отношение 4 передачи",
-  "offset": "0xce16c"
+  "grupo": "P",
+  "descripcion_es": "Relación de transmisión incorrecta en 4.ª marcha"
  },
  {
-  "grupo": "P",
   "codigo": "P0741",
-  "descripcion_ru": "Блокировка в выключенном состоянии блокировочной муфты гидротрансформатора (TCC)",
-  "offset": "0xce1b4"
+  "grupo": "P",
+  "descripcion_es": "Embrague de bloqueo del convertidor de par (TCC) bloqueado en estado desactivado"
  },
  {
-  "grupo": "P",
   "codigo": "P0742",
-  "descripcion_ru": "Блокировка во включенном состоянии блокировочной муфты гидротрансформатора (TCC)",
-  "offset": "0xce220"
+  "grupo": "P",
+  "descripcion_es": "Embrague de bloqueo del convertidor de par (TCC) bloqueado en estado activado"
  },
  {
-  "grupo": "P",
   "codigo": "P0751",
-  "descripcion_ru": "Блокировка в выключенном состоянии электромагнитного клапана переключения передач 1 (SS1)",
-  "offset": "0xce28c"
+  "grupo": "P",
+  "descripcion_es": "Electroválvula de cambio 1 (SS1) bloqueada en estado desactivado"
  },
  {
-  "grupo": "P",
   "codigo": "P0752",
-  "descripcion_ru": "Блокировка во включенном состоянии электромагнитного клапана переключения передач 1 (SS1)",
-  "offset": "0xce300"
+  "grupo": "P",
+  "descripcion_es": "Electroválvula de cambio 1 (SS1) bloqueada en estado activado"
  },
  {
-  "grupo": "P",
   "codigo": "P0756",
-  "descripcion_ru": "Блокировка в выключенном состоянии электромагнитного клапана переключения передач 2 (SS2",
-  "offset": "0xce374"
+  "grupo": "P",
+  "descripcion_es": "Electroválvula de cambio 2 (SS2) bloqueada en estado desactivado"
  },
  {
-  "grupo": "P",
   "codigo": "P0757",
-  "descripcion_ru": "Блокировка во включенном состоянии электромагнитного клапана переключения передач 2 (SS2)",
-  "offset": "0xce3e8"
+  "grupo": "P",
+  "descripcion_es": "Electroválvula de cambio 2 (SS2) bloqueada en estado activado"
  },
  {
-  "grupo": "P",
   "codigo": "P0781",
-  "descripcion_ru": "Сбой при переключении с 1 на 2 передачу",
-  "offset": "0xce45c"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el cambio de 1.ª a 2.ª marcha"
  },
  {
-  "grupo": "P",
   "codigo": "P0782",
-  "descripcion_ru": "Сбой при переключении со 2 на 3 передачу",
-  "offset": "0xce49c"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el cambio de 2.ª a 3.ª marcha"
  },
  {
-  "grupo": "P",
   "codigo": "P0783",
-  "descripcion_ru": "Сбой при переключении с 3 на 4 передачу",
-  "offset": "0xce4e0"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el cambio de 3.ª a 4.ª marcha"
  },
  {
-  "grupo": "P",
   "codigo": "P0787",
-  "descripcion_ru": "Низкий уровень в цепи электромагнитного клапана синхронизации (ST) (замыкание на массу)",
-  "offset": "0xce520"
+  "grupo": "P",
+  "descripcion_es": "Nivel bajo en el circuito de la electroválvula de sincronización (ST) (cortocircuito a masa)"
  },
  {
-  "grupo": "P",
   "codigo": "P0788",
-  "descripcion_ru": "Высокий уровень электромагнитного клапана синхронизации (ST) (обрыв или замыкание на +12)",
-  "offset": "0xce590"
+  "grupo": "P",
+  "descripcion_es": "Nivel alto en la electroválvula de sincronización (ST) (circuito abierto o cortocircuito a +12 V)"
  },
  {
-  "grupo": "P",
   "codigo": "P0962",
-  "descripcion_ru": "Низкий уровень в цепи электромагнитного клапана регулировки давления (PCS)",
-  "offset": "0xce604"
+  "grupo": "P",
+  "descripcion_es": "Nivel bajo en el circuito de la electroválvula de regulación de presión (PCS)"
  },
  {
-  "grupo": "P",
   "codigo": "P0963",
-  "descripcion_ru": "Высокий уровень в цепи электромагнитного клапана регулировки давления (PCS)",
-  "offset": "0xce668"
+  "grupo": "P",
+  "descripcion_es": "Nivel alto en el circuito de la electroválvula de regulación de presión (PCS)"
  },
  {
-  "grupo": "P",
   "codigo": "P0973",
-  "descripcion_ru": "Низкий уровень в цепи электромагнитного клапана переключения передач 1 (SS1)",
-  "offset": "0xce6cc"
+  "grupo": "P",
+  "descripcion_es": "Nivel bajo en el circuito de la electroválvula de cambio 1 (SS1)"
  },
  {
-  "grupo": "P",
   "codigo": "P0974",
-  "descripcion_ru": "Высокий уровень в цепи электромагнитного клапана переключения передач 1 (SS1)",
-  "offset": "0xce734"
+  "grupo": "P",
+  "descripcion_es": "Nivel alto en el circuito de la electroválvula de cambio 1 (SS1)"
  },
  {
-  "grupo": "P",
   "codigo": "P0976",
-  "descripcion_ru": "Низкий уровень в цепи электромагнитного клапана переключения передач 2 (SS2)",
-  "offset": "0xce79c"
+  "grupo": "P",
+  "descripcion_es": "Nivel bajo en el circuito de la electroválvula de cambio 2 (SS2)"
  },
  {
-  "grupo": "P",
   "codigo": "P0977",
-  "descripcion_ru": "Высокий уровень в цепи электромагнитного клапана переключения передач 2 (SS2)",
-  "offset": "0xce804"
+  "grupo": "P",
+  "descripcion_es": "Nivel alto en el circuito de la electroválvula de cambio 2 (SS2)"
  },
  {
-  "grupo": "P",
   "codigo": "P1133",
-  "descripcion_ru": "Недостаточная эффективность переключения 1 датчика кислорода",
-  "offset": "0xce86c"
+  "grupo": "P",
+  "descripcion_es": "Eficiencia de conmutación insuficiente del sensor de oxígeno 1"
  },
  {
-  "grupo": "P",
   "codigo": "P1134",
-  "descripcion_ru": "Неправильное соотношение времени перехода 1 датчика кислорода",
-  "offset": "0xce8c4"
+  "grupo": "P",
+  "descripcion_es": "Relación incorrecta de los tiempos de transición del sensor de oxígeno 1"
  },
  {
-  "grupo": "P",
   "codigo": "P1166",
-  "descripcion_ru": "Бедная смесь в режиме полной нагрузки",
-  "offset": "0xce91c"
+  "grupo": "P",
+  "descripcion_es": "Mezcla pobre a plena carga"
  },
  {
-  "grupo": "P",
   "codigo": "P1391",
-  "descripcion_ru": "Неисправность датчика неровной дароги",
-  "offset": "0xce95c"
+  "grupo": "P",
+  "descripcion_es": "Fallo del sensor de carretera irregular"
  },
  {
-  "grupo": "P",
   "codigo": "P1392",
-  "descripcion_ru": "Низкий уровень в цепи сигнала датчика неровной дороги",
-  "offset": "0xce99c"
+  "grupo": "P",
+  "descripcion_es": "Nivel bajo en el circuito de señal del sensor de carretera irregular"
  },
  {
-  "grupo": "P",
   "codigo": "P1393",
-  "descripcion_ru": "Высокий уровень в цепи сигнала датчика неровной дороги",
-  "offset": "0xce9ec"
+  "grupo": "P",
+  "descripcion_es": "Nivel alto en el circuito de señal del sensor de carretera irregular"
  },
  {
-  "grupo": "P",
   "codigo": "P1396",
-  "descripcion_ru": "Неверные данные датчика скорости колеса с АБС",
-  "offset": "0xcea3c"
+  "grupo": "P",
+  "descripcion_es": "Datos erróneos del sensor de velocidad de rueda del ABS"
  },
  {
-  "grupo": "P",
   "codigo": "P1397",
-  "descripcion_ru": "Нет сигнала от датчика скорости колеса с АБС",
-  "offset": "0xcea84"
+  "grupo": "P",
+  "descripcion_es": "Sin señal del sensor de velocidad de rueda del ABS"
  },
  {
-  "grupo": "P",
   "codigo": "P1504",
-  "descripcion_ru": "Нет сигнала скорости автомобиля",
-  "offset": "0xceacc"
+  "grupo": "P",
+  "descripcion_es": "Sin señal de velocidad del vehículo"
  },
  {
-  "grupo": "P",
   "codigo": "P1604",
-  "descripcion_ru": "Проверка данных внутреннего и расширенного ОЗУ не выполнена",
-  "offset": "0xceb04"
+  "grupo": "P",
+  "descripcion_es": "No se completó la verificación de la RAM interna y ampliada"
  },
  {
-  "grupo": "P",
   "codigo": "P1606",
-  "descripcion_ru": "Неисправность внешнего сторожевого таймера",
-  "offset": "0xceb58"
+  "grupo": "P",
+  "descripcion_es": "Fallo del temporizador de vigilancia (watchdog) externo"
  },
  {
-  "grupo": "P",
   "codigo": "P1610",
-  "descripcion_ru": "Высокое напряжение в цепи главного реле",
-  "offset": "0xceb9c"
+  "grupo": "P",
+  "descripcion_es": "Tensión alta en el circuito del relé principal"
  },
  {
-  "grupo": "P",
   "codigo": "P1611",
-  "descripcion_ru": "Низкое напряжение в цепи главного реле",
-  "offset": "0xcebdc"
+  "grupo": "P",
+  "descripcion_es": "Tensión baja en el circuito del relé principal"
  },
  {
-  "grupo": "P",
   "codigo": "P1628",
-  "descripcion_ru": "Нет связи с иммобилизатором",
-  "offset": "0xcec1c"
+  "grupo": "P",
+  "descripcion_es": "Sin comunicación con el inmovilizador"
  },
  {
-  "grupo": "P",
   "codigo": "P1629",
-  "descripcion_ru": "Неправильное вычисление иммобилизатора",
-  "offset": "0xcec50"
+  "grupo": "P",
+  "descripcion_es": "Cálculo incorrecto del inmovilizador"
  },
  {
-  "grupo": "P",
   "codigo": "P1631",
-  "descripcion_ru": "Неверный сигнал включения подачи топлива противоугонной системы",
-  "offset": "0xcec90"
+  "grupo": "P",
+  "descripcion_es": "Señal incorrecta de habilitación de combustible del sistema antirrobo"
  },
  {
-  "grupo": "P",
   "codigo": "P1671",
-  "descripcion_ru": "Нарушение передачи сообщения по шине CAN",
-  "offset": "0xced28"
+  "grupo": "P",
+  "descripcion_es": "Fallo en la transmisión de mensajes por el bus CAN"
  },
  {
-  "grupo": "P",
   "codigo": "P1672",
-  "descripcion_ru": "Неисправность отключения шины CAN",
-  "offset": "0xced6c"
+  "grupo": "P",
+  "descripcion_es": "Fallo de desconexión del bus CAN"
  },
  {
-  "grupo": "P",
   "codigo": "P1673",
-  "descripcion_ru": "Нарушение приёма сообщения контроллера шиной CAN",
-  "offset": "0xceda8"
+  "grupo": "P",
+  "descripcion_es": "Fallo en la recepción de mensajes de la unidad de control por el bus CAN"
  },
  {
-  "grupo": "P",
   "codigo": "P1839",
-  "descripcion_ru": "Короткое замыкание выхода EDS3 на массу",
-  "offset": "0xcedf4"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito a masa de la salida EDS3"
  },
  {
-  "grupo": "P",
   "codigo": "P1840",
-  "descripcion_ru": "Короткое замыкание выхода EDS3 на питание",
-  "offset": "0xcee34"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito a alimentación de la salida EDS3"
  },
  {
-  "grupo": "P",
   "codigo": "P1841",
-  "descripcion_ru": "Обрыв выхода EDS3",
-  "offset": "0xcee78"
+  "grupo": "P",
+  "descripcion_es": "Circuito abierto en la salida EDS3"
  },
  {
-  "grupo": "P",
   "codigo": "P1850",
-  "descripcion_ru": "Короткое замыкание выхода соленоида 1 на массу",
-  "offset": "0xceea4"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito a masa de la salida del solenoide 1"
  },
  {
-  "grupo": "P",
   "codigo": "P1851",
-  "descripcion_ru": "Короткое замыкание выхода соленоида 1 на напряжение питания",
-  "offset": "0xceeec"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito a tensión de alimentación de la salida del solenoide 1"
  },
  {
-  "grupo": "P",
   "codigo": "P1852",
-  "descripcion_ru": "Обрыв выхода соленоида 1",
-  "offset": "0xcef40"
+  "grupo": "P",
+  "descripcion_es": "Circuito abierto en la salida del solenoide 1"
  },
  {
-  "grupo": "P",
   "codigo": "P1853",
-  "descripcion_ru": "Короткое замыкание выхода соленоида 2 на массу",
-  "offset": "0xcef74"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito a masa de la salida del solenoide 2"
  },
  {
-  "grupo": "P",
   "codigo": "P1854",
-  "descripcion_ru": "Короткое замыкание выхода соленоида 2 на напряжение питания",
-  "offset": "0xcefbc"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito a tensión de alimentación de la salida del solenoide 2"
  },
  {
-  "grupo": "P",
   "codigo": "P1855",
-  "descripcion_ru": "Обрыв выхода соленоида 2",
-  "offset": "0xcf010"
+  "grupo": "P",
+  "descripcion_es": "Circuito abierto en la salida del solenoide 2"
  },
  {
-  "grupo": "P",
   "codigo": "P1861",
-  "descripcion_ru": "Короткое замыкание выхода EDS4 на массу",
-  "offset": "0xcf044"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito a masa de la salida EDS4"
  },
  {
-  "grupo": "P",
   "codigo": "P1862",
-  "descripcion_ru": "Короткое замыкание выхода EDS4 на питание",
-  "offset": "0xcf084"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito a alimentación de la salida EDS4"
  },
  {
-  "grupo": "P",
   "codigo": "P1863",
-  "descripcion_ru": "Обрыв выхода EDS4",
-  "offset": "0xcf0c8"
+  "grupo": "P",
+  "descripcion_es": "Circuito abierto en la salida EDS4"
  },
  {
-  "grupo": "P",
   "codigo": "P1864",
-  "descripcion_ru": "Короткое замыкание выхода EDS5 на массу",
-  "offset": "0xcf0f4"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito a masa de la salida EDS5"
  },
  {
-  "grupo": "P",
   "codigo": "P1865",
-  "descripcion_ru": "Короткое замыкание выхода EDS5 на питание",
-  "offset": "0xcf134"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito a alimentación de la salida EDS5"
  },
  {
-  "grupo": "P",
   "codigo": "P1866",
-  "descripcion_ru": "Обрыв выхода EDS5",
-  "offset": "0xcf178"
+  "grupo": "P",
+  "descripcion_es": "Circuito abierto en la salida EDS5"
  },
  {
-  "grupo": "P",
   "codigo": "P1867",
-  "descripcion_ru": "Короткое замыкание выхода EDS6 на массу",
-  "offset": "0xcf1a4"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito a masa de la salida EDS6"
  },
  {
-  "grupo": "P",
   "codigo": "P1868",
-  "descripcion_ru": "Короткое замыкание выхода EDS6 на питание",
-  "offset": "0xcf1e4"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito a alimentación de la salida EDS6"
  },
  {
-  "grupo": "P",
   "codigo": "P1869",
-  "descripcion_ru": "Обрыв выхода EDS6",
-  "offset": "0xcf228"
+  "grupo": "P",
+  "descripcion_es": "Circuito abierto en la salida EDS6"
  },
  {
-  "grupo": "P",
   "codigo": "P1871",
-  "descripcion_ru": "Короткое замыкание цепи электропитания клапана EDS на напряжение питания",
-  "offset": "0xcf254"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito a tensión de alimentación en el circuito de alimentación de la válvula EDS"
  },
  {
-  "grupo": "P",
   "codigo": "P1874",
-  "descripcion_ru": "Короткое замыкание цепи питания электромагнитного клапана на напряжение питания",
-  "offset": "0xcf2b8"
+  "grupo": "P",
+  "descripcion_es": "Cortocircuito a tensión de alimentación en el circuito de alimentación de la electroválvula"
  },
  {
-  "grupo": "P",
   "codigo": "P1881",
-  "descripcion_ru": "Сбой при переключении со 2 на 1 передачу",
-  "offset": "0xcf320"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el cambio de 2.ª a 1.ª marcha"
  },
  {
-  "grupo": "P",
   "codigo": "P1883",
-  "descripcion_ru": "Сбой при переключении с 3 на 2 передачу",
-  "offset": "0xcf364"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el cambio de 3.ª a 2.ª marcha"
  },
  {
-  "grupo": "P",
   "codigo": "P1884",
-  "descripcion_ru": "Сбой при переключении с 4 на 3 передачу",
-  "offset": "0xcf3a4"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el cambio de 4.ª a 3.ª marcha"
  },
  {
-  "grupo": "P",
   "codigo": "P1885",
-  "descripcion_ru": "Сбой при переключении с 3 на 1 передачу",
-  "offset": "0xcf3e4"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el cambio de 3.ª a 1.ª marcha"
  },
  {
-  "grupo": "P",
   "codigo": "P1886",
-  "descripcion_ru": "Сбой при переключении с 4 на 2 передачу",
-  "offset": "0xcf424"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el cambio de 4.ª a 2.ª marcha"
  },
  {
-  "grupo": "P",
   "codigo": "P2101",
-  "descripcion_ru": "Неисправность цепи привода регулятора холостого хода",
-  "offset": "0xcf464"
+  "grupo": "P",
+  "descripcion_es": "Fallo en el circuito del actuador de ralentí"
  },
  {
-  "grupo": "P",
   "codigo": "P2118",
-  "descripcion_ru": "Механическая проблема привода регулятора холостого хода",
-  "offset": "0xcf4b4"
+  "grupo": "P",
+  "descripcion_es": "Problema mecánico del actuador de ralentí"
  },
  {
-  "grupo": "P",
   "codigo": "P2119",
-  "descripcion_ru": "Функциональная ошибка регулятора холостого хода",
-  "offset": "0xcf504"
+  "grupo": "P",
+  "descripcion_es": "Error funcional del regulador de ralentí"
  },
  {
-  "grupo": "P",
   "codigo": "P2297",
-  "descripcion_ru": "Неверный сигнал 1 датчика кислорода в режиме отсечки топлива",
-  "offset": "0xcf54c"
+  "grupo": "P",
+  "descripcion_es": "Señal incorrecta del sensor de oxígeno 1 en modo de corte de combustible"
  },
  {
-  "grupo": "P",
   "codigo": "P2610",
-  "descripcion_ru": "Неисправность таймера выключения зажигания в ЭСУД",
-  "offset": "0xcf5a4"
+  "grupo": "P",
+  "descripcion_es": "Fallo del temporizador de apagado del encendido en la ECU del motor"
  },
  {
-  "grupo": "P",
   "codigo": "P2769",
-  "descripcion_ru": "Низкий уровень в цепи блокировочной муфты гидротрансформатора (TCC) ",
-  "offset": "0xcf5f0"
- },
- {
   "grupo": "P",
+  "descripcion_es": "Nivel bajo en el circuito del embrague de bloqueo del convertidor de par (TCC)"
+ },
+ {
   "codigo": "P2770",
-  "descripcion_ru": "Высокий уровень в цепи блокировочной муфты гидротрансформатора (TCC) ",
-  "offset": "0xcf650"
+  "grupo": "P",
+  "descripcion_es": "Nivel alto en el circuito del embrague de bloqueo del convertidor de par (TCC)"
  },
  {
-  "grupo": "U",
   "codigo": "U0001",
-  "descripcion_ru": "Неисправность высокоскоростной коммуникационной шины CAN",
-  "offset": "0xcf6bc"
+  "grupo": "U",
+  "descripcion_es": "Fallo del bus CAN de alta velocidad"
  },
  {
-  "grupo": "U",
   "codigo": "U0100",
-  "descripcion_ru": "Нет связи с контроллером ЭСУД",
-  "offset": "0xcf710"
+  "grupo": "U",
+  "descripcion_es": "Sin comunicación con la ECU del motor"
  },
  {
-  "grupo": "U",
   "codigo": "U0101",
-  "descripcion_ru": "Нет обмена с контроллером КПП",
-  "offset": "0xcf748"
- },
- {
   "grupo": "U",
+  "descripcion_es": "Sin intercambio de datos con la ECU de la caja de cambios"
+ },
+ {
   "codigo": "U0167",
-  "descripcion_ru": "Отсутствует идентификатор сообщения иммобилизатора",
-  "offset": "0xcf780"
+  "grupo": "U",
+  "descripcion_es": "Falta el identificador del mensaje del inmovilizador"
  },
  {
-  "grupo": "C",
   "codigo": "C0035",
-  "descripcion_ru": "Неисправность цепи датчика скорости переднего левого колеса",
-  "offset": "0xcf810"
+  "grupo": "C",
+  "descripcion_es": "Fallo en el circuito del sensor de velocidad de la rueda delantera izquierda"
  },
  {
-  "grupo": "C",
   "codigo": "C0040",
-  "descripcion_ru": "Неисправность цепи датчика скорости переднего правого колеса",
-  "offset": "0xcf864"
+  "grupo": "C",
+  "descripcion_es": "Fallo en el circuito del sensor de velocidad de la rueda delantera derecha"
  },
  {
-  "grupo": "C",
   "codigo": "C0041",
-  "descripcion_ru": null,
-  "offset": "0xcf8bc"
+  "grupo": "C",
+  "descripcion_es": null
  },
  {
-  "grupo": "C",
   "codigo": "C0045",
-  "descripcion_ru": "Неисправность цепи датчика скорости заднего левого колеса",
-  "offset": "0xcf8cc"
+  "grupo": "C",
+  "descripcion_es": "Fallo en el circuito del sensor de velocidad de la rueda trasera izquierda"
  },
  {
-  "grupo": "C",
   "codigo": "C0046",
-  "descripcion_ru": null,
-  "offset": "0xcf920"
+  "grupo": "C",
+  "descripcion_es": null
  },
  {
-  "grupo": "C",
   "codigo": "C0050",
-  "descripcion_ru": "Неисправность цепи датчика скорости заднего правого колеса",
-  "offset": "0xcf930"
+  "grupo": "C",
+  "descripcion_es": "Fallo en el circuito del sensor de velocidad de la rueda trasera derecha"
  },
  {
-  "grupo": "C",
   "codigo": "C0051",
-  "descripcion_ru": null,
-  "offset": "0xcf984"
+  "grupo": "C",
+  "descripcion_es": null
  },
  {
-  "grupo": "C",
   "codigo": "C0060",
-  "descripcion_ru": "Неисправность соленоида переднего левого клапана",
-  "offset": "0xcf994"
+  "grupo": "C",
+  "descripcion_es": "Fallo del solenoide de la válvula delantera izquierda"
  },
  {
-  "grupo": "C",
   "codigo": "C0065",
-  "descripcion_ru": null,
-  "offset": "0xcf9e0"
+  "grupo": "C",
+  "descripcion_es": null
  },
  {
-  "grupo": "C",
   "codigo": "C0070",
-  "descripcion_ru": "Неисправность соленоида переднего правого клапана",
-  "offset": "0xcf9f0"
+  "grupo": "C",
+  "descripcion_es": "Fallo del solenoide de la válvula delantera derecha"
  },
  {
-  "grupo": "C",
   "codigo": "C0075",
-  "descripcion_ru": null,
-  "offset": "0xcfa3c"
+  "grupo": "C",
+  "descripcion_es": null
  },
  {
-  "grupo": "C",
   "codigo": "C0080",
-  "descripcion_ru": "Неисправность соленоида заднего левого клапана",
-  "offset": "0xcfa4c"
+  "grupo": "C",
+  "descripcion_es": "Fallo del solenoide de la válvula trasera izquierda"
  },
  {
-  "grupo": "C",
   "codigo": "C0085",
-  "descripcion_ru": null,
-  "offset": "0xcfa94"
+  "grupo": "C",
+  "descripcion_es": null
  },
  {
-  "grupo": "C",
   "codigo": "C0090",
-  "descripcion_ru": "Неисправность соленоида заднего правого клапана",
-  "offset": "0xcfaa4"
+  "grupo": "C",
+  "descripcion_es": "Fallo del solenoide de la válvula trasera derecha"
  },
  {
-  "grupo": "C",
   "codigo": "C0095",
-  "descripcion_ru": null,
-  "offset": "0xcfaec"
+  "grupo": "C",
+  "descripcion_es": null
  },
  {
-  "grupo": "C",
   "codigo": "C0110",
-  "descripcion_ru": "Неисправность цепи электронасоса",
-  "offset": "0xcfafc"
+  "grupo": "C",
+  "descripcion_es": "Fallo en el circuito de la electrobomba"
  },
  {
-  "grupo": "C",
   "codigo": "C0121",
-  "descripcion_ru": "Неисправность цепи реле клапана",
-  "offset": "0xcfb38"
+  "grupo": "C",
+  "descripcion_es": "Fallo en el circuito del relé de las válvulas"
  },
  {
-  "grupo": "C",
   "codigo": "C0146",
-  "descripcion_ru": null,
-  "offset": "0xcfba8"
+  "grupo": "C",
+  "descripcion_es": null
  },
  {
-  "grupo": "C",
   "codigo": "C0151",
-  "descripcion_ru": null,
-  "offset": "0xcfbb8"
+  "grupo": "C",
+  "descripcion_es": null
  },
  {
-  "grupo": "C",
   "codigo": "C0156",
-  "descripcion_ru": null,
-  "offset": "0xcfbc8"
+  "grupo": "C",
+  "descripcion_es": null
  },
  {
-  "grupo": "C",
   "codigo": "C0161",
-  "descripcion_ru": "Неисправность цепи выключателя тормоза АБС",
-  "offset": "0xcfbd8"
+  "grupo": "C",
+  "descripcion_es": "Fallo en el circuito del interruptor de freno del ABS"
  },
  {
-  "grupo": "C",
   "codigo": "C0550",
-  "descripcion_ru": "Внутренняя неисправность EBCM",
-  "offset": "0xcfc1c"
+  "grupo": "C",
+  "descripcion_es": "Fallo interno del EBCM"
  },
  {
-  "grupo": "C",
   "codigo": "C0800",
-  "descripcion_ru": "Пониженное напряжение",
-  "offset": "0xcfc54"
+  "grupo": "C",
+  "descripcion_es": "Tensión baja"
  },
  {
-  "grupo": "C",
   "codigo": "C0931",
-  "descripcion_ru": "Перегрев",
-  "offset": "0xcfc84"
+  "grupo": "C",
+  "descripcion_es": "Sobrecalentamiento"
  },
  {
-  "grupo": "C",
   "codigo": "C1200",
-  "descripcion_ru": "Обрыв или замыкание цепи датчика скорости левого переднего колеса",
-  "offset": "0xcfd08"
+  "grupo": "C",
+  "descripcion_es": "Circuito abierto o cortocircuito en el sensor de velocidad de la rueda delantera izquierda"
  },
  {
-  "grupo": "C",
   "codigo": "C1201",
-  "descripcion_ru": "Чрезмерно большие колебания скорости левого переднего колеса",
-  "offset": "0xcfd64"
+  "grupo": "C",
+  "descripcion_es": "Variaciones excesivas de velocidad de la rueda delantera izquierda"
  },
  {
-  "grupo": "C",
   "codigo": "C1202",
-  "descripcion_ru": "Отсутствует сигнал датчика скорости левого переднего колеса",
-  "offset": "0xcfdbc"
+  "grupo": "C",
+  "descripcion_es": "Sin señal del sensor de velocidad de la rueda delantera izquierda"
  },
  {
-  "grupo": "C",
   "codigo": "C1203",
-  "descripcion_ru": "Обрыв или замыкание цепи датчика скорости правого переднего колеса",
-  "offset": "0xcfe10"
+  "grupo": "C",
+  "descripcion_es": "Circuito abierto o cortocircuito en el sensor de velocidad de la rueda delantera derecha"
  },
  {
-  "grupo": "C",
   "codigo": "C1204",
-  "descripcion_ru": "Чрезмерно большие колебания скорости правого переднего колеса",
-  "offset": "0xcfe6c"
+  "grupo": "C",
+  "descripcion_es": "Variaciones excesivas de velocidad de la rueda delantera derecha"
  },
  {
-  "grupo": "C",
   "codigo": "C1205",
-  "descripcion_ru": "Отсутствует сигнал датчика скорости правого переднего колеса",
-  "offset": "0xcfec4"
+  "grupo": "C",
+  "descripcion_es": "Sin señal del sensor de velocidad de la rueda delantera derecha"
  },
  {
-  "grupo": "C",
   "codigo": "C1206",
-  "descripcion_ru": "Обрыв или замыкание цепи датчика скорости левого заднего колеса",
-  "offset": "0xcff1c"
+  "grupo": "C",
+  "descripcion_es": "Circuito abierto o cortocircuito en el sensor de velocidad de la rueda trasera izquierda"
  },
  {
-  "grupo": "C",
   "codigo": "C1207",
-  "descripcion_ru": "Чрезмерно большие колебания скорости левого заднего колеса",
-  "offset": "0xcff74"
+  "grupo": "C",
+  "descripcion_es": "Variaciones excesivas de velocidad de la rueda trasera izquierda"
  },
  {
-  "grupo": "C",
   "codigo": "C1208",
-  "descripcion_ru": "Отсутствует сигнал датчика скорости левого заднего колеса",
-  "offset": "0xcffc8"
+  "grupo": "C",
+  "descripcion_es": "Sin señal del sensor de velocidad de la rueda trasera izquierda"
  },
  {
-  "grupo": "C",
   "codigo": "C1209",
-  "descripcion_ru": "Обрыв или замыкание цепи датчика скорости правого заднего колеса",
-  "offset": "0xd001c"
+  "grupo": "C",
+  "descripcion_es": "Circuito abierto o cortocircuito en el sensor de velocidad de la rueda trasera derecha"
  },
  {
-  "grupo": "C",
   "codigo": "C1210",
-  "descripcion_ru": "Чрезмерно большие колебания скорости правого заднего колеса",
-  "offset": "0xd0078"
+  "grupo": "C",
+  "descripcion_es": "Variaciones excesivas de velocidad de la rueda trasera derecha"
  },
  {
-  "grupo": "C",
   "codigo": "C1211",
-  "descripcion_ru": "Отсутствует сигнал датчика скорости правого заднего колеса",
-  "offset": "0xd00cc"
+  "grupo": "C",
+  "descripcion_es": "Sin señal del sensor de velocidad de la rueda trasera derecha"
  },
  {
-  "grupo": "C",
   "codigo": "C2112",
-  "descripcion_ru": "Неисправность реле клапана или плавкого предохранителя",
-  "offset": "0xd0164"
+  "grupo": "C",
+  "descripcion_es": "Fallo del relé de válvulas o del fusible"
  },
  {
-  "grupo": "C",
   "codigo": "C2402",
-  "descripcion_ru": "Неисправность электродвигателя насоса",
-  "offset": "0xd01b4"
+  "grupo": "C",
+  "descripcion_es": "Fallo del motor eléctrico de la bomba"
  }
 ]

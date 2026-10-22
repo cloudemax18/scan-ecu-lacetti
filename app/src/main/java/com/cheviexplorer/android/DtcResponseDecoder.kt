@@ -10,7 +10,7 @@ package com.cheviexplorer.android
  *
  * MR-140 (service 0x19, subfunction DA FF 00) uses four-byte records;
  * ZF 4HP16 (service 0x18) uses three-byte records. Both start with a count.
- * The observed MR-140 59 00 response is count=0 ("Ошибок нет" in Delphi).
+ * The observed MR-140 59 00 response is count=0 ("No hay códigos de avería" en la interfaz Delphi).
  * The observed ZF 58 01 07 03 68 response is one P0703 record with status 0x68,
  * whose 0x60 mask maps to intermittent according to the Delphi status table.
  */
