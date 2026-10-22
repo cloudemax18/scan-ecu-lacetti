@@ -342,3 +342,7 @@ Al redactar esta entrada, solo se ha preparado el plan y los prompts. No se han 
 
 ### Próxima decisión
 No aplicar el parche 0003 aisladamente ni aplicar 0001/0002 de forma automática. Solicitar una versión integrada contra los archivos actuales, luego revisión independiente y CI. El nuevo paquete de prompts es `PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-22.md`. El usuario dispone solo de Android; los agentes externos entregan ZIP e informe, y la integración/validación del repositorio debe ser verificable por separado.
+
+
+## 16. Norma de calidad de prompts (2026-10-22)
+A petición del usuario, todos los prompts multiagente deben ser operativos y detallados: contexto técnico, materiales exactos y rutas, objetivo medible, procedimiento paso a paso, criterios de aceptación/rechazo, límites de seguridad, formato del informe, entregables con rutas destino y ZIP con manifiesto. No bastan instrucciones generales del tipo “revisa”, “corrige” o “continúa”. Debe separarse evidencia estática, pruebas modelo, Kotlin/JUnit, CI y prueba física. Los agentes externos no tienen acceso al repo por defecto; deben entregar paquetes para carga manual, sin afirmar commits/PR que no hicieron.
