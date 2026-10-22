@@ -1,0 +1,11 @@
+test_gate_all_reset_reasons_and_stale (__main__.T.test_gate_all_reset_reasons_and_stale) ... ok
+test_gate_fail_closed_for_every_bad_verdict (__main__.T.test_gate_fail_closed_for_every_bad_verdict) ... ok
+test_gate_order_and_per_block_open (__main__.T.test_gate_order_and_per_block_open) ... ok
+test_runner_flows (__main__.T.test_runner_flows) ... ok
+test_validator_positive_and_negative (__main__.T.test_validator_positive_and_negative) ... ok
+test_zf_blocked_by_default (__main__.T.test_zf_blocked_by_default) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.002s
+
+OK
