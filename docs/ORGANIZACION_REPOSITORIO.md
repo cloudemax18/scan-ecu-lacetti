@@ -11,7 +11,7 @@
 | CI | `.github/workflows/` | Registrar el SHA exacto y resultado final. |
 | Estado vigente y decisiones | `opera/INTEGRACION_BITACORA_CONTINUIDAD.md` | Añadir secciones fechadas; no borrar historia. |
 | Índice para retomar trabajo | `opera/README_CONTINUIDAD.md` | Mantener enlaces a entregas activas y límites conocidos. |
-| Prompts multiagente | `opera/PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-22.md` | Usar prompts detallados, con entradas, método, aceptación y entregables. |
+| Prompts multiagente | `opera/PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-21.md`; versión ampliada propuesta en [PR #13](https://github.com/cloudemax18/scan-ecu-lacetti/pull/13) | Usar prompts detallados, con entradas, método, aceptación y entregables. |
 | Investigación técnica general | Archivos Markdown de la raíz y `docs/` | Al actualizar, enlazar desde este índice y el README. |
 | Material de referencia, capturas y dumps | `archivos/` | Conservar procedencia y distinguir capturas de la app de instrumentos independientes. |
 | Entregas externas | `opera/claud/`, `opera/deekseep/`, `opera/gemini/`, `opera/grok/` | Son fuentes históricas/propuestas; no equivalen automáticamente a integración. |
