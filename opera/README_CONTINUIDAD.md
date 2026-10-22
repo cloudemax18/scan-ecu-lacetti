@@ -37,3 +37,7 @@ Este estado refleja la revisión estática de Claude v2 del 2026-10-21. Antes de
 - F0/F1 siguen fuera del barrido automático; ZF F0, actuadores, adaptación y HV-240 siguen bloqueados.
 - La CI del commit de subida `e593e23068b4046919a5775e24f7bb4291ce28bb` estaba en curso durante la revisión; comprobar el resultado en [Actions #254](https://github.com/cloudemax18/scan-ecu-lacetti/actions/runs/39728318911).
 - Prompts para la siguiente ronda: [PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-22.md](PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-22.md).
+
+
+## Norma para los próximos prompts
+Por indicación del usuario, todos los prompts de Claude, DeepSeek, Gemini, Grok y del integrador deben detallar archivos de entrada y rutas, contexto heredado, pasos de trabajo, criterios verificables de aceptación, limitaciones, pruebas y entregables exactos. La versión ampliada vigente es [PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-22.md](PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-22.md).
