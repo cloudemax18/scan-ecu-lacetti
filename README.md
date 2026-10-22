@@ -8,7 +8,7 @@ Aplicación Android en desarrollo para investigar y diagnosticar, mediante K-Lin
 
 - **Estado del proyecto y decisiones técnicas:** [Bitácora de integración](opera/INTEGRACION_BITACORA_CONTINUIDAD.md)
 - **Índice de continuidad:** [opera/README_CONTINUIDAD.md](opera/README_CONTINUIDAD.md)
-- **Prompts detallados para los agentes:** [opera/PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-22.md](opera/PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-22.md)
+- **Prompts multiagente disponibles en main:** [versión del 21 de octubre](opera/PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-21.md). [Versión ampliada en revisión (PR #13)](https://github.com/cloudemax18/scan-ecu-lacetti/pull/13).
 - **Investigación KWP y pendientes:** [INVESTIGACION_KWP.md](INVESTIGACION_KWP.md)
 - **Auditoría de referencias K-Line:** [AUDITORIA_REFERENCIAS_KLINE.md](AUDITORIA_REFERENCIAS_KLINE.md)
 - **Procedimiento del laboratorio KWP:** [KWP_LABORATORIO.md](KWP_LABORATORIO.md)
