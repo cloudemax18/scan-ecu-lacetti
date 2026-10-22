@@ -315,3 +315,30 @@ Al redactar esta entrada, solo se ha preparado el plan y los prompts. No se han 
 2. Priorizar transacciones serializadas, asociación estricta RX↔solicitud y reinicio del estado al cambiar perfil/desconectar.
 3. Mantener `0x2C), actuadores, adaptación y HV-240 bloqueados hasta sus respectivas puertas de validación.
 4. No se ejecutaron nuevas pruebas JUnit/Gradle/CI ni pruebas físicas por la incorporación de esta captura.
+
+
+## 15. Revisión de la entrega Claude v3 (2026-10-22)
+
+### Estado del repositorio observado
+- Commit de subida observado en `main`: `e593e23068b4046919a5775e24f7bb4291ce28bb`, mensaje `Add files via upload`.
+- La ejecución Actions asociada `#254` estaba **en curso** al momento de la revisión: https://github.com/cloudemax18/scan-ecu-lacetti/actions/runs/39728318911. No registrar éxito hasta revisar el resultado final.
+- Entrega nueva: `opera/claud/CLAUDE_2C_INTEGRATION_PROPOSAL.md`, `opera/claud/CHANGELOG_CLAUDE_V3.md`, `opera/claud/CLAUDE_2C_INTEGRATION_v3.zip` y fuentes bajo `opera/claud/CLAUDE_2C_INTEGRATION_v3/files/`.
+- La propia propuesta declara explícitamente que no pudo contrastar el código actual, no produjo un parche de integración en `MainActivity.kt`/`KwpBus.kt`, no ejecutó Gradle/JUnit y no subió cambios. Las seis pruebas citadas son del modelo Python, no Kotlin.
+- No se debe describir esta entrega como integración terminada: es una propuesta de componentes aislados.
+
+### Revisión técnica de la propuesta
+1. `DynamicBlockDefinitionRunner.kt`, `DynamicBlockGate.kt`, `DynamicBlockResponseValidator.kt` y `SerialTransactionOwner.kt` están en el directorio de entrega del agente; no están conectados al flujo de producción por el mero hecho de estar subidos como archivos de documentación.
+2. Los componentes importan `com.cheviexplorer.android.DynamicBlockDefinitions`. Antes de integrar hay que confirmar que la definición existe en el código productivo actual. En la revisión, no se encontró en `app/src/main/java/com/cheviexplorer/android/DynamicBlockDefinitions.kt`; el runner depende del parche v2 0001, que no se debe aplicar a ciegas.
+3. El validador espera por defecto eco TX incluido en RX. Debe adaptarse al contrato real de transporte: `KwpBus.transaccion()` puede consumir el eco y devolver solo la respuesta. Elegir un único contrato documentado y probar ambos escenarios relevantes; no rechazar una respuesta válida por discrepancia de capas.
+4. `SerialTransactionOwner` es una clase nueva, no una garantía de serialización mientras `MainActivity`, `KwpBus`, TesterPresent, inicialización y escaneos sigan accediendo al puerto por rutas distintas. Todas las operaciones TX/RX deben pasar por un único propietario compartido.
+5. El gate debe quedar ligado al ciclo de vida real de sesión y reiniciarse en desconexión, reconexión, cambio de perfil, reinicio, timeout, error I/O y respuesta inválida. Una StartCommunication positiva no basta para declarar listos F0/F1.
+6. Mantener F0/F1 fuera del barrido automático. Para MR-140, no permitir lecturas hasta aceptar cada definición de la sesión actual. Mantener ZF F0 bloqueado por defecto hasta evidencia específica de aceptación real. No habilitar actuadores, aprendizaje, escritura ni HV-240.
+
+### Estado de pruebas y evidencia
+- El archivo `KwpLaboratoryPlan.kt` mantiene F0/F1 excluidos de los rangos automáticos; conservar esta protección.
+- La captura Android incorporada en `archivos/Capturas/` sugiere revisar la asociación RX↔TX y TesterPresent concurrente, pero no demuestra por sí sola una carrera ni valida 0x2C.
+- No se ejecutaron nuevas pruebas Kotlin/Gradle ni pruebas físicas durante esta revisión. La CI #254 estaba en curso al consultar.
+- Identificar antes de limpiar cualquier archivo diminuto/extraño en el paquete de Claude; no borrar a ciegas.
+
+### Próxima decisión
+No aplicar el parche 0003 aisladamente ni aplicar 0001/0002 de forma automática. Solicitar una versión integrada contra los archivos actuales, luego revisión independiente y CI. El nuevo paquete de prompts es `PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-22.md`. El usuario dispone solo de Android; los agentes externos entregan ZIP e informe, y la integración/validación del repositorio debe ser verificable por separado.
