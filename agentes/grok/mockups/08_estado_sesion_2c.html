@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CheviExplorer — Estados sesión vs 0x2C (mock)</title>
+<style>
+  :root {
+    --bg:#0C0C0E; --surface:#17171B; --accent:#007AFF;
+    --text:#FFF; --muted:#A0A0AB; --border:#2B2B32;
+    --ok:#1E9E66; --warn:#FF9500; --err:#FF3B30;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#121216;font-family:Roboto,sans-serif;color:var(--text);padding:20px}
+  h1{font-size:18px;margin-bottom:8px}
+  .note{font-size:12px;color:var(--muted);margin-bottom:16px;max-width:640px;line-height:1.4}
+  .phone{max-width:360px;background:var(--bg);border:2px solid var(--border);border-radius:24px;padding:16px;margin-bottom:20px}
+  .badge{display:flex;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px}
+  .dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0}
+  .t{font-size:13px;font-weight:600}
+  .s{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.35}
+  .tag{display:inline-block;font-size:10px;color:var(--accent);margin-top:8px}
+</style>
+</head>
+<body>
+  <h1>Barra de estado — sesión ≠ 0x2C</h1>
+  <p class="note">MOCK de referencia · no es captura del APK · no implica implementación. Colores de apoyo; el texto debe bastar sin color.</p>
+
+  <div class="phone" aria-label="Ejemplos de estado">
+    <div class="badge"><div class="dot" style="background:#A0A0AB"></div><div><div class="t">Desconectado</div><div class="s">No se detecta adaptador serie USB. Comprueba OTG y el cable KKL.</div></div></div>
+    <div class="badge"><div class="dot" style="background:var(--err)"></div><div><div class="t">USB sin permiso</div><div class="s">Permiso USB denegado. Vuelve a conectar y acepta el permiso del sistema.</div></div></div>
+    <div class="badge"><div class="dot" style="background:var(--accent)"></div><div><div class="t">Puerto abierto · 10400 8N1</div><div class="s">Ajuste de puerto. Protocolo ECU sin validar.</div></div></div>
+    <div class="badge"><div class="dot" style="background:var(--ok)"></div><div><div class="t">Sesión iniciada · MR-140</div><div class="s">Inicio de comunicación aceptado (0xC1). No implica definiciones 0x2C ni mapa de sensores validado.</div></div></div>
+    <div class="badge"><div class="dot" style="background:var(--warn)"></div><div><div class="t">Definición 0x2C pendiente</div><div class="s">Bloque dinámico no definido. Exploración F0/F1 no disponible.</div></div></div>
+    <div class="badge"><div class="dot" style="background:var(--err)"></div><div><div class="t">Timeout</div><div class="s">Sin respuesta a tiempo. No es un NRC. Reintenta o comprueba K-Line.</div></div></div>
+    <div class="badge"><div class="dot" style="background:var(--err)"></div><div><div class="t">Pérdida de sesión</div><div class="s">Enlace perdido durante la operación. Vuelve a inicializar el perfil.</div></div></div>
+    <span class="tag">PROPUESTA DE UX · revisar GROK_2C_UX_STATES.md</span>
+  </div>
+</body>
+</html>

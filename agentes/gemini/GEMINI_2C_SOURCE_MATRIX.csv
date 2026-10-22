@@ -1,0 +1,7 @@
+ID_Fuente,Tipo_Fuente,Clasificacion_Origen,Documento_O_Referencia,Edicion_O_Fecha,Pagina_O_Seccion,URL_O_Ubicacion,Cita_Corta_O_Resumen,Aplicabilidad_MR140,Aplicabilidad_ZF4HP16
+SRC-01,Estándar,Primaria,ISO 14230-3:1999,1999,Sección 7.4.2,https://www.iso.org/standard/26212.html,"Especificación del servicio DynamicallyDefineDataIdentifier (0x2C) en KWP2000.",Genérica (Protocolo),Genérica (Protocolo)
+SRC-02,Estándar,Primaria,ISO 14229-1:2013,2013,Sección 11.4,https://www.iso.org/standard/57608.html,"Especificación del servicio DynamicallyDefineDataIdentifier (0x2C) en UDS.",Evolutiva,Evolutiva
+SRC-03,Manual OEM,Primaria,Chevrolet Lacetti/Nubira Service Manual (J200),2008,Sección 3A / DLC Pinout,Chevrolet Service Information,"Especificación eléctrica de conector DLC Pin 7 K-Line 10.4 kbps.",Alta (Capa Física),Alta (Capa Física)
+SRC-04,Documentación Fabricante,Primaria,GM GMW3110 / GMW8772,2010,Sección KWP Services,GM Engineering Standards,"Definición de direccionamiento de diagnóstico GM sobre KWP2000.",Alta (Marco GM),Alta (Marco GM)
+SRC-05,Código EXE Analizado,Secundaria,Herramientas Diagnóstico Terceros (.exe/.dll),2020-2026,Módulos MR-140/ZF4HP16,Análisis Binario Local,"Estructuras de comandos 0x2C con bloques F0/F1 en código compilado.",Hipótesis Altamente Probable,Hipótesis Altamente Probable
+SRC-06,Repositorio Comunitario,Terciaria,Foros / Repositorios Diagnóstico KWP,2022-2026,Hilos Chevrolet KWP2000,GitHub / Online forums,"Mapeo de PIDs dinámicos F0/F1 para captura multivariable rápida.",Hipótesis Comprobatoria,Hipótesis Comprobatoria

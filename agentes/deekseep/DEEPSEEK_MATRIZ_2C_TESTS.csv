@@ -1,0 +1,16 @@
+ID_caso,Riesgo,Precondiciones,TX_simulado,RX_simulado,Resultado_esperado,Prueba_unitaria_que_deberia_cubrirlo,Criterio_aceptacion,Estado
+TC2C-01,Carrera TesterPresent vs 21 02,TesterPresent periódico activo,3E C1 + 82 11 F1 21 02 A7,7E 01 + 96 F1 11 61 02 66 xx,Cada RX se asocia a su TX,Test de concurrencia,No hay cruce de respuestas,NO EJECUTADA
+TC2C-02,Asociación RX unívoca,21 02 en vuelo,82 11 F1 21 02 A7,96 F1 11 61 02 66 xx,RX asignada a 21 02,Test de correlación,Rechaza RX con SID inesperado,NO EJECUTADA
+TC2C-03,Checksum incorrecto,21 02 en vuelo,82 11 F1 21 02 A7,96 F1 11 61 02 66 xx CS corrupto,ChecksumError,UT-TR-02,No devuelve datos de parámetro,BLOQUEADA
+TC2C-04,Trama truncada,21 02 en vuelo,82 11 F1 21 02 A7,96 F1 11 61,TruncatedFrame,UT-TR-03,No lanza excepción,NO EJECUTADA
+TC2C-05,Dirección origen inesperada,Petición a MR-140,82 11 F1 21 02 A7,96 F1 18 61 02 66 xx,UnexpectedAddress,UT-TR-04,Rechaza RX de ECU distinta,NO EJECUTADA
+TC2C-06,NRC completo,2C F0,86 11 F1 2C F0 10 00 CS,7F 2C 31 CS,Negative(0x31),UT-TR-07,No habilita bloque,NO EJECUTADA
+TC2C-07,NRC incompleto 7F,2C F0,86 11 F1 2C F0 10 00 CS,7F CS,IncompleteNrc,UT-TR-08,No interpreta como rechazo ni éxito,NO EJECUTADA
+TC2C-08,NRC incompleto 7F 2C,2C F0,86 11 F1 2C F0 10 00 CS,7F 2C CS,IncompleteNrc,UT-TR-09,No interpreta como rechazo ni éxito,NO EJECUTADA
+TC2C-09,F0 aceptada F1 rechazada,Definir F0 y F1,2C F0 positivo + 2C F1 -> 7F 2C 31,F0 positive + F1 NRC,F0 no se habilita,Test de gate atómico,Gate todo-o-nada,NO EJECUTADA
+TC2C-10,Lectura F0 sin gate,21 F0 sin 2C previo,82 11 F1 21 F0 xx,7F 21 31 CS,No envía petición,Test de precondición,Rechaza sin gate completo,NO EJECUTADA
+TC2C-11,Gate de sesión anterior,Reconexión,21 F0 tras reconexión,82 11 F1 21 F0 xx,Exige nuevo gate,Test de reinicio de estado,No usa gate anterior,NO EJECUTADA
+TC2C-12,Herencia de perfil MR-140 -> ZF,Cambio de perfil,21 F0 con perfil ZF,82 11 F1 21 F0 xx,Rechaza por perfil incompatible,Test de ProfileGuard,No permite sin perfil compatible,NO EJECUTADA
+TC2C-13,Regresión IdProbe 21 02,2C activa,82 11 F1 21 02 A7,96 F1 11 61 02 66 xx,Respuesta positiva correcta,UT-POS-01,Lectura 21 02 igual que antes,NO EJECUTADA
+TC2C-14,Regresión DTC 19,2C activa,19 DA FF 00,59 00 CS,Respuesta positiva correcta,Test DTC,DTC igual que antes,NO EJECUTADA
+TC2C-15,Regresión TesterPresent,2C activa,3E C1,7E 01 CS,Respuesta positiva correcta,Test TesterPresent,Keep-alive sin interferencia,NO EJECUTADA
