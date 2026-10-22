@@ -1,0 +1,694 @@
+diff -ruN a/app/src/main/java/com/cheviexplorer/android/kwp/DynamicBlockDefinitionRunner.kt b/app/src/main/java/com/cheviexplorer/android/kwp/DynamicBlockDefinitionRunner.kt
+--- a/app/src/main/java/com/cheviexplorer/android/kwp/DynamicBlockDefinitionRunner.kt	1970-01-01 00:00:00.000000000 +0000
++++ b/app/src/main/java/com/cheviexplorer/android/kwp/DynamicBlockDefinitionRunner.kt	2026-10-22 04:55:06.306967047 +0000
+@@ -0,0 +1,52 @@
++package com.cheviexplorer.android.kwp
++
++import com.cheviexplorer.android.DynamicBlockDefinitions
++import com.cheviexplorer.android.DynamicBlockDefinitions.Block
++import java.io.IOException
++
++/** Una transacción de bajo nivel: vaciar entrada, escribir, leer hasta fin/timeout. Devuelve TODO lo leído (con eco). */
++internal fun interface DefinitionTransport {
++    @Throws(IOException::class)
++    fun exchange(request: ByteArray, timeoutMs: Long): ByteArray?
++}
++
++/**
++ * Ejecuta las definiciones 0x2C pendientes del perfil, en orden y bajo el propietario único del puerto.
++ * Se detiene en la primera que no se acepta; la compuerta queda cerrada. Sin reintentos (el EXE no reintenta).
++ */
++internal class DynamicBlockDefinitionRunner(
++    private val gate: DynamicBlockGate,
++    private val owner: SerialTransactionOwner,
++    private val transport: DefinitionTransport,
++    private val timeoutMs: Long = 4_000L,
++    private val echoExpected: Boolean = true
++) {
++    data class Step(
++        val block: Block,
++        val result: DynamicBlockResponseValidator.Result?,
++        val ioError: String? = null
++    )
++
++    fun defineAll(session: Long): List<Step> = owner.run(OWNER_NAME) {
++        val steps = mutableListOf<Step>()
++        while (true) {
++            val block = gate.nextDefinition() ?: break
++            if (!gate.beginDefinition(block, session)) break
++            val request = DynamicBlockDefinitions.buildDefinitionRequest(block)
++            val rx = try {
++                transport.exchange(request, timeoutMs)
++            } catch (e: Exception) {
++                if (e is InterruptedException) Thread.currentThread().interrupt()
++                gate.reset(DynamicBlockGate.ResetReason.IO_ERROR)
++                steps += Step(block, null, e.message ?: e.javaClass.simpleName)
++                break
++            }
++            val result = DynamicBlockResponseValidator.validate(request, rx, block, echoExpected)
++            steps += Step(block, result)
++            if (gate.completeDefinition(block, session, result) != DynamicBlockGate.Completion.ACCEPTED) break
++        }
++        steps
++    }
++
++    companion object { const val OWNER_NAME = "2C-definition" }
++}
+diff -ruN a/app/src/main/java/com/cheviexplorer/android/kwp/DynamicBlockGate.kt b/app/src/main/java/com/cheviexplorer/android/kwp/DynamicBlockGate.kt
+--- a/app/src/main/java/com/cheviexplorer/android/kwp/DynamicBlockGate.kt	1970-01-01 00:00:00.000000000 +0000
++++ b/app/src/main/java/com/cheviexplorer/android/kwp/DynamicBlockGate.kt	2026-10-22 04:55:06.306925878 +0000
+@@ -0,0 +1,105 @@
++package com.cheviexplorer.android.kwp
++
++import com.cheviexplorer.android.DynamicBlockDefinitions.Block
++
++/**
++ * Compuerta de sesión para bloques dinámicos 0x2C. Falla cerrado.
++ *
++ * Invariantes:
++ *  - F0/F1 solo se pueden leer si SU definición fue aceptada en la sesión ACTUAL.
++ *  - MR-140: orden F0 -> F1; F1 no se define si F0 no fue aceptada.
++ *  - Cualquier rechazo, timeout, error I/O, desconexión, reconexión, reinicio o cambio de perfil
++ *    deja la compuerta cerrada (todos los bloques revocados) hasta una nueva [startSession].
++ *  - Cada reset invalida las finalizaciones en vuelo (se incrementa el id de sesión).
++ *  - ZF F0 está bloqueado por política (sin captura física de aceptación). [Policy.zfEnabled] = false por defecto.
++ */
++internal class DynamicBlockGate(private val policy: Policy = Policy()) {
++    data class Policy(val zfEnabled: Boolean = false)
++    enum class Profile { MR140, ZF }
++    enum class ResetReason {
++        DISCONNECT, RECONNECT, SESSION_RESTART, PROFILE_CHANGE, TIMEOUT, IO_ERROR, INVALID_RESPONSE, DEFINITION_FAILED
++    }
++    enum class Completion { ACCEPTED, REJECTED_GATE_CLOSED, IGNORED_STALE }
++
++    private var sessionId = 0L
++    private var profile: Profile? = null
++    private val accepted = mutableSetOf<Block>()
++    private var pending: Block? = null
++    private var lastReset: ResetReason? = null
++
++    @Synchronized fun currentSessionId(): Long = sessionId
++    @Synchronized fun lastResetReason(): ResetReason? = lastReset
++    @Synchronized fun isPending(): Boolean = pending != null
++
++    /** Llamar solo tras aceptar StartCommunication de la sesión nueva. Revoca todo lo anterior. */
++    @Synchronized fun startSession(newProfile: Profile): Long {
++        if (profile != null) lastReset = ResetReason.SESSION_RESTART
++        sessionId++
++        accepted.clear(); pending = null
++        profile = newProfile
++        return sessionId
++    }
++
++    @Synchronized fun reset(reason: ResetReason) {
++        sessionId++            // invalida finalizaciones en vuelo
++        accepted.clear(); pending = null
++        profile = null         // sin sesión: hay que arrancar otra
++        lastReset = reason
++    }
++
++    @Synchronized fun onProfileChange(newProfile: Profile) {
++        val current = profile
++        if (current != null && current != newProfile) reset(ResetReason.PROFILE_CHANGE)
++    }
++
++    /** Siguiente bloque a definir, o null (sin sesión, pendiente, completo o bloqueado por política). */
++    @Synchronized fun nextDefinition(): Block? {
++        if (pending != null) return null
++        return when (profile) {
++            Profile.MR140 -> when {
++                Block.MR140_F0 !in accepted -> Block.MR140_F0
++                Block.MR140_F1 !in accepted -> Block.MR140_F1
++                else -> null
++            }
++            Profile.ZF -> if (policy.zfEnabled && Block.ZF_F0 !in accepted) Block.ZF_F0 else null
++            null -> null
++        }
++    }
++
++    @Synchronized fun beginDefinition(block: Block, session: Long): Boolean {
++        if (session != sessionId || nextDefinition() != block) return false
++        pending = block
++        return true
++    }
++
++    @Synchronized fun completeDefinition(
++        block: Block, session: Long, result: DynamicBlockResponseValidator.Result
++    ): Completion {
++        if (session != sessionId || pending != block) return Completion.IGNORED_STALE
++        if (result.accepted) {
++            accepted.add(block); pending = null
++            return Completion.ACCEPTED
++        }
++        reset(
++            if (result.verdict == DynamicBlockResponseValidator.Verdict.NO_RESPONSE) ResetReason.TIMEOUT
++            else ResetReason.INVALID_RESPONSE
++        )
++        return Completion.REJECTED_GATE_CLOSED
++    }
++
++    @Synchronized fun canRead(block: Block): Boolean {
++        val current = profile ?: return false
++        if (pending != null) return false
++        if (profileOf(block) != current) return false
++        if (block == Block.ZF_F0 && !policy.zfEnabled) return false
++        return block in accepted
++    }
++
++    /** El barrido automático debe preguntar esto antes de incluir F0/F1. */
++    @Synchronized fun canPoll(block: Block): Boolean = canRead(block)
++
++    private fun profileOf(block: Block): Profile = when (block) {
++        Block.MR140_F0, Block.MR140_F1 -> Profile.MR140
++        Block.ZF_F0 -> Profile.ZF
++    }
++}
+diff -ruN a/app/src/main/java/com/cheviexplorer/android/kwp/DynamicBlockResponseValidator.kt b/app/src/main/java/com/cheviexplorer/android/kwp/DynamicBlockResponseValidator.kt
+--- a/app/src/main/java/com/cheviexplorer/android/kwp/DynamicBlockResponseValidator.kt	1970-01-01 00:00:00.000000000 +0000
++++ b/app/src/main/java/com/cheviexplorer/android/kwp/DynamicBlockResponseValidator.kt	2026-10-22 04:55:06.306890577 +0000
+@@ -0,0 +1,101 @@
++package com.cheviexplorer.android.kwp
++
++import com.cheviexplorer.android.DynamicBlockDefinitions.Block
++
++/**
++ * Validación ESTRICTA de la respuesta a una definición 0x2C. Puro: no toca el puerto.
++ *
++ * Criterios (CLAUDE_2C_DYNAMIC_BLOCKS.md §3; el EXE solo compara 0x6C y el id del bloque, aquí se exige más):
++ * eco exacto de la petición, UNA sola trama completa, checksum, destino = tester (0xF1),
++ * origen = ECU del bloque, SID 0x6C, id de bloque correcto y ningún byte sobrante.
++ * Cualquier otra cosa se rechaza (fallar cerrado).
++ */
++internal object DynamicBlockResponseValidator {
++    const val TESTER_ADDRESS = 0xF1
++    const val SID_REQUEST = 0x2C
++    const val SID_POSITIVE = 0x6C
++    const val SID_NEGATIVE = 0x7F
++    const val SID_TESTER_PRESENT_POSITIVE = 0x7E
++
++    enum class Verdict {
++        ACCEPTED, NO_RESPONSE, ECHO_MISMATCH, TRUNCATED, MALFORMED, BAD_CHECKSUM,
++        WRONG_TARGET, WRONG_SOURCE, NEGATIVE_RESPONSE, OTHER_REQUEST,
++        TESTER_PRESENT_RESIDUAL, WRONG_SERVICE, WRONG_BLOCK, RESIDUAL_BYTES
++    }
++
++    data class Result(val verdict: Verdict, val detail: String) {
++        val accepted: Boolean get() = verdict == Verdict.ACCEPTED
++    }
++
++    /**
++     * @param request trama enviada (con checksum).
++     * @param rx todos los bytes leídos tras enviarla (incluye el eco si [echoExpected]).
++     */
++    fun validate(request: ByteArray, rx: ByteArray?, block: Block, echoExpected: Boolean = true): Result {
++        if (rx == null || rx.isEmpty()) return fail(Verdict.NO_RESPONSE, "sin bytes recibidos")
++        var start = 0
++        if (echoExpected) {
++            val common = minOf(rx.size, request.size)
++            for (i in 0 until common) {
++                if (rx[i] != request[i]) return fail(Verdict.ECHO_MISMATCH, "eco distinto en el byte $i")
++            }
++            if (rx.size < request.size) return fail(Verdict.TRUNCATED, "eco incompleto: ${rx.size} de ${request.size}")
++            start = request.size
++        }
++        val available = rx.size - start
++        if (available <= 0) return fail(Verdict.NO_RESPONSE, "solo eco, sin respuesta")
++
++        val format = rx[start].toInt() and 0xFF
++        if ((format and 0xC0) != 0x80) return fail(Verdict.MALFORMED, "formato 0x%02X no soportado".format(format))
++        val shortLength = format and 0x3F
++        val header: Int
++        val dataLength: Int
++        if (shortLength == 0) {
++            header = 4
++            if (available < header) return fail(Verdict.TRUNCATED, "cabecera extendida incompleta")
++            dataLength = rx[start + 3].toInt() and 0xFF
++            if (dataLength == 0) return fail(Verdict.MALFORMED, "longitud 0")
++        } else {
++            header = 3
++            dataLength = shortLength
++        }
++        val total = header + dataLength + 1
++        if (available < total) return fail(Verdict.TRUNCATED, "trama de $available bytes, se esperaban $total")
++
++        var sum = 0
++        for (i in start until start + total - 1) sum += rx[i].toInt() and 0xFF
++        val received = rx[start + total - 1].toInt() and 0xFF
++        if ((sum and 0xFF) != received) {
++            return fail(Verdict.BAD_CHECKSUM, "checksum 0x%02X, esperado 0x%02X".format(received, sum and 0xFF))
++        }
++        val target = rx[start + 1].toInt() and 0xFF
++        val source = rx[start + 2].toInt() and 0xFF
++        if (target != TESTER_ADDRESS) return fail(Verdict.WRONG_TARGET, "destino 0x%02X".format(target))
++        if (source != block.targetAddress) return fail(Verdict.WRONG_SOURCE, "origen 0x%02X, esperado 0x%02X".format(source, block.targetAddress))
++
++        val payloadStart = start + header
++        val payload = ByteArray(dataLength) { rx[payloadStart + it] }
++        val sid = payload[0].toInt() and 0xFF
++        when (sid) {
++            SID_NEGATIVE -> {
++                if (payload.size < 3) return fail(Verdict.MALFORMED, "respuesta negativa incompleta")
++                val requested = payload[1].toInt() and 0xFF
++                val nrc = payload[2].toInt() and 0xFF
++                return if (requested == SID_REQUEST) fail(Verdict.NEGATIVE_RESPONSE, "NRC 0x%02X a 0x2C".format(nrc))
++                else fail(Verdict.OTHER_REQUEST, "NRC 0x%02X a SID 0x%02X (otra solicitud)".format(nrc, requested))
++            }
++            SID_TESTER_PRESENT_POSITIVE -> return fail(Verdict.TESTER_PRESENT_RESIDUAL, "respuesta 0x7E intercalada")
++            SID_POSITIVE -> Unit
++            else -> return fail(Verdict.WRONG_SERVICE, "SID 0x%02X".format(sid))
++        }
++        if (payload.size < 2) return fail(Verdict.MALFORMED, "6C sin id de bloque")
++        val blockId = payload[1].toInt() and 0xFF
++        if (blockId != block.blockId) {
++            return fail(Verdict.WRONG_BLOCK, "bloque 0x%02X, esperado 0x%02X".format(blockId, block.blockId))
++        }
++        if (available > total) return fail(Verdict.RESIDUAL_BYTES, "${available - total} bytes tras la respuesta")
++        return Result(Verdict.ACCEPTED, "6C %02X aceptado".format(blockId))
++    }
++
++    private fun fail(verdict: Verdict, detail: String) = Result(verdict, detail)
++}
+diff -ruN a/app/src/main/java/com/cheviexplorer/android/kwp/SerialTransactionOwner.kt b/app/src/main/java/com/cheviexplorer/android/kwp/SerialTransactionOwner.kt
+--- a/app/src/main/java/com/cheviexplorer/android/kwp/SerialTransactionOwner.kt	1970-01-01 00:00:00.000000000 +0000
++++ b/app/src/main/java/com/cheviexplorer/android/kwp/SerialTransactionOwner.kt	2026-10-22 04:55:06.306955753 +0000
+@@ -0,0 +1,42 @@
++package com.cheviexplorer.android.kwp
++
++import java.util.concurrent.locks.ReentrantLock
++
++/**
++ * Único propietario del puerto serie para transacciones petición/respuesta.
++ * Tester Present, barrido (IdProbe), lecturas y definiciones 0x2C deben pasar por aquí:
++ * mientras una transacción está en curso nadie más escribe ni lee, así nadie consume la respuesta ajena.
++ *
++ * - [run]: bloquea hasta tener el puerto. Usar SIEMPRE fuera del hilo de UI.
++ * - [tryRun]: no espera; devuelve false si está ocupado (para Tester Present: se omite el latido).
++ * La acción debe vaciar el buffer de entrada antes de escribir y leer hasta fin de respuesta o timeout.
++ */
++internal class SerialTransactionOwner {
++    private val lock = ReentrantLock()
++    @Volatile private var owner: String? = null
++
++    fun busyOwner(): String? = owner
++
++    fun <T> run(name: String, action: () -> T): T {
++        lock.lock()
++        try {
++            owner = name
++            return action()
++        } finally {
++            owner = null
++            lock.unlock()
++        }
++    }
++
++    fun tryRun(name: String, action: () -> Unit): Boolean {
++        if (!lock.tryLock()) return false
++        try {
++            owner = name
++            action()
++            return true
++        } finally {
++            owner = null
++            lock.unlock()
++        }
++    }
++}
+diff -ruN a/app/src/test/java/com/cheviexplorer/android/kwp/DynamicBlockDefinitionRunnerTest.kt b/app/src/test/java/com/cheviexplorer/android/kwp/DynamicBlockDefinitionRunnerTest.kt
+--- a/app/src/test/java/com/cheviexplorer/android/kwp/DynamicBlockDefinitionRunnerTest.kt	1970-01-01 00:00:00.000000000 +0000
++++ b/app/src/test/java/com/cheviexplorer/android/kwp/DynamicBlockDefinitionRunnerTest.kt	2026-10-22 04:55:06.307158279 +0000
+@@ -0,0 +1,122 @@
++package com.cheviexplorer.android.kwp
++
++import com.cheviexplorer.android.DynamicBlockDefinitions
++import com.cheviexplorer.android.DynamicBlockDefinitions.Block
++import com.cheviexplorer.android.kwp.DynamicBlockGate.Profile
++import com.cheviexplorer.android.kwp.DynamicBlockGate.ResetReason
++import com.cheviexplorer.android.kwp.DynamicBlockResponseValidator.Verdict
++import java.io.IOException
++import java.util.concurrent.CountDownLatch
++import java.util.concurrent.TimeUnit
++import java.util.concurrent.atomic.AtomicBoolean
++import org.junit.Assert.assertEquals
++import org.junit.Assert.assertFalse
++import org.junit.Assert.assertNull
++import org.junit.Assert.assertTrue
++import org.junit.Test
++
++class DynamicBlockDefinitionRunnerTest {
++    private fun withChecksum(vararg b: Int): ByteArray {
++        val body = b.map { it.toByte() }.toByteArray()
++        return body + ((body.sumOf { it.toInt() and 0xFF }) and 0xFF).toByte()
++    }
++    private fun ok(block: Block) = withChecksum(0x82, 0xF1, block.targetAddress, 0x6C, block.blockId)
++
++    private class FakeTransport(val reply: (ByteArray, Int) -> ByteArray?) : DefinitionTransport {
++        val requests = mutableListOf<ByteArray>()
++        override fun exchange(request: ByteArray, timeoutMs: Long): ByteArray? {
++            requests += request
++            return reply(request, requests.size)
++        }
++    }
++
++    private fun setup(transport: DefinitionTransport): Triple<DynamicBlockGate, DynamicBlockDefinitionRunner, Long> {
++        val gate = DynamicBlockGate(); val session = gate.startSession(Profile.MR140)
++        return Triple(gate, DynamicBlockDefinitionRunner(gate, SerialTransactionOwner(), transport), session)
++    }
++
++    @Test fun definesF0ThenF1InOrderAndOpensGate() {
++        val t = FakeTransport { req, n -> req + ok(if (n == 1) Block.MR140_F0 else Block.MR140_F1) }
++        val (gate, runner, s) = setup(t)
++        val steps = runner.defineAll(s)
++        assertEquals(listOf(Block.MR140_F0, Block.MR140_F1), steps.map { it.block })
++        assertTrue(steps.all { it.result!!.accepted })
++        assertEquals(DynamicBlockDefinitions.buildDefinitionRequest(Block.MR140_F0).toList(), t.requests[0].toList())
++        assertEquals(DynamicBlockDefinitions.buildDefinitionRequest(Block.MR140_F1).toList(), t.requests[1].toList())
++        assertTrue(gate.canRead(Block.MR140_F0) && gate.canRead(Block.MR140_F1))
++    }
++
++    @Test fun f1IsNotSentWhenF0IsRejected() {
++        val t = FakeTransport { req, _ -> req + withChecksum(0x83, 0xF1, 0x11, 0x7F, 0x2C, 0x31) }
++        val (gate, runner, s) = setup(t)
++        val steps = runner.defineAll(s)
++        assertEquals(1, t.requests.size); assertEquals(Verdict.NEGATIVE_RESPONSE, steps.single().result!!.verdict)
++        assertFalse(gate.canRead(Block.MR140_F0)); assertFalse(gate.canRead(Block.MR140_F1))
++    }
++
++    @Test fun f1RejectionRevokesF0() {
++        val t = FakeTransport { req, n -> if (n == 1) req + ok(Block.MR140_F0) else req + withChecksum(0x81, 0xF1, 0x11, 0x7E) }
++        val (gate, runner, s) = setup(t)
++        val steps = runner.defineAll(s)
++        assertEquals(Verdict.TESTER_PRESENT_RESIDUAL, steps.last().result!!.verdict)
++        assertFalse(gate.canRead(Block.MR140_F0)); assertFalse(gate.canRead(Block.MR140_F1))
++    }
++
++    @Test fun timeoutClosesGateWithTimeoutReason() {
++        val t = FakeTransport { req, _ -> req }              // solo eco
++        val (gate, runner, s) = setup(t)
++        runner.defineAll(s)
++        assertEquals(ResetReason.TIMEOUT, gate.lastResetReason()); assertFalse(gate.canRead(Block.MR140_F0))
++    }
++
++    @Test fun ioErrorClosesGateAndStops() {
++        val t = FakeTransport { _, _ -> throw IOException("usb perdido") }
++        val (gate, runner, s) = setup(t)
++        val steps = runner.defineAll(s)
++        assertEquals("usb perdido", steps.single().ioError); assertNull(steps.single().result)
++        assertEquals(ResetReason.IO_ERROR, gate.lastResetReason()); assertEquals(1, t.requests.size)
++    }
++
++    @Test fun staleSessionSendsNothing() {
++        val t = FakeTransport { req, _ -> req + ok(Block.MR140_F0) }
++        val (gate, runner, s) = setup(t)
++        gate.reset(ResetReason.DISCONNECT)
++        assertTrue(runner.defineAll(s).isEmpty()); assertTrue(t.requests.isEmpty())
++    }
++
++    @Test fun zfSendsNothingByDefault() {
++        val t = FakeTransport { req, _ -> req + ok(Block.ZF_F0) }
++        val gate = DynamicBlockGate(); val s = gate.startSession(Profile.ZF)
++        val runner = DynamicBlockDefinitionRunner(gate, SerialTransactionOwner(), t)
++        assertTrue(runner.defineAll(s).isEmpty()); assertTrue(t.requests.isEmpty())
++    }
++
++    @Test fun testerPresentCannotInterleaveWhileDefinitionsRun() {
++        val owner = SerialTransactionOwner()
++        val inside = CountDownLatch(1); val release = CountDownLatch(1); val tpRan = AtomicBoolean(false)
++        val t = DefinitionTransport { req, _ ->
++            inside.countDown(); release.await(2, TimeUnit.SECONDS)
++            req + ok(Block.MR140_F0)
++        }
++        val gate = DynamicBlockGate(); val s = gate.startSession(Profile.MR140)
++        val runner = DynamicBlockDefinitionRunner(gate, owner, t)
++        val worker = Thread { runner.defineAll(s) }; worker.start()
++        assertTrue(inside.await(2, TimeUnit.SECONDS))
++        assertEquals(DynamicBlockDefinitionRunner.OWNER_NAME, owner.busyOwner())
++        val ran = owner.tryRun("TP") { tpRan.set(true) }
++        assertFalse(ran); assertFalse(tpRan.get())          // el latido se omite, no consume respuestas ajenas
++        release.countDown(); worker.join(3000)
++        assertTrue(owner.tryRun("TP") { tpRan.set(true) }); assertTrue(tpRan.get())
++        assertNull(owner.busyOwner())
++    }
++
++    @Test fun ownerSerializesConcurrentTransactions() {
++        val owner = SerialTransactionOwner()
++        val active = java.util.concurrent.atomic.AtomicInteger(0); val maxActive = java.util.concurrent.atomic.AtomicInteger(0)
++        val threads = (1..6).map {
++            Thread { repeat(20) { owner.run("t") { val n = active.incrementAndGet(); maxActive.accumulateAndGet(n) { a, b -> maxOf(a, b) }; Thread.yield(); active.decrementAndGet() } } }
++        }
++        threads.forEach { it.start() }; threads.forEach { it.join(5000) }
++        assertEquals(1, maxActive.get())
++    }
++}
+diff -ruN a/app/src/test/java/com/cheviexplorer/android/kwp/DynamicBlockGateTest.kt b/app/src/test/java/com/cheviexplorer/android/kwp/DynamicBlockGateTest.kt
+--- a/app/src/test/java/com/cheviexplorer/android/kwp/DynamicBlockGateTest.kt	1970-01-01 00:00:00.000000000 +0000
++++ b/app/src/test/java/com/cheviexplorer/android/kwp/DynamicBlockGateTest.kt	2026-10-22 04:55:06.307138782 +0000
+@@ -0,0 +1,131 @@
++package com.cheviexplorer.android.kwp
++
++import com.cheviexplorer.android.DynamicBlockDefinitions.Block
++import com.cheviexplorer.android.kwp.DynamicBlockGate.Completion
++import com.cheviexplorer.android.kwp.DynamicBlockGate.Profile
++import com.cheviexplorer.android.kwp.DynamicBlockGate.ResetReason
++import com.cheviexplorer.android.kwp.DynamicBlockResponseValidator.Result
++import com.cheviexplorer.android.kwp.DynamicBlockResponseValidator.Verdict
++import org.junit.Assert.assertEquals
++import org.junit.Assert.assertFalse
++import org.junit.Assert.assertNull
++import org.junit.Assert.assertTrue
++import org.junit.Test
++
++class DynamicBlockGateTest {
++    private val accepted = Result(Verdict.ACCEPTED, "ok")
++    private fun bad(v: Verdict) = Result(v, "x")
++
++    private fun gateWithBothAccepted(policy: DynamicBlockGate.Policy = DynamicBlockGate.Policy()): Pair<DynamicBlockGate, Long> {
++        val g = DynamicBlockGate(policy); val s = g.startSession(Profile.MR140)
++        assertTrue(g.beginDefinition(Block.MR140_F0, s)); g.completeDefinition(Block.MR140_F0, s, accepted)
++        assertTrue(g.beginDefinition(Block.MR140_F1, s)); g.completeDefinition(Block.MR140_F1, s, accepted)
++        return g to s
++    }
++
++    @Test fun startsClosed() {
++        val g = DynamicBlockGate()
++        Block.values().forEach { assertFalse(g.canRead(it)); assertFalse(g.canPoll(it)) }
++        assertNull(g.nextDefinition())
++    }
++
++    @Test fun mr140DefinesF0ThenF1AndOpensEachBlockIndividually() {
++        val g = DynamicBlockGate(); val s = g.startSession(Profile.MR140)
++        assertEquals(Block.MR140_F0, g.nextDefinition())
++        assertTrue(g.beginDefinition(Block.MR140_F0, s))
++        assertFalse(g.canRead(Block.MR140_F0))            // pendiente: aún cerrada
++        assertNull(g.nextDefinition())                    // no se lanza otra a la vez
++        assertEquals(Completion.ACCEPTED, g.completeDefinition(Block.MR140_F0, s, accepted))
++        assertTrue(g.canRead(Block.MR140_F0)); assertFalse(g.canRead(Block.MR140_F1))
++        assertEquals(Block.MR140_F1, g.nextDefinition())
++        assertTrue(g.beginDefinition(Block.MR140_F1, s))
++        assertEquals(Completion.ACCEPTED, g.completeDefinition(Block.MR140_F1, s, accepted))
++        assertTrue(g.canRead(Block.MR140_F1)); assertNull(g.nextDefinition())
++    }
++
++    @Test fun f1CannotBeDefinedBeforeF0() {
++        val g = DynamicBlockGate(); val s = g.startSession(Profile.MR140)
++        assertFalse(g.beginDefinition(Block.MR140_F1, s))
++        assertFalse(g.canRead(Block.MR140_F1))
++    }
++
++    @Test fun anyRejectedDefinitionClosesEverythingIncludingPreviouslyAcceptedF0() {
++        for (v in Verdict.values().filter { it != Verdict.ACCEPTED }) {
++            val g = DynamicBlockGate(); val s = g.startSession(Profile.MR140)
++            g.beginDefinition(Block.MR140_F0, s); g.completeDefinition(Block.MR140_F0, s, accepted)
++            g.beginDefinition(Block.MR140_F1, s)
++            assertEquals(Completion.REJECTED_GATE_CLOSED, g.completeDefinition(Block.MR140_F1, s, bad(v)))
++            assertFalse("F0 debe revocarse tras $v", g.canRead(Block.MR140_F0))
++            assertFalse(g.canRead(Block.MR140_F1)); assertNull(g.nextDefinition())
++            val expected = if (v == Verdict.NO_RESPONSE) ResetReason.TIMEOUT else ResetReason.INVALID_RESPONSE
++            assertEquals(expected, g.lastResetReason())
++        }
++    }
++
++    @Test fun everyResetReasonRevokesAccessAndBlocksNewDefinitions() {
++        for (reason in ResetReason.values()) {
++            val (g, _) = gateWithBothAccepted()
++            assertTrue(g.canRead(Block.MR140_F0) && g.canRead(Block.MR140_F1))
++            g.reset(reason)
++            assertFalse("$reason", g.canRead(Block.MR140_F0)); assertFalse(g.canRead(Block.MR140_F1))
++            assertNull(g.nextDefinition()); assertEquals(reason, g.lastResetReason())
++        }
++    }
++
++    @Test fun newSessionAfterReconnectStartsFromScratch() {
++        val (g, _) = gateWithBothAccepted()
++        val s2 = g.startSession(Profile.MR140)
++        assertEquals(ResetReason.SESSION_RESTART, g.lastResetReason())
++        assertFalse(g.canRead(Block.MR140_F0)); assertFalse(g.canRead(Block.MR140_F1))
++        assertEquals(Block.MR140_F0, g.nextDefinition()); assertTrue(g.currentSessionId() == s2)
++    }
++
++    @Test fun profileChangeResets() {
++        val (g, _) = gateWithBothAccepted()
++        g.onProfileChange(Profile.MR140)                  // mismo perfil: no cambia nada
++        assertTrue(g.canRead(Block.MR140_F0))
++        g.onProfileChange(Profile.ZF)
++        assertFalse(g.canRead(Block.MR140_F0)); assertEquals(ResetReason.PROFILE_CHANGE, g.lastResetReason())
++    }
++
++    @Test fun staleCompletionAfterResetIsIgnoredAndDoesNotOpenNewSession() {
++        val g = DynamicBlockGate(); val s1 = g.startSession(Profile.MR140)
++        assertTrue(g.beginDefinition(Block.MR140_F0, s1))
++        g.reset(ResetReason.DISCONNECT)                   // desconexión con la definición en vuelo
++        assertEquals(Completion.IGNORED_STALE, g.completeDefinition(Block.MR140_F0, s1, accepted))
++        assertFalse(g.canRead(Block.MR140_F0))
++        val s2 = g.startSession(Profile.MR140)
++        assertFalse(g.beginDefinition(Block.MR140_F0, s1)) // ticket viejo
++        assertEquals(Completion.IGNORED_STALE, g.completeDefinition(Block.MR140_F0, s1, accepted))
++        assertTrue(g.beginDefinition(Block.MR140_F0, s2))
++    }
++
++    @Test fun completionForNonPendingBlockIsIgnored() {
++        val g = DynamicBlockGate(); val s = g.startSession(Profile.MR140)
++        assertEquals(Completion.IGNORED_STALE, g.completeDefinition(Block.MR140_F0, s, accepted))
++        assertFalse(g.canRead(Block.MR140_F0))
++    }
++
++    @Test fun zfIsBlockedByDefaultPolicy() {
++        val g = DynamicBlockGate(); val s = g.startSession(Profile.ZF)
++        assertNull(g.nextDefinition()); assertFalse(g.beginDefinition(Block.ZF_F0, s))
++        assertFalse(g.canRead(Block.ZF_F0)); assertFalse(g.canPoll(Block.ZF_F0))
++    }
++
++    @Test fun zfPolicyDisabledStillBlocksEvenIfSomehowAccepted() {
++        val on = DynamicBlockGate(DynamicBlockGate.Policy(zfEnabled = true)); val s = on.startSession(Profile.ZF)
++        assertEquals(Block.ZF_F0, on.nextDefinition())     // la política existe pero NO es el valor por defecto
++        assertTrue(on.beginDefinition(Block.ZF_F0, s)); on.completeDefinition(Block.ZF_F0, s, accepted)
++        assertTrue(on.canRead(Block.ZF_F0))
++        val off = DynamicBlockGate(DynamicBlockGate.Policy(zfEnabled = false)); val s2 = off.startSession(Profile.ZF)
++        assertFalse(off.beginDefinition(Block.ZF_F0, s2)); assertFalse(off.canRead(Block.ZF_F0))
++    }
++
++    @Test fun blocksOfOtherProfileAreNeverReadable() {
++        val (g, _) = gateWithBothAccepted()
++        assertFalse(g.canRead(Block.ZF_F0))
++        val z = DynamicBlockGate(DynamicBlockGate.Policy(zfEnabled = true)); val s = z.startSession(Profile.ZF)
++        z.beginDefinition(Block.ZF_F0, s); z.completeDefinition(Block.ZF_F0, s, accepted)
++        assertFalse(z.canRead(Block.MR140_F0)); assertFalse(z.canRead(Block.MR140_F1))
++    }
++}
+diff -ruN a/app/src/test/java/com/cheviexplorer/android/kwp/DynamicBlockResponseValidatorTest.kt b/app/src/test/java/com/cheviexplorer/android/kwp/DynamicBlockResponseValidatorTest.kt
+--- a/app/src/test/java/com/cheviexplorer/android/kwp/DynamicBlockResponseValidatorTest.kt	1970-01-01 00:00:00.000000000 +0000
++++ b/app/src/test/java/com/cheviexplorer/android/kwp/DynamicBlockResponseValidatorTest.kt	2026-10-22 04:55:06.307118140 +0000
+@@ -0,0 +1,113 @@
++package com.cheviexplorer.android.kwp
++
++import com.cheviexplorer.android.DynamicBlockDefinitions
++import com.cheviexplorer.android.DynamicBlockDefinitions.Block
++import com.cheviexplorer.android.kwp.DynamicBlockResponseValidator.Verdict
++import org.junit.Assert.assertEquals
++import org.junit.Assert.assertTrue
++import org.junit.Test
++
++/** Pruebas ESTÁTICAS de lógica pura. No sustituyen una prueba en vehículo. */
++class DynamicBlockResponseValidatorTest {
++    private val f0 = Block.MR140_F0
++    private val request = DynamicBlockDefinitions.buildDefinitionRequest(f0)
++
++    private fun withChecksum(vararg b: Int): ByteArray {
++        val body = b.map { it.toByte() }.toByteArray()
++        val sum = body.sumOf { it.toInt() and 0xFF } and 0xFF
++        return body + sum.toByte()
++    }
++
++    private fun verdict(rx: ByteArray?, block: Block = f0, echo: Boolean = true, req: ByteArray = DynamicBlockDefinitions.buildDefinitionRequest(block)) =
++        DynamicBlockResponseValidator.validate(req, rx, block, echo).verdict
++
++    private val ok = withChecksum(0x82, 0xF1, 0x11, 0x6C, 0xF0)
++
++    @Test fun acceptsPositive6CWithEchoForEachMrBlock() {
++        assertEquals(Verdict.ACCEPTED, verdict(request + ok))
++        val f1 = Block.MR140_F1
++        val reqF1 = DynamicBlockDefinitions.buildDefinitionRequest(f1)
++        assertEquals(Verdict.ACCEPTED, verdict(reqF1 + withChecksum(0x82, 0xF1, 0x11, 0x6C, 0xF1), f1))
++    }
++
++    @Test fun acceptsExtendedLengthHeader() {
++        assertEquals(Verdict.ACCEPTED, verdict(request + withChecksum(0x80, 0xF1, 0x11, 0x02, 0x6C, 0xF0)))
++    }
++
++    @Test fun acceptsWithoutEchoOnlyWhenEchoNotExpected() {
++        assertEquals(Verdict.ACCEPTED, verdict(ok, echo = false))
++        assertEquals(Verdict.ECHO_MISMATCH, verdict(ok, echo = true))
++    }
++
++    @Test fun rejectsNoResponseAndEchoOnly() {
++        assertEquals(Verdict.NO_RESPONSE, verdict(null))
++        assertEquals(Verdict.NO_RESPONSE, verdict(ByteArray(0)))
++        assertEquals(Verdict.NO_RESPONSE, verdict(request))
++    }
++
++    @Test fun rejectsIncompleteEcho() {
++        assertEquals(Verdict.TRUNCATED, verdict(request.copyOf(50)))
++    }
++
++    @Test fun rejectsEchoDifferentFromRequest() {
++        val bad = request.copyOf(); bad[10] = (bad[10] + 1).toByte()
++        assertEquals(Verdict.ECHO_MISMATCH, verdict(bad + ok))
++    }
++
++    @Test fun rejectsTruncatedResponse() {
++        assertEquals(Verdict.TRUNCATED, verdict(request + ok.copyOf(ok.size - 1)))
++        assertEquals(Verdict.TRUNCATED, verdict(request + byteArrayOf(0x80.toByte(), 0xF1.toByte())))
++    }
++
++    @Test fun rejectsBadChecksum() {
++        val bad = ok.copyOf(); bad[bad.lastIndex] = (bad.last() + 1).toByte()
++        assertEquals(Verdict.BAD_CHECKSUM, verdict(request + bad))
++    }
++
++    @Test fun rejectsWrongTargetAndWrongSource() {
++        assertEquals(Verdict.WRONG_TARGET, verdict(request + withChecksum(0x82, 0x11, 0x11, 0x6C, 0xF0)))
++        assertEquals(Verdict.WRONG_SOURCE, verdict(request + withChecksum(0x82, 0xF1, 0x18, 0x6C, 0xF0)))
++        assertEquals(Verdict.WRONG_SOURCE, verdict(request + withChecksum(0x82, 0xF1, 0x00, 0x6C, 0xF0)))
++    }
++
++    @Test fun rejectsNegativeResponseTo2C() {
++        val r = DynamicBlockResponseValidator.validate(request, request + withChecksum(0x83, 0xF1, 0x11, 0x7F, 0x2C, 0x31), f0)
++        assertEquals(Verdict.NEGATIVE_RESPONSE, r.verdict)
++        assertTrue(r.detail.contains("0x31"))
++    }
++
++    @Test fun rejectsInterleavedTesterPresentResponse() {
++        val tp = withChecksum(0x81, 0xF1, 0x11, 0x7E)
++        assertEquals(Verdict.TESTER_PRESENT_RESIDUAL, verdict(request + tp))
++        // 7E primero y la respuesta real detrás: sigue siendo rechazo (fallar cerrado)
++        assertEquals(Verdict.TESTER_PRESENT_RESIDUAL, verdict(request + tp + ok))
++    }
++
++    @Test fun rejectsResponsesBelongingToAnotherRequest() {
++        assertEquals(Verdict.WRONG_SERVICE, verdict(request + withChecksum(0x82, 0xF1, 0x11, 0x61, 0xF0)))
++        assertEquals(Verdict.OTHER_REQUEST, verdict(request + withChecksum(0x83, 0xF1, 0x11, 0x7F, 0x21, 0x31)))
++        assertEquals(Verdict.WRONG_SERVICE, verdict(request + withChecksum(0x82, 0xF1, 0x11, 0x5A, 0x80)))
++    }
++
++    @Test fun rejectsWrongBlockId() {
++        assertEquals(Verdict.WRONG_BLOCK, verdict(request + withChecksum(0x82, 0xF1, 0x11, 0x6C, 0xF1)))
++    }
++
++    @Test fun rejectsResidualBytesAfterValidResponse() {
++        assertEquals(Verdict.RESIDUAL_BYTES, verdict(request + ok + withChecksum(0x81, 0xF1, 0x11, 0x7E)))
++        assertEquals(Verdict.RESIDUAL_BYTES, verdict(request + ok + byteArrayOf(0x00)))
++    }
++
++    @Test fun rejectsMalformedFormatAndEmptyPayload() {
++        assertEquals(Verdict.MALFORMED, verdict(request + withChecksum(0x02, 0xF1, 0x11, 0x6C, 0xF0)))
++        assertEquals(Verdict.MALFORMED, verdict(request + withChecksum(0x80, 0xF1, 0x11, 0x00)))
++        assertEquals(Verdict.MALFORMED, verdict(request + withChecksum(0x81, 0xF1, 0x11, 0x6C)))
++    }
++
++    @Test fun zfBlockExpectsZfEcuAsSource() {
++        val zf = Block.ZF_F0
++        val req = DynamicBlockDefinitions.buildDefinitionRequest(zf)
++        assertEquals(Verdict.ACCEPTED, verdict(req + withChecksum(0x82, 0xF1, 0x18, 0x6C, 0xF0), zf))
++        assertEquals(Verdict.WRONG_SOURCE, verdict(req + withChecksum(0x82, 0xF1, 0x11, 0x6C, 0xF0), zf))
++    }
++}
