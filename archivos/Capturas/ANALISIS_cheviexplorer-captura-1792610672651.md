@@ -1,6 +1,6 @@
 # Análisis de captura KWP — CheviExplorer
 **Captura fuente:** `archivos/Capturas/cheviexplorer-captura-1792610672651.md`  
-**Fecha/hora de sesión según marcas del archivo:** 15:21:45–15:24:29 (la captura no indica fecha ni zona horaria).  
+**Fecha/hora de sesión según marcas del archivo:** 15:21:45–15:24:33 (la captura no indica fecha ni zona horaria).  
 **Tipo de evidencia:** registro de aplicación aportado por el usuario; no es un volcado independiente de analizador de bus.  
 **Estado:** análisis documental. No se ejecutaron nuevas pruebas a partir de este archivo.
 
@@ -45,9 +45,9 @@ Se registran consultas `21 02`, `21 03` y `21 04` con respuestas positivas `61 0
 - El registro dice expresamente que no asigna unidades ni decodifica campos sin mapa validado. Mantener esos bytes como datos crudos hasta contar con una definición fiable específica del perfil ECU.
 
 ### 6. ZF 4HP16
-- Se observa una respuesta positiva candidata al inicio `0x81), con origen `0x18` según el registro.
+- Se observa una respuesta positiva candidata al inicio del servicio `0x81`, con origen `0x18` según el registro.
 - Se observan varias respuestas `7E 08` al TesterPresent.
-- No se registra en esta captura lectura DTC positiva de ZF, identificación de TCM, definición de bloques `0x2C), ni lectura de datos de transmisión. No inferir soporte de esas funciones.
+- No se registra en esta captura lectura DTC positiva de ZF, identificación de TCM, definición de bloques `0x2C`, ni lectura de datos de transmisión. No inferir soporte de esas funciones.
 
 ## Problemas y acciones recomendadas
 
@@ -75,7 +75,7 @@ Se registran consultas `21 02`, `21 03` y `21 04` con respuestas positivas `61 0
 
 - **Respaldado directamente por el archivo:** bytes TX/RX que aparecen en el registro, timestamps, mensajes de la app y resultados que el validador de la app declara.
 - **Inferencia técnica razonable:** la planificación de TesterPresent debe serializarse con el resto de las solicitudes; el registro contiene suficientes eventos cercanos para justificar pruebas de concurrencia.
-- **No demostrado por esta captura:** identidad física exacta de la ECU, definición OEM de los datos, ausencia absoluta de DTC en el vehículo, compatibilidad de funciones no ejercitadas, validez de `0x2C), ni ejecución de pruebas unitarias/CI/vehículo fuera de lo que muestra el propio log.
+- **No demostrado por esta captura:** identidad física exacta de la ECU, definición OEM de los datos, ausencia absoluta de DTC en el vehículo, compatibilidad de funciones no ejercitadas, validez de `0x2C`, ni ejecución de pruebas unitarias/CI/vehículo fuera de lo que muestra el propio log.
 
 ## Estado de ejecución
 
