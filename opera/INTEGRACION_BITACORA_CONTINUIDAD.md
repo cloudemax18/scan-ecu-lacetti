@@ -294,3 +294,24 @@ El paquete Claude v2 es una fuente de reconstrucción estática útil, pero el p
 ### 13.5 Estado de ejecución
 
 Al redactar esta entrada, solo se ha preparado el plan y los prompts. No se han aplicado cambios de código 0x2C, no se ha compilado APK por esta tarea, no se han ejecutado JUnit por esta tarea y no se han realizado pruebas con adaptador ni vehículo.
+
+
+## 14. 2026-10-21 — captura KWP MR-140/ZF y análisis
+
+**Archivo fuente incorporado:** `archivos/Capturas/cheviexplorer-captura-1792610672651.md`.  
+**Análisis:** `archivos/Capturas/ANALISIS_cheviexplorer-captura-1792610672651.md`.  
+**Tipo de evidencia:** registro de la aplicación aportado por el usuario; no es un volcado independiente de analizador K-Line.
+
+### Observaciones documentadas
+- El log reporta adaptador USB VID `1A86` / PID `7523`, controlador `Ch34xSerialDriver`, 10400 baud, 8N1.
+- MR-140: StartCommunication candidata `83 F1 11 C1 EF 8F C4`, lectura DTC con respuesta `59 00), y respuestas positivas `61 02`, `61 03`, `61 04`; el validador de la app informa checksums coincidentes.
+- ZF 4HP16: StartCommunication candidata `83 F1 18 C1 EF 8F CB) y respuestas `7E 08) al TesterPresent; esta captura no demuestra lectura DTC ni datos de ZF.
+- El TesterPresent automático se ejecuta cada 2 s y aparece cerca de otras operaciones. Esto no prueba por sí solo una respuesta mal asociada, pero exige serializar transacciones y evitar respuestas residuales/intercaladas.
+- Los bytes de IDs `02`–`04` siguen sin decodificación/unidades validadas. La interpretación de contador DTC cero es la del parser de la app y no equivale a un certificado de ausencia de fallos en todo el vehículo.
+- El registro contiene RX `00) y aviso de que `purgeHwBuffers()` no está disponible; revisar limpieza de buffer y límites de sesión.
+
+### Decisiones
+1. Usar esta captura como evidencia de protocolo reportada por la app, no como fuente OEM ni prueba independiente del bus.
+2. Priorizar transacciones serializadas, asociación estricta RX↔solicitud y reinicio del estado al cambiar perfil/desconectar.
+3. Mantener `0x2C), actuadores, adaptación y HV-240 bloqueados hasta sus respectivas puertas de validación.
+4. No se ejecutaron nuevas pruebas JUnit/Gradle/CI ni pruebas físicas por la incorporación de esta captura.
