@@ -23,3 +23,9 @@ Este estado refleja la revisión estática de Claude v2 del 2026-10-21. Antes de
 - Decisión: no aplicar directamente ninguno de los parches Claude v2. El gate 0x2C debe integrarse al flujo real, validar dirección ECU y serializar transacciones; F0/F1 permanecen fuera del barrido automático.
 - Prompts multiagente para la fase siguiente: [PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-21.md](PROMPTS_CONTINUACION_MULTIAGENTE_2026-10-21.md).
 - La nueva ronda es propuesta de código + auditoría independiente + investigación de fuentes + revisión UX. No se han ejecutado pruebas de vehículo ni se ha habilitado ninguna operación de actuador.
+
+
+## Captura nueva incorporada (2026-10-21)
+- Registro original: [cheviexplorer-captura-1792610672651.md](../archivos/Capturas/cheviexplorer-captura-1792610672651.md).
+- Análisis técnico: [ANALISIS_cheviexplorer-captura-1792610672651.md](../archivos/Capturas/ANALISIS_cheviexplorer-captura-1792610672651.md).
+- Hallazgo principal: revisar serialización de TesterPresent y otras solicitudes, respuestas residuales `RX 00), y no decodificar IDs 02–04 sin mapa validado. La captura no demuestra soporte `0x2C` ni funciones ZF adicionales.
